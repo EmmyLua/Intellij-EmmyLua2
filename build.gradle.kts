@@ -33,6 +33,7 @@ val buildDataList = listOf(
 
 group = "com.cppcxy"
 val emmyluaAnalyzerVersion = "0.6.3"
+val emmyDebuggerVersion = "1.8.2"
 
 val emmyluaAnalyzerProjectUrl = "https://github.com/CppCXY/EmmyLuaAnalyzer"
 
@@ -43,6 +44,7 @@ val buildVersionData = buildDataList.find { it.ideaSDKShortVersion == buildVersi
 val runnerNumber = System.getenv("RUNNER_NUMBER") ?: "Dev"
 
 version = "${emmyluaAnalyzerVersion}.${runnerNumber}-IDEA${buildVersion}"
+
 
 task("download", type = Download::class) {
     src(
@@ -83,6 +85,62 @@ task("install", type = Copy::class) {
     destinationDir = file("src/main/resources")
 }
 
+task("downloadEmmyDebugger", type = Download::class) {
+    src(arrayOf(
+        "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/darwin-arm64.zip",
+        "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/darwin-x64.zip",
+        "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/linux-x64.zip",
+        "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/win32-x64.zip",
+        "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/win32-x86.zip"
+    ))
+
+    dest("temp")
+}
+
+task("unzipEmmyDebugger", type = Copy::class) {
+    dependsOn("downloadEmmyDebugger")
+    from(zipTree("temp/win32-x86.zip")) {
+        into("windows/x86")
+    }
+    from(zipTree("temp/win32-x64.zip")) {
+        into("windows/x64")
+    }
+    from(zipTree("temp/darwin-x64.zip")) {
+        into("mac/x64")
+    }
+    from(zipTree("temp/darwin-arm64.zip")) {
+        into("mac/arm64")
+    }
+    from(zipTree("temp/linux-x64.zip")) {
+        into("linux")
+    }
+    destinationDir = file("temp")
+}
+
+task("installEmmyDebugger", type = Copy::class) {
+    dependsOn("unzipEmmyDebugger")
+    from("temp/windows/x64/") {
+        include("emmy_core.dll")
+        into("debugger/emmy/windows/x64")
+    }
+    from("temp/windows/x86/") {
+        include("emmy_core.dll")
+        into("debugger/emmy/windows/x86")
+    }
+    from("temp/linux/") {
+        include("emmy_core.so")
+        into("debugger/emmy/linux")
+    }
+    from("temp/mac/x64") {
+        include("emmy_core.dylib")
+        into("debugger/emmy/mac/x64")
+    }
+    from("temp/mac/arm64") {
+        include("emmy_core.dylib")
+        into("debugger/emmy/mac/arm64")
+    }
+    destinationDir = file("src/main/resources")
+}
 
 // Configure Gradle IntelliJ Plugin
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
@@ -131,7 +189,7 @@ tasks {
     }
 
     buildPlugin {
-        dependsOn("install")
+        dependsOn("install", "installEmmyDebugger")
     }
     // fix by https://youtrack.jetbrains.com/issue/IDEA-325747/IDE-always-actively-disables-LSP-plugins-if-I-ask-the-plugin-to-return-localized-diagnostic-messages.
     runIde {
@@ -143,6 +201,10 @@ tasks {
             copy {
                 from("${project.projectDir}/src/main/resources/server")
                 into("${destinationDir.path}/${pluginName.get()}/server")
+            }
+            copy {
+                from("${project.projectDir}/src/main/resources/debugger")
+                into("${destinationDir.path}/${pluginName.get()}/debugger")
             }
         }
     }

@@ -30,6 +30,8 @@ object LuaIcons {
         return getIcon(path, LuaIcons::class.java)
     }
 
+    val CPP = getIcon("/icons/cpp.png")
+    val CSHARP = getIcon("/icons/csharp.png")
     val FILE = getIcon("/icons/lua.png")
     val CLASS = AllIcons.Nodes.Class
     val Alias = AllIcons.Nodes.AbstractClass
