@@ -1,0 +1,321 @@
+/*
+ * Copyright (c) 2017. tangzx(love.tangzx@qq.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+{
+  parserClass="com.tang.intellij.lua.comment.parser.LuaDocParser"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+  implements="com.tang.intellij.lua.comment.psi.LuaDocPsiElement"
+
+  psiClassPrefix="LuaDoc"
+  psiImplClassSuffix="Impl"
+  psiPackage="com.tang.intellij.lua.comment.psi"
+  psiImplPackage="com.tang.intellij.lua.comment.psi.impl"
+  psiImplUtilClass="com.tang.intellij.lua.comment.psi.LuaDocPsiImplUtilKt"
+
+  parserUtilClass="com.tang.intellij.lua.psi.LuaParserUtil"
+  elementTypeHolderClass="com.tang.intellij.lua.comment.psi.LuaDocTypes"
+  elementTypeClass="com.tang.intellij.lua.comment.psi.LuaDocElementType"
+  elementTypeFactory="com.tang.intellij.lua.lang.LuaParserDefinitionKt.createDocType"
+  tokenTypeClass="com.tang.intellij.lua.comment.psi.LuaDocTokenType"
+  extends(".*ty") = 'ty'
+
+  tokens = [
+        ID="regexp:[A-Za-z0-9_]+"
+        AT = '@'
+        SHARP = '#'
+        EQ = '='
+        COMMA = ','
+        EXTENDS = ':'
+        OR = '|'
+        GT = ">"
+        LT = "<"
+        LPAREN = "("
+        RPAREN = ")"
+        LCURLY = "{"
+        RCURLY = "}"
+        STRING_LITERAL = "STRING_LITERAL"
+        ARR = '[]'
+        FUN = 'fun'
+        VARARG = 'vararg'
+        PRIVATE = 'private'
+        PROTECTED = 'protected'
+        PUBLIC = 'public'
+        DASHES = 'DASHES'
+        STRING_BEGIN = 'STRING_BEGIN'
+        STRING = 'STRING'
+        TAG_NAME_RETURN = 'return'
+        TAG_NAME = 'TAG_NAME'
+        TAG_NAME_PARAM = 'param'
+        TAG_NAME_VARARG = 'vararg'
+        TAG_NAME_PRIVATE = 'private'
+        TAG_NAME_PROTECTED = 'protected'
+        TAG_NAME_PUBLIC = 'public'
+        TAG_NAME_CLASS = 'class'
+        TAG_NAME_FIELD = 'field'
+        TAG_NAME_TYPE = 'type'
+        TAG_NAME_LANGUAGE = 'language'
+        TAG_NAME_OVERLOAD = 'overload'
+        TAG_NAME_MODULE = 'module'
+        TAG_NAME_SEE = 'see'
+        TAG_NAME_GENERIC = 'generic'
+        TAG_NAME_ALIAS = 'alias'
+        TAG_NAME_SUPPRESS = 'suppress'
+  ]
+  implements("tag.*") = [
+    "com.tang.intellij.lua.comment.psi.LuaDocTag"
+  ]
+}
+
+doc ::= (DASHES after_dash?)*
+
+private after_dash ::= doc_item | STRING { recoverWhile=after_dash_recover }
+private after_dash_recover ::= !(DASHES)
+private doc_item ::= '@' (tag_param
+    | tag_alias
+    | tag_suppress
+    | tag_vararg
+    | tag_return
+    | tag_class
+    | tag_field
+    | tag_type
+    | tag_lan
+    | tag_overload
+    | tag_see
+    | tag_def
+    | access_modifier
+    | tag_generic_list)
+
+ty ::= union_ty | function_ty | table_ty | generic_ty | arr_ty | general_ty | par_ty | string_literal_ty {
+//    implements = ['com.tang.intellij.lua.comment.psi.LuaDocType']
+}
+
+arr_ty ::= ty '[]' {
+//    methods = [getType]
+}
+general_ty ::= class_name_ref {
+//    methods = [getType]
+}
+par_ty ::= '(' ty ')' {
+    pin = 1
+//    methods = [getType]
+}
+string_literal_ty ::= STRING_LITERAL{
+//    methods = [getType content = 'STRING_LITERAL']
+}
+
+private fieldList ::= (tableField (',' tableField)* (',')?)?
+
+private tableField2 ::= ID ':' ty { pin = 1 }
+
+tableField ::= tableField2 {
+//    implements = [
+//        "com.tang.intellij.lua.comment.psi.LuaDocPsiElement"
+//        "com.tang.intellij.lua.psi.LuaClassField"
+//        "com.intellij.psi.PsiNameIdentifierOwner"
+//    ]
+//    methods = [
+//        guessParentType
+//        getVisibility
+//        getWorth
+//        setName
+//        getName
+//        getNameIdentifier
+//        guessType
+//        isDeprecated
+//    ]
+//    stubClass = "com.tang.intellij.lua.stubs.LuaDocTableFieldStub"
+}
+
+table_def ::= '{' fieldList '}' {
+    pin = 1
+//    stubClass = "com.tang.intellij.lua.stubs.LuaDocTableDefStub"
+}
+
+table_ty ::= table_def {
+//    methods = [getType]
+}
+
+private generic_param_list ::= (ty ',')* ty
+generic_ty ::= general_ty '<' generic_param_list '>' {
+//    methods = [getType]
+    pin = 2
+}
+
+function_param ::= ID (':' ty)? {
+    pin = 1
+}
+vararg_param ::= VARARG ty {
+    pin = 1
+//    methods = [getType]
+}
+private function_param_list::= (function_param ',')* ((function_param|vararg_param) |& ')')
+private function_generic ::= '<' generic_def (',' generic_def)* '>' {
+    pin = 1
+}
+function_ty ::= fun function_generic? '(' function_param_list ')' (':' type_list)? {
+//    methods = [getType getReturnType]
+    pin = 1
+}
+
+union_ty ::= ty ('|' ty)+ {
+//    methods = [getType]
+}
+access_modifier ::= PRIVATE | PUBLIC | PROTECTED | TAG_NAME_PRIVATE | TAG_NAME_PUBLIC | TAG_NAME_PROTECTED
+
+tag_field ::= TAG_NAME_FIELD access_modifier? ('<' class_name_ref '>')? ID ty comment_string? {
+    pin = 1
+//    implements = [
+//        "com.tang.intellij.lua.psi.LuaClassField"
+//        "com.tang.intellij.lua.comment.psi.LuaDocPsiElement"
+//        "com.intellij.psi.PsiNameIdentifierOwner"
+//    ]
+//    stubClass = "com.tang.intellij.lua.stubs.LuaDocTagFieldStub"
+//    methods = [
+//        guessParentType
+//        getVisibility
+//        getWorth
+//        getNameIdentifier
+//        setName
+//        getName
+//        getTextOffset
+//        getFieldName
+//        toString
+//        getPresentation
+//        isDeprecated
+//    ]
+}
+
+//--- tag
+tag_def ::= TAG_NAME_NAME comment_string? {
+    pin = 1
+    methods = [
+        tagName = 'TAG_NAME_NAME'
+    ]
+}
+
+//@overload
+tag_overload ::= TAG_NAME_OVERLOAD function_ty { pin = 1 }
+
+//@language json
+tag_lan ::= TAG_NAME_LANGUAGE ID comment_string? { pin = 1 }
+
+//@param PARAM_NAME CLASS_REF
+param_name_ref ::= ID {
+//    methods = [getReference]
+}
+tag_param ::= TAG_NAME_PARAM param_name_ref ty comment_string? {
+    pin = 1
+//    methods = [getType]
+}
+tag_vararg ::= TAG_NAME_VARARG ty comment_string? {
+    pin = 1
+//    methods = [getType]
+}
+
+//--- return
+type_list ::= ty(',' ty)*
+tag_return ::= TAG_NAME_RETURN type_list comment_string? {
+    pin = 1
+//    methods = [resolveTypeAt getType]
+}
+
+class_name_ref ::= ID {
+//    methods = [getReference resolveType]
+}
+tag_class ::= (TAG_NAME_CLASS|TAG_NAME_MODULE) ID (EXTENDS class_name_ref)? comment_string? {
+    pin = 2
+//    implements = [
+//        "com.tang.intellij.lua.comment.psi.LuaDocPsiElement"
+//        "com.intellij.psi.PsiNameIdentifierOwner"
+//        "com.tang.intellij.lua.psi.LuaClass"
+//    ]
+//    stubClass = "com.tang.intellij.lua.stubs.LuaDocTagClassStub"
+//    methods = [
+//        getType
+//
+//        getPresentation
+//        getNameIdentifier
+//        setName
+//        getName
+//        getTextOffset
+//        toString
+//        isDeprecated
+//
+//        superClassNameRef = 'class_name_ref'
+//        module = 'TAG_NAME_MODULE'
+//    ]
+}
+
+// @type CLASS_REF
+tag_type ::= TAG_NAME_TYPE ty comment_string? {
+    pin = 1
+//    stubClass = "com.tang.intellij.lua.stubs.LuaDocTagTypeStub"
+//    methods = [getType]
+}
+
+comment_string ::= STRING_BEGIN? STRING? {
+    //pin = 1
+    methods = [
+        string = "STRING"
+    ]
+}
+
+tag_see ::= TAG_NAME_SEE class_name_ref (SHARP ID)? {
+    pin = 1
+//    methods = [
+//        getReference
+//    ]
+}
+
+generic_def ::= ID (EXTENDS class_name_ref)? {
+    pin = 1
+//    implements = [
+//        "com.intellij.psi.PsiNameIdentifierOwner"
+//        "com.tang.intellij.lua.comment.psi.LuaDocPsiElement"
+//    ]
+//    methods = [
+//        getNameIdentifier
+//        setName
+//        getName
+//        getTextOffset
+//    ]
+}
+
+tag_generic_list ::= TAG_NAME_GENERIC generic_def (',' generic_def)* {
+    pin = 1
+}
+
+tag_alias ::= TAG_NAME_ALIAS ID ty {
+    pin = 1
+//    implements = [
+//        "com.tang.intellij.lua.psi.LuaTypeAlias"
+//        "com.tang.intellij.lua.comment.psi.LuaDocPsiElement"
+//        "com.intellij.psi.PsiNameIdentifierOwner"
+//    ]
+//    methods = [
+//        getNameIdentifier
+//        setName
+//        getName
+//        getTextOffset
+//        getType
+//    ]
+//    stubClass = "com.tang.intellij.lua.stubs.LuaDocTagAliasStub"
+}
+
+tag_suppress ::= TAG_NAME_SUPPRESS ID (',' ID)* {
+    pin = 1
+}

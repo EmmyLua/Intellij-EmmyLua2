@@ -1,0 +1,107 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+    <id>com.cppcxy.Intellij-EmmyLua</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+    <name>EmmyLua2</name>
+
+    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+    <vendor email="" url="">CppCXY</vendor>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
+    <description><![CDATA[
+EmmyLua is a powerful Lua language support plugin that provides the following features:
+
+- All Lua versions support (Lua 5.1, Lua 5.2, Lua 5.3, Lua 5.4, LuaJIT)
+- Almost Language features
+- Lua Debugger
+
+This plugin is based on [EmmyLuaAnalyzer](https://github.com/CppCXY/EmmyLuaAnalyzer), offering the same powerful features and user experience as VSCode.
+
+  ]]></description>
+
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.redhat.devtools.lsp4ij</depends>
+    <idea-version since-build="233.3"/>
+    <!-- Extension points defined by the plugin.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <extensions defaultExtensionNs="com.intellij">
+        <fileType name="lua"
+                  implementationClass="com.tang.intellij.lua.lang.LuaFileType"
+                  fieldName="INSTANCE"
+                  extensions="lua"
+                  language="Lua"/>
+
+        <!--        folding-->
+        <lang.foldingBuilder language="Lua" implementationClass="com.tang.intellij.lua.folding.LuaFoldingBuilder"/>
+        <lang.foldingBuilder language="Lua"
+                             implementationClass="com.tang.intellij.lua.folding.LuaRegionFoldingBuilder"/>
+
+        <lang.parserDefinition language="Lua" implementationClass="com.tang.intellij.lua.lang.LuaParserDefinition"/>
+        <lang.braceMatcher language="Lua" implementationClass="com.tang.intellij.lua.braces.LuaBraceMatcher"/>
+        <lang.quoteHandler language="Lua"
+                           implementationClass="com.tang.intellij.lua.codeInsight.editorActions.LuaQuoteHandler"/>
+        <customPasteProvider
+                implementation="com.tang.intellij.lua.codeInsight.editorActions.StringLiteralPasteProvider"/>
+
+        <!--        highlight-->
+        <lang.syntaxHighlighterFactory
+                language="Lua"
+                implementationClass="com.tang.intellij.lua.highlighting.LuaSyntaxHighlighterFactory"/>
+<!--        <highlightErrorFilter implementation="com.tang.intellij.lua.highlighting.LuaHighlightErrorFilter"/>-->
+        <annotator language="Lua" implementationClass="com.tang.intellij.lua.annotator.LuaAnnotator"/>
+
+        <highlightUsagesHandlerFactory
+                implementation="com.tang.intellij.lua.codeInsight.highlighting.LuaHighlightUsagesHandlerFactory"/>
+
+        <readWriteAccessDetector implementation="com.tang.intellij.lua.codeInsight.LuaReadWriteAccessDetector"/>
+
+        <!-- file template provider -->
+        <fileTemplateGroup implementation="com.tang.intellij.lua.actions.LuaFileTemplateProvider"/>
+        <!--CreateFromTemplate-->
+        <createFromTemplateHandler implementation="com.tang.intellij.lua.actions.LuaCreateFromTemplateHandler"/>
+        <!-- for displaying the statusbar icon -->
+
+        <!-- for settings-->
+        <applicationService
+                serviceImplementation="com.cppcxy.ide.setting.EmmyLuaSettings"/>
+        <applicationConfigurable
+                groupId="language"
+                instance="com.cppcxy.ide.setting.EmmyLuaSettingsPanel"
+                displayName="SumnekoLua Settings"
+                id="SumnekoLua.Settings"
+        >
+        </applicationConfigurable>
+
+        <statusBarWidgetFactory id="EmmyLuaAnalyzer" implementation="com.cppcxy.ide.editor.statusbar.StatusBarWidgetFactory"/>
+        <lang.commenter language="Lua" implementationClass="com.tang.intellij.lua.comment.LuaCommenter"/>
+    </extensions>
+
+    <extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">
+        <server id="EmmyLua"
+                name="EmmyLua"
+                factoryClass="com.cppcxy.ide.lsp.EmmyLuaAnalyzerFactory">
+            <description><![CDATA[
+                <p>EmmyLua</p>
+    ]]>
+            </description>
+        </server>
+        <languageMapping language="Lua"
+                         serverId="EmmyLua"/>
+    </extensions>
+
+    <actions>
+        <action class="com.tang.intellij.lua.actions.CreateLuaFileAction"
+                text="Lua File"
+                id="lua.newFile">
+            <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFromTemplate"/>
+        </action>
+    </actions>
+</idea-plugin>
