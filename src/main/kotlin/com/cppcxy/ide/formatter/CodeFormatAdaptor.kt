@@ -21,7 +21,7 @@ interface ReformatAccept {
 
 object CodeFormatAdaptor {
     private val pluginSource: String?
-        get() = PluginManagerCore.getPlugin(PluginId.getId("com.cppcxy.Intellij-EmmyLua2"))?.pluginPath?.toFile()?.path
+        get() = PluginManagerCore.getPlugin(PluginId.getId("com.cppcxy.Intellij-EmmyLua"))?.pluginPath?.toFile()?.path
 
 
     private val codeFormatPath: String = "$pluginSource/CodeFormat/bin/$codeFormatExe"

@@ -71,7 +71,7 @@ public class EmmyDebugSettingsPanel extends SettingsEditor<EmmyDebugConfiguratio
         });
         typeCombox.setModel(model);
         // tcp
-        tcpHostInput.setText("localhost");
+        tcpHostInput.setText("::1");
         tcpHostInput.getDocument().addDocumentListener(this);
         tcpPortInput.setText("9966");
         tcpPortInput.setDocument(new IntegerDocument());
