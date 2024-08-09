@@ -86,6 +86,7 @@ This plugin is based on [EmmyLuaAnalyzer](https://github.com/CppCXY/EmmyLuaAnaly
 
         <statusBarWidgetFactory id="EmmyLuaAnalyzer" implementation="com.cppcxy.ide.editor.statusbar.StatusBarWidgetFactory"/>
         <lang.commenter language="Lua" implementationClass="com.tang.intellij.lua.comment.LuaCommenter"/>
+        <formattingService implementation="com.cppcxy.ide.formatter.EmmyLuaCodeStyle"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">

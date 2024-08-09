@@ -34,8 +34,10 @@ val buildDataList = listOf(
 group = "com.cppcxy"
 val emmyluaAnalyzerVersion = "0.6.3"
 val emmyDebuggerVersion = "1.8.2"
+val emmyluaCodeStyleVersion = "1.5.4"
 
 val emmyluaAnalyzerProjectUrl = "https://github.com/CppCXY/EmmyLuaAnalyzer"
+val emmyluaCodeStyleProjectUrl = "https://github.com/CppCXY/EmmyLuaCodeStyle"
 
 val buildVersion = System.getProperty("IDEA_VER") ?: buildDataList.first().ideaSDKShortVersion
 
@@ -58,8 +60,34 @@ task("download", type = Download::class) {
     dest("temp")
 }
 
-task("makeServer", type = Copy::class) {
-    dependsOn("download")
+task("downloadEmmyDebugger", type = Download::class) {
+    src(arrayOf(
+        "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/darwin-arm64.zip",
+        "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/darwin-x64.zip",
+        "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/linux-x64.zip",
+        "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/win32-x64.zip",
+        "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/win32-x86.zip"
+    ))
+
+    dest("temp/debugger")
+}
+
+task("downloadEmmyLuaCodeStyle", type = Download::class) {
+    src(
+        arrayOf(
+            "${emmyluaCodeStyleProjectUrl}/releases/download/${emmyluaCodeStyleVersion}/darwin-arm64.tar.gz",
+            "${emmyluaCodeStyleProjectUrl}/releases/download/${emmyluaCodeStyleVersion}/darwin-x64.tar.gz",
+            "${emmyluaCodeStyleProjectUrl}/releases/download/${emmyluaCodeStyleVersion}/linux-x64.tar.gz",
+            "${emmyluaCodeStyleProjectUrl}/releases/download/${emmyluaCodeStyleVersion}/win32-x64.zip",
+        )
+    )
+
+    dest("temp/codestyle")
+}
+
+task("unzip", type = Copy::class) {
+    dependsOn("download", "downloadEmmyDebugger")
+    // language server
     from(zipTree("temp/EmmyLua.LanguageServer-win32-x64.zip")) {
         into("server/")
     }
@@ -72,73 +100,83 @@ task("makeServer", type = Copy::class) {
     from(zipTree("temp/EmmyLua.LanguageServer-darwin-x64.zip")) {
         into("server/")
     }
+    // debugger
+    from(zipTree("temp/debugger/win32-x86.zip")) {
+        into("debugger/windows/x86")
+    }
+    from(zipTree("temp/debugger/win32-x64.zip")) {
+        into("debugger/windows/x64")
+    }
+    from(zipTree("temp/debugger/darwin-x64.zip")) {
+        into("debugger/mac/x64")
+    }
+    from(zipTree("temp/debugger/darwin-arm64.zip")) {
+        into("debugger/mac/arm64")
+    }
+    from(zipTree("temp/debugger/linux-x64.zip")) {
+        into("debugger/linux")
+    }
+    // codeStyle
+    from(zipTree("temp/codestyle/win32-x64.zip")) {
+        into("CodeFormat")
+    }
+    from(tarTree("emp/codestyle/darwin-x64.tar.gz")) {
+        into("CodeFormat")
+    }
+    from(tarTree("emp/codestyle/darwin-arm64.tar.gz")) {
+        into("CodeFormat")
+    }
+    from(tarTree("emp/codestyle/linux-x64.tar.gz")) {
+        into("CodeFormat")
+    }
 
-    destinationDir = file("temp")
+    destinationDir = file("temp/unzip")
 }
 
 
 task("install", type = Copy::class) {
-    dependsOn("makeServer")
-    from("temp/server") {
+    dependsOn("unzip")
+    from("temp/unzip/server") {
         into("server")
     }
-    destinationDir = file("src/main/resources")
-}
-
-task("downloadEmmyDebugger", type = Download::class) {
-    src(arrayOf(
-        "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/darwin-arm64.zip",
-        "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/darwin-x64.zip",
-        "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/linux-x64.zip",
-        "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/win32-x64.zip",
-        "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/win32-x86.zip"
-    ))
-
-    dest("temp")
-}
-
-task("unzipEmmyDebugger", type = Copy::class) {
-    dependsOn("downloadEmmyDebugger")
-    from(zipTree("temp/win32-x86.zip")) {
-        into("windows/x86")
-    }
-    from(zipTree("temp/win32-x64.zip")) {
-        into("windows/x64")
-    }
-    from(zipTree("temp/darwin-x64.zip")) {
-        into("mac/x64")
-    }
-    from(zipTree("temp/darwin-arm64.zip")) {
-        into("mac/arm64")
-    }
-    from(zipTree("temp/linux-x64.zip")) {
-        into("linux")
-    }
-    destinationDir = file("temp")
-}
-
-task("installEmmyDebugger", type = Copy::class) {
-    dependsOn("unzipEmmyDebugger")
-    from("temp/windows/x64/") {
+    from("temp/unzip/debugger/windows/x64/") {
         include("emmy_core.dll")
         into("debugger/emmy/windows/x64")
     }
-    from("temp/windows/x86/") {
+    from("temp/unzip/debugger/windows/x86/") {
         include("emmy_core.dll")
         into("debugger/emmy/windows/x86")
     }
-    from("temp/linux/") {
+    from("temp/unzip/debugger/linux/") {
         include("emmy_core.so")
         into("debugger/emmy/linux")
     }
-    from("temp/mac/x64") {
+    from("temp/unzip/debugger/mac/x64") {
         include("emmy_core.dylib")
         into("debugger/emmy/mac/x64")
     }
-    from("temp/mac/arm64") {
+    from("temp/unzip/debugger/mac/arm64") {
         include("emmy_core.dylib")
         into("debugger/emmy/mac/arm64")
     }
+
+    from("temp/unzip/CodeFormat/win32-x64/bin") {
+        include("CodeFormat.exe")
+        into("CodeFormat/bin/win32-x64/")
+    }
+    from("temp/unzip/CodeFormat/linux-x64/bin") {
+        include("CodeFormat")
+        into("CodeFormat/bin/linux-x64/")
+    }
+    from("temp/unzip/CodeFormat/darwin-x64/bin") {
+        include("CodeFormat")
+        into("CodeFormat/bin/darwin-x64/")
+    }
+    from("temp/unzip/CodeFormat/darwin-arm64/bin") {
+        include("CodeFormat")
+        into("CodeFormat/bin/darwin-arm64/")
+    }
+
     destinationDir = file("src/main/resources")
 }
 
@@ -189,7 +227,7 @@ tasks {
     }
 
     buildPlugin {
-        dependsOn("install", "installEmmyDebugger")
+        dependsOn("install")
     }
     // fix by https://youtrack.jetbrains.com/issue/IDEA-325747/IDE-always-actively-disables-LSP-plugins-if-I-ask-the-plugin-to-return-localized-diagnostic-messages.
     runIde {
@@ -205,6 +243,10 @@ tasks {
             copy {
                 from("${project.projectDir}/src/main/resources/debugger")
                 into("${destinationDir.path}/${pluginName.get()}/debugger")
+            }
+            copy {
+                from("${project.projectDir}/src/main/resources/CodeFormat")
+                into("\"${destinationDir.path}/${pluginName.get()}/CodeFormat")
             }
         }
     }
