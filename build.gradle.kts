@@ -120,13 +120,13 @@ task("unzip", type = Copy::class) {
     from(zipTree("temp/codestyle/win32-x64.zip")) {
         into("CodeFormat")
     }
-    from(tarTree("emp/codestyle/darwin-x64.tar.gz")) {
+    from(tarTree("temp/codestyle/darwin-x64.tar.gz")) {
         into("CodeFormat")
     }
-    from(tarTree("emp/codestyle/darwin-arm64.tar.gz")) {
+    from(tarTree("temp/codestyle/darwin-arm64.tar.gz")) {
         into("CodeFormat")
     }
-    from(tarTree("emp/codestyle/linux-x64.tar.gz")) {
+    from(tarTree("temp/codestyle/linux-x64.tar.gz")) {
         into("CodeFormat")
     }
 
