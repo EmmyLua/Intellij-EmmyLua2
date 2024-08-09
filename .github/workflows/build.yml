@@ -1,0 +1,38 @@
+name: Build Plugin
+
+on: push
+#on:
+#  push:
+#    branches: [ "master" ]
+#  pull_request:
+#    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    env:
+      CI_BUILD_VERSION: build.test.${{ github.run_number }}
+      RUNNER_NUMBER: ${{ github.run_number }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build
+        run: |
+          chmod 777 gradlew
+          ./gradlew.bat buildPlugin
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3.1.0
+        with:
+          name: ${{ env.CI_BUILD_VERSION }}
+          path: build/distributions/*.zip
