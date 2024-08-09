@@ -246,7 +246,7 @@ tasks {
             }
             copy {
                 from("${project.projectDir}/src/main/resources/CodeFormat")
-                into("\"${destinationDir.path}/${pluginName.get()}/CodeFormat")
+                into("${destinationDir.path}/${pluginName.get()}/CodeFormat")
             }
         }
     }
