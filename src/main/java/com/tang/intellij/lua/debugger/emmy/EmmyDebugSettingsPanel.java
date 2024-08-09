@@ -157,7 +157,7 @@ public class EmmyDebugSettingsPanel extends SettingsEditor<EmmyDebugConfiguratio
 
     private boolean isClient() {
         EmmyDebugTransportType type = getType();
-        return type == EmmyDebugTransportType.TCP_CLIENT || type == EmmyDebugTransportType.PIPE_CLIENT;
+        return type == EmmyDebugTransportType.TCP_CLIENT;
     }
 
     private EmmyDebugTransportType getType() {
@@ -190,7 +190,7 @@ public class EmmyDebugSettingsPanel extends SettingsEditor<EmmyDebugConfiguratio
     private EditorEx createEditorEx(Project project) {
         EditorFactory editorFactory = EditorFactory.getInstance();
         Document editorDocument = editorFactory.createDocument("");
-        return (EditorEx)editorFactory.createEditor(editorDocument, project, LuaFileType.INSTANCE, false);
+        return (EditorEx) editorFactory.createEditor(editorDocument, project, LuaFileType.INSTANCE, false);
     }
 
     private void updateCode() {
@@ -218,7 +218,7 @@ public class EmmyDebugSettingsPanel extends SettingsEditor<EmmyDebugConfiguratio
             sb.append("package.cpath = package.cpath .. ';")
                     .append(getDebuggerFolder())
                     .append("/")
-                    .append(Objects.equals(System.getProperty("os.arch"), "arm64") ? "arm64": "x64")
+                    .append(Objects.equals(System.getProperty("os.arch"), "arm64") ? "arm64" : "x64")
                     .append("/?.dylib'\n");
         } else {
             sb.append("package.cpath = package.cpath .. ';")
@@ -227,16 +227,9 @@ public class EmmyDebugSettingsPanel extends SettingsEditor<EmmyDebugConfiguratio
         }
         sb.append("local dbg = require('emmy_core')\n");
         EmmyDebugTransportType type = getType();
-        if (type == EmmyDebugTransportType.PIPE_CLIENT) {
-            sb.append("dbg.pipeListen('").append(getPipeName()).append("')\n");
-        }
-        else if (type == EmmyDebugTransportType.PIPE_SERVER) {
-            sb.append("dbg.pipeConnect('").append(getPipeName()).append("')\n");
-        }
-        else if (type == EmmyDebugTransportType.TCP_CLIENT) {
+        if (type == EmmyDebugTransportType.TCP_CLIENT) {
             sb.append("dbg.tcpListen('").append(getHost()).append("', ").append(getPort()).append(")\n");
-        }
-        else if (type == EmmyDebugTransportType.TCP_SERVER) {
+        } else if (type == EmmyDebugTransportType.TCP_SERVER) {
             sb.append("dbg.tcpConnect('").append(getHost()).append("', ").append(getPort()).append(")\n");
         }
 
