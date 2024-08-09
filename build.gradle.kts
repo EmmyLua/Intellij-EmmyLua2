@@ -57,7 +57,7 @@ task("download", type = Download::class) {
 }
 
 task("makeServer", type = Copy::class) {
-//    dependsOn("download")
+    dependsOn("download")
     from(zipTree("temp/EmmyLua.LanguageServer-win32-x64.zip")) {
         into("server/")
     }
