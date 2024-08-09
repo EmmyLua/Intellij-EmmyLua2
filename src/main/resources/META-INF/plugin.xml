@@ -14,14 +14,17 @@
          Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
     <description><![CDATA[
-EmmyLua is a powerful Lua language support plugin that provides the following features:
+    Support for Lua programming language.<br>
+    <h2>Features</h2>
 
-- All Lua versions support (Lua 5.1, Lua 5.2, Lua 5.3, Lua 5.4, LuaJIT)
-- Almost Language features
-- Lua Debugger
+    <ul>
+    <li> All Lua versions support (<code>Lua 5.1</code>, <code>Lua 5.2</code>, <code>Lua 5.3</code>, <code>Lua 5.4</code>, <code>Luajit</code>)</li>
+    <li> Support Enhance EmmyLua Doc</li>
+    <li> Support Almost language IDE features Provider by <a href="https://github.com/CppCXY/EmmyLuaAnalyzer">EmmyLuaAnalyzer</a></li>
+    <li> More better formatter base on <a href="https://github.com/CppCXY/EmmyLuaCodeStyle">EmmyLuaCodeStyle</a></li>
+    <li> EmmyLua Lua Debugger</li>
 
-This plugin is based on [EmmyLuaAnalyzer](https://github.com/CppCXY/EmmyLuaAnalyzer), offering the same powerful features and user experience as VSCode.
-
+    </ul>
   ]]></description>
 
     <!-- Product and plugin compatibility requirements.
