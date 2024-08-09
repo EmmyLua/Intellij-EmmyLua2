@@ -86,7 +86,7 @@ task("downloadEmmyLuaCodeStyle", type = Download::class) {
 }
 
 task("unzip", type = Copy::class) {
-    dependsOn("download", "downloadEmmyDebugger")
+    dependsOn("download", "downloadEmmyDebugger", "downloadEmmyLuaCodeStyle")
     // language server
     from(zipTree("temp/EmmyLua.LanguageServer-win32-x64.zip")) {
         into("server/")
