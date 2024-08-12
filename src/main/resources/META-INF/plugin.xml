@@ -22,7 +22,7 @@
     <li> Support Enhance EmmyLua Doc</li>
     <li> Support Almost language IDE features Provider by <a href="https://github.com/CppCXY/EmmyLuaAnalyzer">EmmyLuaAnalyzer</a></li>
     <li> More better formatter base on <a href="https://github.com/CppCXY/EmmyLuaCodeStyle">EmmyLuaCodeStyle</a></li>
-    <li> EmmyLua Lua Debugger</li>
+    <li> Powerful and more performant <a href="https://github.com/EmmyLua/EmmyLuaDebugger">EmmyLuaLua Debugger</li></li>
 
     </ul>
   ]]></description>
@@ -82,8 +82,8 @@
         <applicationConfigurable
                 groupId="language"
                 instance="com.cppcxy.ide.setting.EmmyLuaSettingsPanel"
-                displayName="SumnekoLua Settings"
-                id="SumnekoLua.Settings"
+                displayName="EmmyLua Settings"
+                id="EmmyLua.Settings"
         >
         </applicationConfigurable>
 
