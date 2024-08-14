@@ -34,7 +34,6 @@ val buildDataList = listOf(
 group = "com.cppcxy"
 val emmyluaAnalyzerVersion = "0.6.3"
 val emmyDebuggerVersion = "1.8.2"
-val emmyluaCodeStyleVersion = "1.5.4"
 
 val emmyluaAnalyzerProjectUrl = "https://github.com/CppCXY/EmmyLuaAnalyzer"
 val emmyluaCodeStyleProjectUrl = "https://github.com/CppCXY/EmmyLuaCodeStyle"
@@ -72,21 +71,8 @@ task("downloadEmmyDebugger", type = Download::class) {
     dest("temp/debugger")
 }
 
-task("downloadEmmyLuaCodeStyle", type = Download::class) {
-    src(
-        arrayOf(
-            "${emmyluaCodeStyleProjectUrl}/releases/download/${emmyluaCodeStyleVersion}/darwin-arm64.tar.gz",
-            "${emmyluaCodeStyleProjectUrl}/releases/download/${emmyluaCodeStyleVersion}/darwin-x64.tar.gz",
-            "${emmyluaCodeStyleProjectUrl}/releases/download/${emmyluaCodeStyleVersion}/linux-x64.tar.gz",
-            "${emmyluaCodeStyleProjectUrl}/releases/download/${emmyluaCodeStyleVersion}/win32-x64.zip",
-        )
-    )
-
-    dest("temp/codestyle")
-}
-
 task("unzip", type = Copy::class) {
-    dependsOn("download", "downloadEmmyDebugger", "downloadEmmyLuaCodeStyle")
+    dependsOn("download", "downloadEmmyDebugger")
     // language server
     from(zipTree("temp/EmmyLua.LanguageServer-win32-x64.zip")) {
         into("server/")
@@ -115,19 +101,6 @@ task("unzip", type = Copy::class) {
     }
     from(zipTree("temp/debugger/linux-x64.zip")) {
         into("debugger/linux")
-    }
-    // codeStyle
-    from(zipTree("temp/codestyle/win32-x64.zip")) {
-        into("CodeFormat")
-    }
-    from(tarTree("temp/codestyle/darwin-x64.tar.gz")) {
-        into("CodeFormat")
-    }
-    from(tarTree("temp/codestyle/darwin-arm64.tar.gz")) {
-        into("CodeFormat")
-    }
-    from(tarTree("temp/codestyle/linux-x64.tar.gz")) {
-        into("CodeFormat")
     }
 
     destinationDir = file("temp/unzip")
@@ -160,22 +133,6 @@ task("install", type = Copy::class) {
         into("debugger/emmy/mac/arm64")
     }
 
-    from("temp/unzip/CodeFormat/win32-x64/bin") {
-        include("CodeFormat.exe")
-        into("CodeFormat/bin/win32-x64/")
-    }
-    from("temp/unzip/CodeFormat/linux-x64/bin") {
-        include("CodeFormat")
-        into("CodeFormat/bin/linux-x64/")
-    }
-    from("temp/unzip/CodeFormat/darwin-x64/bin") {
-        include("CodeFormat")
-        into("CodeFormat/bin/darwin-x64/")
-    }
-    from("temp/unzip/CodeFormat/darwin-arm64/bin") {
-        include("CodeFormat")
-        into("CodeFormat/bin/darwin-arm64/")
-    }
 
     destinationDir = file("src/main/resources")
 }
@@ -185,6 +142,7 @@ task("install", type = Copy::class) {
 intellij {
     pluginName.set("EmmyLua2")
     version.set(buildVersionData.ideaSDKVersion)
+
     type.set(buildVersionData.type) // Target IDE Platform
     sandboxDir.set("${project.buildDir}/${buildVersionData.ideaSDKShortVersion}/idea-sandbox")
     plugins.set(listOf("com.redhat.devtools.lsp4ij:0.3.0"))
@@ -243,10 +201,6 @@ tasks {
             copy {
                 from("${project.projectDir}/src/main/resources/debugger")
                 into("${destinationDir.path}/${pluginName.get()}/debugger")
-            }
-            copy {
-                from("${project.projectDir}/src/main/resources/CodeFormat")
-                into("${destinationDir.path}/${pluginName.get()}/CodeFormat")
             }
         }
     }

@@ -89,7 +89,6 @@
 
         <statusBarWidgetFactory id="EmmyLuaAnalyzer" implementation="com.cppcxy.ide.editor.statusbar.StatusBarWidgetFactory"/>
         <lang.commenter language="Lua" implementationClass="com.tang.intellij.lua.comment.LuaCommenter"/>
-        <formattingService implementation="com.cppcxy.ide.formatter.EmmyLuaCodeStyle"/>
         <codeInsight.parameterInfo
                 language="Lua"
                 implementationClass="com.redhat.devtools.lsp4ij.features.signatureHelp.LSPParameterInfoHandler"/>
