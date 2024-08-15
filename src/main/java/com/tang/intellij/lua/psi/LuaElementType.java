@@ -46,7 +46,7 @@ public class LuaElementType extends IElementType {
         super(debugName, LuaLanguage.INSTANCE);
     }
 
-    public static CustomParsingType DOC_COMMENT = new CustomParsingType ("DOC_COMMENT", LuaLanguage.INSTANCE) {
+    public static CustomParsingType DOC_COMMENT =  new CustomParsingType ("DOC_COMMENT", LuaLanguage.INSTANCE) {
         @NotNull
         @Override
         public ASTNode parse(@NotNull CharSequence charSequence, @NotNull CharTable charTable) {

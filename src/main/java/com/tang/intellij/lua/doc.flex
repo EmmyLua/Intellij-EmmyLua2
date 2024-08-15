@@ -85,22 +85,6 @@ SINGLE_QUOTED_STRING='([^\\\']|\\\S|\\[\r\n])*'?    //'([^\\'\r\n]|\\[^\r\n])*'?
 }
 
 <xTAG_NAME> {
-    "field"                    { yybegin(xFIELD); return TAG_NAME_FIELD; }
-    "param"                    { yybegin(xPARAM); return TAG_NAME_PARAM; }
-    "vararg"                   { yybegin(xPARAM); return TAG_NAME_VARARG; }
-    "class"                    { yybegin(xCLASS); return TAG_NAME_CLASS; }
-    "module"                   { yybegin(xCLASS); return TAG_NAME_MODULE; }
-    "return"                   { beginType(); return TAG_NAME_RETURN; }
-    "type"                     { beginType(); return TAG_NAME_TYPE;}
-    "overload"                 { beginType(); return TAG_NAME_OVERLOAD; }
-    "private"                  { return TAG_NAME_PRIVATE; }
-    "protected"                { return TAG_NAME_PROTECTED; }
-    "public"                   { return TAG_NAME_PUBLIC; }
-    "language"                 { yybegin(xTAG_WITH_ID); return TAG_NAME_LANGUAGE;}
-    "generic"                  { yybegin(xGENERIC); return TAG_NAME_GENERIC; }
-    "see"                      { yybegin(xTAG); return TAG_NAME_SEE; }
-    "alias"                    { yybegin(xALIAS); return TAG_NAME_ALIAS; }
-    "suppress"                 { yybegin(xSUPPRESS); return TAG_NAME_SUPPRESS; }
     {ID}                       { yybegin(xCOMMENT_STRING); return TAG_NAME; }
     [^]                        { return com.intellij.psi.TokenType.BAD_CHARACTER; }
 }

@@ -90,6 +90,10 @@ public class LuaDocVisitor extends PsiElementVisitor {
     visitTag(o);
   }
 
+  public void visitTagNormal(@NotNull LuaDocTagNormal o) {
+    visitTag(o);
+  }
+
   public void visitTagOverload(@NotNull LuaDocTagOverload o) {
     visitTag(o);
   }
