@@ -19,7 +19,6 @@ package com.tang.intellij.lua.comment.psi;
 import com.tang.intellij.lua.psi.LuaPsiElement;
 
 /**
- * 注释接口
  * Created by TangZX on 2016/11/25.
  */
 public interface LuaDocPsiElement extends LuaPsiElement {
