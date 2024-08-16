@@ -143,21 +143,8 @@ class LuaParserDefinition : ParserDefinition {
             LuaTypes.TRUE
         )
         val DOC_TAG_TOKENS = TokenSet.create(
-            LuaDocTypes.TAG_NAME_PARAM,
-            LuaDocTypes.TAG_NAME_RETURN,
-            LuaDocTypes.TAG_NAME_CLASS,
-            LuaDocTypes.TAG_NAME_MODULE,
-            LuaDocTypes.TAG_NAME_TYPE,
-            LuaDocTypes.TAG_NAME_FIELD,
+            LuaDocTypes.TAG_NAME,
             LuaDocTypes.TAG_NAME_LANGUAGE,
-            LuaDocTypes.TAG_NAME_OVERLOAD,
-            LuaDocTypes.TAG_NAME_PRIVATE,
-            LuaDocTypes.TAG_NAME_PROTECTED,
-            LuaDocTypes.TAG_NAME_PUBLIC,
-            LuaDocTypes.TAG_NAME_SEE,
-            LuaDocTypes.TAG_NAME_GENERIC,
-            LuaDocTypes.TAG_NAME_VARARG,
-            LuaDocTypes.TAG_NAME_ALIAS
         )
         val DOC_KEYWORD_TOKENS = TokenSet.create(
             LuaDocTypes.FUN,

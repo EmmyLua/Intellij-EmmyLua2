@@ -57,23 +57,14 @@
         DASHES = 'DASHES'
         STRING_BEGIN = 'STRING_BEGIN'
         STRING = 'STRING'
-        TAG_NAME_RETURN = 'return'
         TAG_NAME = 'TAG_NAME'
-        TAG_NAME_PARAM = 'param'
-        TAG_NAME_VARARG = 'vararg'
-        TAG_NAME_PRIVATE = 'private'
-        TAG_NAME_PROTECTED = 'protected'
-        TAG_NAME_PUBLIC = 'public'
-        TAG_NAME_CLASS = 'class'
-        TAG_NAME_FIELD = 'field'
-        TAG_NAME_TYPE = 'type'
         TAG_NAME_LANGUAGE = 'language'
-        TAG_NAME_OVERLOAD = 'overload'
-        TAG_NAME_MODULE = 'module'
-        TAG_NAME_SEE = 'see'
-        TAG_NAME_GENERIC = 'generic'
-        TAG_NAME_ALIAS = 'alias'
-        TAG_NAME_SUPPRESS = 'suppress'
+        NUMBER = 'regexp:[0-9]+'
+        ASYNC = 'async'
+        NULLABLE = '?'
+        LBRACK = '['
+        RBRACK = ']'
+        PACKAGE = 'package'
   ]
   implements("tag.*") = [
     "com.tang.intellij.lua.comment.psi.LuaDocTag"
@@ -85,128 +76,11 @@ doc ::= (DASHES after_dash?)*
 private after_dash ::= doc_item | STRING { recoverWhile=after_dash_recover }
 private after_dash_recover ::= !(DASHES)
 private doc_item ::= '@' tag_normal
-tag_normal ::= TAG_NAME comment_string? {
+tag_normal ::= TAG_NAME any* {
     pin = 1
+    recoverWhile = after_dash_recover
 }
 
-ty ::= union_ty | function_ty | table_ty | generic_ty | arr_ty | general_ty | par_ty | string_literal_ty {
-}
-
-arr_ty ::= ty '[]' {
-}
-general_ty ::= class_name_ref {
-}
-par_ty ::= '(' ty ')' {
-    pin = 1
-}
-string_literal_ty ::= STRING_LITERAL{
-}
-
-private fieldList ::= (tableField (',' tableField)* (',')?)?
-
-private tableField2 ::= ID ':' ty { pin = 1 }
-
-tableField ::= tableField2 {
-}
-
-table_def ::= '{' fieldList '}' {
-    pin = 1
-}
-
-table_ty ::= table_def {
-}
-
-private generic_param_list ::= (ty ',')* ty
-generic_ty ::= general_ty '<' generic_param_list '>' {
-    pin = 2
-}
-
-function_param ::= ID (':' ty)? {
-    pin = 1
-}
-vararg_param ::= VARARG ty {
-    pin = 1
-}
-private function_param_list::= (function_param ',')* ((function_param|vararg_param) |& ')')
-private function_generic ::= '<' generic_def (',' generic_def)* '>' {
-    pin = 1
-}
-function_ty ::= fun function_generic? '(' function_param_list ')' (':' type_list)? {
-    pin = 1
-}
-
-union_ty ::= ty ('|' ty)+ {
-}
-access_modifier ::= PRIVATE | PUBLIC | PROTECTED | TAG_NAME_PRIVATE | TAG_NAME_PUBLIC | TAG_NAME_PROTECTED
-
-tag_field ::= TAG_NAME_FIELD access_modifier? ('<' class_name_ref '>')? ID ty comment_string? {
-    pin = 1
-}
-
-//--- tag
-tag_def ::= TAG_NAME_NAME comment_string? {
-    pin = 1
-    methods = [
-        tagName = 'TAG_NAME_NAME'
-    ]
-}
-
-//@overload
-tag_overload ::= TAG_NAME_OVERLOAD function_ty { pin = 1 }
-
-//@language json
-tag_lan ::= TAG_NAME_LANGUAGE ID comment_string? { pin = 1 }
-
-//@param PARAM_NAME CLASS_REF
-param_name_ref ::= ID {
-}
-tag_param ::= TAG_NAME_PARAM param_name_ref ty comment_string? {
-    pin = 1
-}
-tag_vararg ::= TAG_NAME_VARARG ty comment_string? {
-    pin = 1
-}
-
-//--- return
-type_list ::= ty(',' ty)*
-tag_return ::= TAG_NAME_RETURN type_list comment_string? {
-    pin = 1
-}
-
-class_name_ref ::= ID {
-}
-tag_class ::= (TAG_NAME_CLASS|TAG_NAME_MODULE) ID (EXTENDS class_name_ref)? comment_string? {
-    pin = 2
-}
-
-// @type CLASS_REF
-tag_type ::= TAG_NAME_TYPE ty comment_string? {
-    pin = 1
-}
-
-comment_string ::= STRING_BEGIN? STRING? {
-    //pin = 1
-    methods = [
-        string = "STRING"
-    ]
-}
-
-tag_see ::= TAG_NAME_SEE class_name_ref (SHARP ID)? {
-    pin = 1
-}
-
-generic_def ::= ID (EXTENDS class_name_ref)? {
-    pin = 1
-}
-
-tag_generic_list ::= TAG_NAME_GENERIC generic_def (',' generic_def)* {
-    pin = 1
-}
-
-tag_alias ::= TAG_NAME_ALIAS ID ty {
-    pin = 1
-}
-
-tag_suppress ::= TAG_NAME_SUPPRESS ID (',' ID)* {
-    pin = 1
-}
+any ::= ID | STRING | NUMBER | AT | SHARP | EQ | COMMA | EXTENDS | OR | GT | LT | LPAREN | RPAREN | LCURLY | RCURLY
+| STRING_LITERAL | ARR | FUN | VARARG | PRIVATE | PROTECTED | PUBLIC | DASHES | STRING_BEGIN | TAG_NAME |
+TAG_NAME_LANGUAGE | ASYNC | NULLABLE | LBRACK | RBRACK | PACKAGE

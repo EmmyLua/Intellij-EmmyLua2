@@ -19,7 +19,6 @@ import com.tang.intellij.lua.psi.*
 class LuaAnnotator : Annotator {
     private var myHolder: AnnotationHolder? = null
     private val luaVisitor = LuaElementVisitor()
-    private val docVisitor = LuaDocElementVisitor()
 
 //    companion object {
 //        private val STD_MARKER = Key.create<Boolean>("lua.std.marker")
@@ -28,9 +27,7 @@ class LuaAnnotator : Annotator {
 
     override fun annotate(psiElement: PsiElement, annotationHolder: AnnotationHolder) {
         myHolder = annotationHolder
-        if (psiElement is LuaDocPsiElement) {
-            psiElement.accept(docVisitor)
-        } else if (psiElement is LuaPsiElement) {
+        if (psiElement is LuaPsiElement) {
             psiElement.accept(luaVisitor)
         }
         myHolder = null
@@ -76,7 +73,7 @@ class LuaAnnotator : Annotator {
             super.visitTableField(o)
             val id = o.id
             if (id != null) {
-                newInfoAnnotation(id, null) {
+                newInfoAnnotation(id, "field") {
                     it.textAttributes(LuaHighlightingData.FIELD)
                 }
             }
@@ -123,8 +120,7 @@ class LuaAnnotator : Annotator {
                 newInfoAnnotation(expr, null) {
                     it.textAttributes(LuaHighlightingData.INSTANCE_METHOD)
                 }
-            }
-            else if(expr is LuaIndexExpr) {
+            } else if (expr is LuaIndexExpr) {
                 val id = expr.id
                 if (id != null) {
                     newInfoAnnotation(id, null) {
@@ -137,7 +133,7 @@ class LuaAnnotator : Annotator {
         override fun visitFuncDef(o: LuaFuncDef) {
             super.visitFuncDef(o)
             val id = o.id
-            if (id != null){
+            if (id != null) {
                 newInfoAnnotation(id, null) {
                     it.textAttributes(LuaHighlightingData.GLOBAL_FUNCTION)
                 }
@@ -157,32 +153,12 @@ class LuaAnnotator : Annotator {
         }
     }
 
-    internal inner class LuaDocElementVisitor : LuaDocVisitor() {
-        override fun visitTagClass(o: LuaDocTagClass) {
-            super.visitTagClass(o)
-            newInfoAnnotation(o.id, null) {
-                it.textAttributes(LuaHighlightingData.CLASS_NAME)
-            }
-        }
-
-        override fun visitTagAlias(o: LuaDocTagAlias) {
-            super.visitTagAlias(o)
-            val id = o.id ?: return
-            newInfoAnnotation(id, null) {
-                it.textAttributes(LuaHighlightingData.TYPE_ALIAS)
-            }
-        }
-
-        override fun visitClassNameRef(o: LuaDocClassNameRef) {
-            newInfoAnnotation(o, null) {
-                it.textAttributes(LuaHighlightingData.CLASS_REFERENCE)
-            }
-        }
-
-        override fun visitParamNameRef(o: LuaDocParamNameRef) {
-            newInfoAnnotation(o, null) {
-                it.textAttributes(LuaHighlightingData.DOC_COMMENT_TAG_VALUE)
-            }
-        }
-    }
+//    internal inner class LuaDocElementVisitor : LuaDocVisitor() {
+//        override fun visitTagClass(o: LuaDocTagClass) {
+//            super.visitTagClass(o)
+//            newInfoAnnotation(o.id, null) {
+//                it.textAttributes(LuaHighlightingData.CLASS_NAME)
+//            }
+//        }
+//    }
 }

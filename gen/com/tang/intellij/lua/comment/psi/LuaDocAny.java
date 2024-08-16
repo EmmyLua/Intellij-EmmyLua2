@@ -5,9 +5,12 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface LuaDocParamNameRef extends LuaDocPsiElement {
+public interface LuaDocAny extends LuaDocPsiElement {
 
-  @NotNull
+  @Nullable
   PsiElement getId();
+
+  @Nullable
+  PsiElement getNumber();
 
 }

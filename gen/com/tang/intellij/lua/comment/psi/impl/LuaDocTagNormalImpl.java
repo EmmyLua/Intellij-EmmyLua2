@@ -28,9 +28,9 @@ public class LuaDocTagNormalImpl extends ASTWrapperPsiElement implements LuaDocT
   }
 
   @Override
-  @Nullable
-  public LuaDocCommentString getCommentString() {
-    return findChildByClass(LuaDocCommentString.class);
+  @NotNull
+  public List<LuaDocAny> getAnyList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, LuaDocAny.class);
   }
 
 }
