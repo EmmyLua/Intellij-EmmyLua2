@@ -25,8 +25,8 @@ data class BuildData(
 val buildDataList = listOf(
     BuildData(
         ideaSDKShortVersion = "242",
-        ideaSDKVersion = "LATEST-EAP-SNAPSHOT",
-        sinceBuild = "233",
+        ideaSDKVersion = "2024.2",
+        sinceBuild = "232",
         untilBuild = "242.*",
     )
 )
@@ -145,7 +145,7 @@ intellij {
 
     type.set(buildVersionData.type) // Target IDE Platform
     sandboxDir.set("${project.buildDir}/${buildVersionData.ideaSDKShortVersion}/idea-sandbox")
-    plugins.set(listOf("com.redhat.devtools.lsp4ij:0.3.0"))
+    plugins.set(listOf("com.redhat.devtools.lsp4ij:0.4.0"))
 }
 
 repositories {
