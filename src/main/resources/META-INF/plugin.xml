@@ -51,7 +51,7 @@
         <lang.braceMatcher language="Lua" implementationClass="com.tang.intellij.lua.braces.LuaBraceMatcher"/>
         <lang.quoteHandler language="Lua"
                            implementationClass="com.tang.intellij.lua.codeInsight.editorActions.LuaQuoteHandler"/>
-        <languageInjector implementation="com.tang.intellij.lua.lang.LuaLanguageInjector"/>
+        <!--        <languageInjector implementation="com.tang.intellij.lua.lang.LuaLanguageInjector"/>-->
 
         <customPasteProvider
                 implementation="com.tang.intellij.lua.codeInsight.editorActions.StringLiteralPasteProvider"/>
@@ -60,8 +60,8 @@
         <lang.syntaxHighlighterFactory
                 language="Lua"
                 implementationClass="com.tang.intellij.lua.highlighting.LuaSyntaxHighlighterFactory"/>
-<!--        <highlightErrorFilter implementation="com.tang.intellij.lua.highlighting.LuaHighlightErrorFilter"/>-->
-<!--        <annotator language="Lua" implementationClass="com.tang.intellij.lua.annotator.LuaAnnotator"/>-->
+        <!--        <highlightErrorFilter implementation="com.tang.intellij.lua.highlighting.LuaHighlightErrorFilter"/>-->
+        <annotator language="Lua" implementationClass="com.tang.intellij.lua.annotator.LuaAnnotator"/>
 
         <highlightUsagesHandlerFactory
                 implementation="com.tang.intellij.lua.codeInsight.highlighting.LuaHighlightUsagesHandlerFactory"/>
@@ -89,11 +89,17 @@
         >
         </applicationConfigurable>
 
-        <statusBarWidgetFactory id="EmmyLuaAnalyzer" implementation="com.cppcxy.ide.editor.statusbar.StatusBarWidgetFactory"/>
+        <statusBarWidgetFactory id="EmmyLuaAnalyzer"
+                                implementation="com.cppcxy.ide.editor.statusbar.StatusBarWidgetFactory"/>
         <lang.commenter language="Lua" implementationClass="com.tang.intellij.lua.comment.LuaCommenter"/>
         <codeInsight.parameterInfo
                 language="Lua"
                 implementationClass="com.redhat.devtools.lsp4ij.features.signatureHelp.LSPParameterInfoHandler"/>
+        <!-- LSP textDocument/documentSymbol -->
+        <lang.psiStructureViewFactory
+                language="EmmyLua"
+                implementationClass="com.redhat.devtools.lsp4ij.features.documentSymbol.LSPDocumentSymbolStructureViewFactory"/>
+
     </extensions>
 
     <extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">
