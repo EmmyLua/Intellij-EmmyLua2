@@ -97,7 +97,8 @@
                 implementationClass="com.redhat.devtools.lsp4ij.features.signatureHelp.LSPParameterInfoHandler"/>
         <!-- LSP textDocument/documentSymbol -->
         <lang.psiStructureViewFactory
-                language="EmmyLua"
+                id="EmmyLua"
+                language="Lua"
                 implementationClass="com.redhat.devtools.lsp4ij.features.documentSymbol.LSPDocumentSymbolStructureViewFactory"/>
 
     </extensions>
