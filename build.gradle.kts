@@ -14,12 +14,12 @@ data class BuildData(
     val ideaSDKVersion: String,
     val sinceBuild: String,
     val untilBuild: String,
-    val archiveName: String = "IntelliJ-SumnekoLua",
+    val archiveName: String = "IntelliJ-EmmyLua2",
     val jvmTarget: String = "17",
     val targetCompatibilityLevel: JavaVersion = JavaVersion.VERSION_17,
     // https://github.com/JetBrains/gradle-intellij-plugin/issues/403#issuecomment-542890849
     val instrumentCodeCompilerVersion: String = ideaSDKVersion,
-    val type: String = "IU"
+    val type: String = "IC"
 )
 
 val buildDataList = listOf(
@@ -27,7 +27,7 @@ val buildDataList = listOf(
         ideaSDKShortVersion = "242",
         ideaSDKVersion = "2024.2",
         sinceBuild = "232",
-        untilBuild = "242.*",
+        untilBuild = "243.*",
     )
 )
 
@@ -145,7 +145,7 @@ intellij {
 
     type.set(buildVersionData.type) // Target IDE Platform
     sandboxDir.set("${project.buildDir}/${buildVersionData.ideaSDKShortVersion}/idea-sandbox")
-    plugins.set(listOf("com.redhat.devtools.lsp4ij:0.4.0"))
+    plugins.set(listOf("com.redhat.devtools.lsp4ij:0.5.0"))
 }
 
 repositories {

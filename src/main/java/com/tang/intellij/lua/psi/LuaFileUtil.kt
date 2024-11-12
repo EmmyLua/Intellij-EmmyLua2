@@ -68,7 +68,7 @@ object LuaFileUtil {
         else {
             val extensions = LuaFileManager.extensions
             for (extension in extensions) {
-                val fileName = if (extension.isEmpty()) fixedShortUrl else "$fixedShortUrl.$extension"
+                val fileName = if (extension.isEmpty()) fixedShortUrl else "$fixedShortUrl$extension"
                 val virtualFile = VfsUtil.findRelativeFile(fileName, project.baseDir)
                 if (virtualFile != null && virtualFile.exists()) {
                     return virtualFile
