@@ -22,6 +22,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.psi.search.FilenameIndex
+import com.intellij.psi.search.ProjectAndLibrariesScope
 import java.io.File
 
 /**
@@ -59,7 +61,7 @@ object LuaFileUtil {
         // Check if the fixedShortUrl already has an extension
         val hasExtension = fixedShortUrl.contains(".")
         if (hasExtension) {
-            val virtualFile = VfsUtil.findRelativeFile(fixedShortUrl, project.baseDir)
+            val virtualFile = findVirtualFile(project, fixedShortUrl);
             if (virtualFile != null && virtualFile.exists()) {
                 return virtualFile
             }
@@ -69,13 +71,32 @@ object LuaFileUtil {
             val extensions = LuaFileManager.extensions
             for (extension in extensions) {
                 val fileName = if (extension.isEmpty()) fixedShortUrl else "$fixedShortUrl$extension"
-                val virtualFile = VfsUtil.findRelativeFile(fileName, project.baseDir)
+                val virtualFile = findVirtualFile(project, fileName)
                 if (virtualFile != null && virtualFile.exists()) {
                     return virtualFile
                 }
             }
         }
         return null
+    }
+
+    fun findVirtualFile(project: Project, filename: String): VirtualFile? {
+        val files = FilenameIndex.getVirtualFilesByName(filename, ProjectAndLibrariesScope(project))
+        var perfect: VirtualFile? = null
+        var perfectMatch = Int.MAX_VALUE
+        for (file in files) {
+            val path = file.canonicalPath
+            if (path != null && perfectMatch > path.length && path.endsWith(filename)) {
+                perfect = file
+                perfectMatch = path.length
+            }
+        }
+
+        if (perfect != null) {
+            return perfect
+        }
+
+        return VfsUtil.findRelativeFile(filename, project.baseDir);
     }
 
     fun getPluginVirtualFile(path: String): String? {
