@@ -8,19 +8,18 @@ plugins {
 }
 
 group = "com.cppcxy"
-val emmyluaAnalyzerVersion = "0.7.1"
+val emmyluaAnalyzerVersion = "0.4.6"
 val emmyDebuggerVersion = "1.8.2"
 
-val emmyluaAnalyzerProjectUrl = "https://github.com/CppCXY/EmmyLuaAnalyzer"
-val emmyluaCodeStyleProjectUrl = "https://github.com/CppCXY/EmmyLuaCodeStyle"
+val emmyluaAnalyzerProjectUrl = "https://github.com/CppCXY/emmylua-analyzer-rust"
 
 task("download", type = Download::class) {
     src(
         arrayOf(
-            "${emmyluaAnalyzerProjectUrl}/releases/download/${emmyluaAnalyzerVersion}/EmmyLua.LanguageServer-win32-x64.zip",
-            "${emmyluaAnalyzerProjectUrl}/releases/download/${emmyluaAnalyzerVersion}/EmmyLua.LanguageServer-linux-x64.tar.gz",
-            "${emmyluaAnalyzerProjectUrl}/releases/download/${emmyluaAnalyzerVersion}/EmmyLua.LanguageServer-darwin-arm64.zip",
-            "${emmyluaAnalyzerProjectUrl}/releases/download/${emmyluaAnalyzerVersion}/EmmyLua.LanguageServer-darwin-x64.zip",
+            "${emmyluaAnalyzerProjectUrl}/releases/download/${emmyluaAnalyzerVersion}/emmylua_ls-win32-x64.zip",
+            "${emmyluaAnalyzerProjectUrl}/releases/download/${emmyluaAnalyzerVersion}/emmylua_ls-linux-x64.tar.gz",
+            "${emmyluaAnalyzerProjectUrl}/releases/download/${emmyluaAnalyzerVersion}/emmylua_ls-darwin-arm64.tar.gz",
+            "${emmyluaAnalyzerProjectUrl}/releases/download/${emmyluaAnalyzerVersion}/emmylua_ls-darwin-x64.tar.gz",
         )
     )
     dest("temp")
@@ -43,17 +42,17 @@ task("downloadEmmyDebugger", type = Download::class) {
 task("unzip", type = Copy::class) {
     dependsOn("download", "downloadEmmyDebugger")
     // language server
-    from(zipTree("temp/EmmyLua.LanguageServer-win32-x64.zip")) {
-        into("server/")
+    from(zipTree("temp/emmylua_ls-win32-x64.zip")) {
+        into("server/win32-x64")
     }
-    from(tarTree("temp/EmmyLua.LanguageServer-linux-x64.tar.gz")) {
-        into("server/EmmyLua.LanguageServer-linux-x64")
+    from(tarTree("temp/emmylua_ls-linux-x64.tar.gz")) {
+        into("server/linux-x64")
     }
-    from(zipTree("temp/EmmyLua.LanguageServer-darwin-arm64.zip")) {
-        into("server/")
+    from(zipTree("temp/emmylua_ls-darwin-arm64.tar.gz")) {
+        into("server/darwin-arm64")
     }
-    from(zipTree("temp/EmmyLua.LanguageServer-darwin-x64.zip")) {
-        into("server/")
+    from(zipTree("temp/emmylua_ls-darwin-x64.tar.gz")) {
+        into("server/darwin-x64")
     }
     // debugger
     from(zipTree("temp/debugger/win32-x86.zip")) {
@@ -173,6 +172,11 @@ tasks {
 
     buildPlugin {
         dependsOn("install")
+    }
+
+    // fix by https://youtrack.jetbrains.com/issue/IDEA-325747/IDE-always-actively-disables-LSP-plugins-if-I-ask-the-plugin-to-return-localized-diagnostic-messages.
+    runIde {
+        autoReloadPlugins.set(false)
     }
 
     prepareSandbox {

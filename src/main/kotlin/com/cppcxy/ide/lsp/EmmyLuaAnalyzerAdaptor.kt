@@ -13,15 +13,15 @@ object EmmyLuaAnalyzerAdaptor {
     private val exe: String
         get() {
             return if (SystemInfoRt.isWindows) {
-                "EmmyLua.LanguageServer-win32-x64/EmmyLua.LanguageServer.exe"
+                "win32-x64/emmylua_ls.exe"
             } else if (SystemInfoRt.isMac) {
                 if (System.getProperty("os.arch") == "arm64") {
-                    "EmmyLua.LanguageServer-darwin-arm64/EmmyLua.LanguageServer"
+                    "darwin-arm64/emmylua_ls"
                 } else {
-                    "EmmyLua.LanguageServer-darwin-x64/EmmyLua.LanguageServer"
+                    "darwin-x64/emmylua_ls"
                 }
             } else {
-                "EmmyLua.LanguageServer-linux-x64/EmmyLua.LanguageServer"
+                "linux-x64/emmylua_ls"
             }
         }
 
