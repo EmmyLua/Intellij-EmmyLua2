@@ -1,4 +1,5 @@
 import de.undercouch.gradle.tasks.download.Download
+import org.gradle.internal.os.OperatingSystem
 
 plugins {
     id("java")
@@ -7,11 +8,33 @@ plugins {
     id("de.undercouch.download") version "5.6.0"
 }
 
+data class BuildData(
+    val ideaSDKShortVersion: String,
+    // https://www.jetbrains.com/intellij-repository/releases
+    val ideaSDKVersion: String,
+    val sinceBuild: String,
+    val untilBuild: String,
+    val type: String = "IC"
+)
+
+val buildDataList = listOf(
+    BuildData(
+        ideaSDKShortVersion = "243",
+        ideaSDKVersion = "2024.3",
+        sinceBuild = "243",
+        untilBuild = "251.*",
+    )
+)
+
 group = "com.cppcxy"
 val emmyluaAnalyzerVersion = "0.4.6"
 val emmyDebuggerVersion = "1.8.2"
-
 val emmyluaAnalyzerProjectUrl = "https://github.com/CppCXY/emmylua-analyzer-rust"
+val buildVersion = System.getProperty("IDEA_VER") ?: buildDataList.first().ideaSDKShortVersion
+val buildVersionData = buildDataList.find { it.ideaSDKShortVersion == buildVersion }!!
+val runnerNumber = System.getenv("RUNNER_NUMBER") ?: "Dev"
+// temporary fix 
+version = "${emmyluaAnalyzerVersion.replaceFirst("^0", "1")}.${runnerNumber}-IDEA${buildVersion}"
 
 task("download", type = Download::class) {
     src(
@@ -108,16 +131,12 @@ task("install", type = Copy::class) {
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
 intellijPlatform {
     buildSearchableOptions = false
-
     projectName = "IntelliJ-EmmyLua2"
-
+    version = buildVersionData.ideaSDKVersion
+    type = buildVersionData.type
+    sandboxDir = "${project.buildDir}/${buildVersionData.ideaSDKShortVersion}/idea-sandbox"
     pluginConfiguration {
         name = "EmmyLua2"
-
-        ideaVersion {
-            sinceBuild = "251"
-            untilBuild = "251.*"
-        }
     }
 
     publishing {
@@ -167,7 +186,8 @@ tasks {
     }
 
     patchPluginXml {
-        dependsOn("install")
+        sinceBuild.set(buildVersionData.sinceBuild)
+        untilBuild.set(buildVersionData.untilBuild)
     }
 
     buildPlugin {
