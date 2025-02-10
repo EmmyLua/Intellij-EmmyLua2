@@ -183,6 +183,7 @@ tasks {
     }
 
     patchPluginXml {
+        dependsOn("install")
         sinceBuild.set(buildVersionData.sinceBuild)
         untilBuild.set(buildVersionData.untilBuild)
     }
