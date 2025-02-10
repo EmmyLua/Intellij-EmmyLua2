@@ -1,5 +1,4 @@
 import de.undercouch.gradle.tasks.download.Download
-import org.gradle.internal.os.OperatingSystem
 
 plugins {
     id("java")
@@ -132,9 +131,7 @@ task("install", type = Copy::class) {
 intellijPlatform {
     buildSearchableOptions = false
     projectName = "IntelliJ-EmmyLua2"
-    version = buildVersionData.ideaSDKVersion
-    type = buildVersionData.type
-    sandboxDir = "${project.buildDir}/${buildVersionData.ideaSDKShortVersion}/idea-sandbox"
+
     pluginConfiguration {
         name = "EmmyLua2"
     }
@@ -192,11 +189,6 @@ tasks {
 
     buildPlugin {
         dependsOn("install")
-    }
-
-    // fix by https://youtrack.jetbrains.com/issue/IDEA-325747/IDE-always-actively-disables-LSP-plugins-if-I-ask-the-plugin-to-return-localized-diagnostic-messages.
-    runIde {
-        autoReloadPlugins.set(false)
     }
 
     prepareSandbox {
