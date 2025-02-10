@@ -1,35 +1,11 @@
 import de.undercouch.gradle.tasks.download.Download
-import org.gradle.internal.os.OperatingSystem
 
 plugins {
     id("java")
-    id("org.jetbrains.kotlin.jvm") version "2.0.0-Beta4"
-    id("org.jetbrains.intellij") version "1.17.2"
-    id("de.undercouch.download") version "5.3.0"
+    id("org.jetbrains.kotlin.jvm") version "2.1.20-Beta2"
+    id("org.jetbrains.intellij.platform") version "2.2.1"
+    id("de.undercouch.download") version "5.6.0"
 }
-
-data class BuildData(
-    val ideaSDKShortVersion: String,
-    // https://www.jetbrains.com/intellij-repository/releases
-    val ideaSDKVersion: String,
-    val sinceBuild: String,
-    val untilBuild: String,
-    val archiveName: String = "IntelliJ-EmmyLua2",
-    val jvmTarget: String = "17",
-    val targetCompatibilityLevel: JavaVersion = JavaVersion.VERSION_17,
-    // https://github.com/JetBrains/gradle-intellij-plugin/issues/403#issuecomment-542890849
-    val instrumentCodeCompilerVersion: String = ideaSDKVersion,
-    val type: String = "IC"
-)
-
-val buildDataList = listOf(
-    BuildData(
-        ideaSDKShortVersion = "242",
-        ideaSDKVersion = "2024.2",
-        sinceBuild = "232",
-        untilBuild = "243.*",
-    )
-)
 
 group = "com.cppcxy"
 val emmyluaAnalyzerVersion = "0.7.1"
@@ -37,15 +13,6 @@ val emmyDebuggerVersion = "1.8.2"
 
 val emmyluaAnalyzerProjectUrl = "https://github.com/CppCXY/EmmyLuaAnalyzer"
 val emmyluaCodeStyleProjectUrl = "https://github.com/CppCXY/EmmyLuaCodeStyle"
-
-val buildVersion = System.getProperty("IDEA_VER") ?: buildDataList.first().ideaSDKShortVersion
-
-val buildVersionData = buildDataList.find { it.ideaSDKShortVersion == buildVersion }!!
-
-val runnerNumber = System.getenv("RUNNER_NUMBER") ?: "Dev"
-
-version = "${emmyluaAnalyzerVersion}.${runnerNumber}-IDEA${buildVersion}"
-
 
 task("download", type = Download::class) {
     src(
@@ -60,13 +27,15 @@ task("download", type = Download::class) {
 }
 
 task("downloadEmmyDebugger", type = Download::class) {
-    src(arrayOf(
-        "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/darwin-arm64.zip",
-        "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/darwin-x64.zip",
-        "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/linux-x64.zip",
-        "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/win32-x64.zip",
-        "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/win32-x86.zip"
-    ))
+    src(
+        arrayOf(
+            "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/darwin-arm64.zip",
+            "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/darwin-x64.zip",
+            "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/linux-x64.zip",
+            "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/win32-x64.zip",
+            "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/win32-x86.zip"
+        )
+    )
 
     dest("temp/debugger")
 }
@@ -106,7 +75,6 @@ task("unzip", type = Copy::class) {
     destinationDir = file("temp/unzip")
 }
 
-
 task("install", type = Copy::class) {
     dependsOn("unzip")
     from("temp/unzip/server") {
@@ -139,18 +107,45 @@ task("install", type = Copy::class) {
 
 // Configure Gradle IntelliJ Plugin
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
-intellij {
-    pluginName.set("EmmyLua2")
-    version.set(buildVersionData.ideaSDKVersion)
+intellijPlatform {
+    buildSearchableOptions = false
 
-    type.set(buildVersionData.type) // Target IDE Platform
-    sandboxDir.set("${project.buildDir}/${buildVersionData.ideaSDKShortVersion}/idea-sandbox")
-    plugins.set(listOf("com.redhat.devtools.lsp4ij:0.5.0"))
+    projectName = "IntelliJ-EmmyLua2"
+
+    pluginConfiguration {
+        name = "EmmyLua2"
+
+        ideaVersion {
+            sinceBuild = "251"
+            untilBuild = "251.*"
+        }
+    }
+
+    publishing {
+        token = System.getenv("PUBLISH_TOKEN")
+    }
+
+    signing {
+        certificateChain = System.getenv("CERTIFICATE_CHAIN")
+        privateKey = System.getenv("PRIVATE_KEY")
+        password = System.getenv("PRIVATE_KEY_PASSWORD")
+    }
 }
 
 repositories {
-    maven(url = "https://www.jetbrains.com/intellij-repository/releases")
     mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
+}
+
+dependencies {
+    intellijPlatform {
+        intellijIdeaCommunity("2024.3.2.1")
+        bundledPlugins("com.intellij.java", "org.jetbrains.kotlin")
+
+        plugins("com.redhat.devtools.lsp4ij:0.9.0")
+    }
 }
 
 sourceSets {
@@ -161,35 +156,23 @@ sourceSets {
 }
 
 tasks {
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = buildVersionData.jvmTarget
+    withType<JavaCompile> {
+        sourceCompatibility = "17"
+        targetCompatibility = "17"
+    }
+
+    kotlin {
+        compilerOptions {
+            jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+        }
     }
 
     patchPluginXml {
-        sinceBuild.set(buildVersionData.sinceBuild)
-        untilBuild.set(buildVersionData.untilBuild)
-    }
-
-    instrumentCode {
-        compilerVersion.set(buildVersionData.instrumentCodeCompilerVersion)
-    }
-
-    signPlugin {
-        certificateChain.set(System.getenv("CERTIFICATE_CHAIN"))
-        privateKey.set(System.getenv("PRIVATE_KEY"))
-        password.set(System.getenv("PRIVATE_KEY_PASSWORD"))
-    }
-
-    publishPlugin {
-        token.set(System.getenv("PUBLISH_TOKEN"))
+        dependsOn("install")
     }
 
     buildPlugin {
         dependsOn("install")
-    }
-    // fix by https://youtrack.jetbrains.com/issue/IDEA-325747/IDE-always-actively-disables-LSP-plugins-if-I-ask-the-plugin-to-return-localized-diagnostic-messages.
-    runIde {
-        autoReloadPlugins.set(false)
     }
 
     prepareSandbox {
