@@ -70,10 +70,10 @@ task("unzip", type = Copy::class) {
     from(tarTree("temp/emmylua_ls-linux-x64.tar.gz")) {
         into("server/linux-x64")
     }
-    from(zipTree("temp/emmylua_ls-darwin-arm64.tar.gz")) {
+    from(tarTree("temp/emmylua_ls-darwin-arm64.tar.gz")) {
         into("server/darwin-arm64")
     }
-    from(zipTree("temp/emmylua_ls-darwin-x64.tar.gz")) {
+    from(tarTree("temp/emmylua_ls-darwin-x64.tar.gz")) {
         into("server/darwin-x64")
     }
     // debugger
