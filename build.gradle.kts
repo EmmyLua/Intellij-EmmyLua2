@@ -26,14 +26,15 @@ val buildDataList = listOf(
 )
 
 group = "com.cppcxy"
-val emmyluaAnalyzerVersion = "0.4.6"
+val emmyluaAnalyzerVersion = "0.5.0"
+val release_version = "0.8.0"
 val emmyDebuggerVersion = "1.8.2"
 val emmyluaAnalyzerProjectUrl = "https://github.com/CppCXY/emmylua-analyzer-rust"
 val buildVersion = System.getProperty("IDEA_VER") ?: buildDataList.first().ideaSDKShortVersion
 val buildVersionData = buildDataList.find { it.ideaSDKShortVersion == buildVersion }!!
 val runnerNumber = System.getenv("RUNNER_NUMBER") ?: "Dev"
 // temporary fix 
-version = "${emmyluaAnalyzerVersion.replaceFirst("^0", "1")}.${runnerNumber}-IDEA${buildVersion}"
+version = "${release_version}.${runnerNumber}-IDEA${buildVersion}"
 
 task("download", type = Download::class) {
     src(
