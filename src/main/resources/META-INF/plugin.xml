@@ -43,9 +43,9 @@
                   language="Lua"/>
 
         <!--        folding-->
-        <lang.foldingBuilder language="Lua" implementationClass="com.tang.intellij.lua.folding.LuaFoldingBuilder"/>
+        <!-- <lang.foldingBuilder language="Lua" implementationClass="com.tang.intellij.lua.folding.LuaFoldingBuilder"/>
         <lang.foldingBuilder language="Lua"
-                             implementationClass="com.tang.intellij.lua.folding.LuaRegionFoldingBuilder"/>
+                             implementationClass="com.tang.intellij.lua.folding.LuaRegionFoldingBuilder"/> -->
 
         <lang.parserDefinition language="Lua" implementationClass="com.tang.intellij.lua.lang.LuaParserDefinition"/>
         <lang.braceMatcher language="Lua" implementationClass="com.tang.intellij.lua.braces.LuaBraceMatcher"/>
@@ -61,12 +61,12 @@
                 language="Lua"
                 implementationClass="com.tang.intellij.lua.highlighting.LuaSyntaxHighlighterFactory"/>
         <!--        <highlightErrorFilter implementation="com.tang.intellij.lua.highlighting.LuaHighlightErrorFilter"/>-->
-        <annotator language="Lua" implementationClass="com.tang.intellij.lua.annotator.LuaAnnotator"/>
+        <!-- <annotator language="Lua" implementationClass="com.tang.intellij.lua.annotator.LuaAnnotator"/> -->
 
-        <highlightUsagesHandlerFactory
-                implementation="com.tang.intellij.lua.codeInsight.highlighting.LuaHighlightUsagesHandlerFactory"/>
+        <!-- <highlightUsagesHandlerFactory
+                implementation="com.tang.intellij.lua.codeInsight.highlighting.LuaHighlightUsagesHandlerFactory"/> -->
 
-        <readWriteAccessDetector implementation="com.tang.intellij.lua.codeInsight.LuaReadWriteAccessDetector"/>
+        <!-- <readWriteAccessDetector implementation="com.tang.intellij.lua.codeInsight.LuaReadWriteAccessDetector"/> -->
 
         <!--        debugger-->
         <programRunner implementation="com.tang.intellij.lua.debugger.emmy.EmmyDebuggerRunner"/>
