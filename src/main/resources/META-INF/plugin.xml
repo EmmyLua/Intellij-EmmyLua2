@@ -43,14 +43,16 @@
                   language="Lua"/>
 
         <!--        folding-->
-        <!-- <lang.foldingBuilder language="Lua" implementationClass="com.tang.intellij.lua.folding.LuaFoldingBuilder"/>
+        <!-- <lang.foldingBuilder language="Lua" implementationClass="com.tang.intellij.lua.folding.LuaFoldingBuilder"/> -->
         <lang.foldingBuilder language="Lua"
-                             implementationClass="com.tang.intellij.lua.folding.LuaRegionFoldingBuilder"/> -->
+                             implementationClass="com.redhat.devtools.lsp4ij.features.foldingRange.LSPFoldingRangeBuilder"/> 
+        
 
         <lang.parserDefinition language="Lua" implementationClass="com.tang.intellij.lua.lang.LuaParserDefinition"/>
         <lang.braceMatcher language="Lua" implementationClass="com.tang.intellij.lua.braces.LuaBraceMatcher"/>
         <lang.quoteHandler language="Lua"
-                           implementationClass="com.tang.intellij.lua.codeInsight.editorActions.LuaQuoteHandler"/>
+                           implementationClass="com.tang.intellij.lua.codeInsight.editorActions.LuaQuoteHandler"
+                           order="first"/>
         <!--        <languageInjector implementation="com.tang.intellij.lua.lang.LuaLanguageInjector"/>-->
 
         <customPasteProvider
