@@ -26,9 +26,9 @@ val buildDataList = listOf(
 )
 
 group = "com.cppcxy"
-val emmyluaAnalyzerVersion = "0.5.1"
-val release_version = "0.8.1"
-val emmyDebuggerVersion = "1.8.2"
+val emmyluaAnalyzerVersion = "0.7.0"
+val release_version = "0.8.2"
+val emmyDebuggerVersion = "1.8.4"
 val emmyluaAnalyzerProjectUrl = "https://github.com/CppCXY/emmylua-analyzer-rust"
 val buildVersion = System.getProperty("IDEA_VER") ?: buildDataList.first().ideaSDKShortVersion
 val buildVersionData = buildDataList.find { it.ideaSDKShortVersion == buildVersion }!!
