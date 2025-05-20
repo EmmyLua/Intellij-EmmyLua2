@@ -26,7 +26,7 @@ val buildDataList = listOf(
 )
 
 group = "com.cppcxy"
-val emmyluaAnalyzerVersion = "0.7.1"
+val emmyluaAnalyzerVersion = "0.7.3"
 val release_version = "0.8.3"
 val emmyDebuggerVersion = "1.8.4"
 val emmyluaAnalyzerProjectUrl = "https://github.com/CppCXY/emmylua-analyzer-rust"
