@@ -7,77 +7,109 @@ plugins {
     id("de.undercouch.download") version "5.6.0"
 }
 
+// ============= 项目配置 =============
+group = "com.cppcxy"
+
+// 版本配置
+object Versions {
+    const val emmyluaAnalyzer = "0.8.1"
+    const val release = "0.8.4"
+    const val emmyDebugger = "1.8.6"
+    const val jvm = "17"
+    const val ideaSDK = "2024.3.2.1"
+}
+
+// 构建数据配置
 data class BuildData(
     val ideaSDKShortVersion: String,
-    // https://www.jetbrains.com/intellij-repository/releases
     val ideaSDKVersion: String,
     val sinceBuild: String,
     val untilBuild: String,
     val type: String = "IC"
 )
 
-val buildDataList = listOf(
+private val buildDataList = listOf(
     BuildData(
         ideaSDKShortVersion = "243",
         ideaSDKVersion = "2024.3",
         sinceBuild = "243",
-        untilBuild = "251.*",
+        untilBuild = "251.*"
     )
 )
 
-group = "com.cppcxy"
-val emmyluaAnalyzerVersion = "0.8.0"
-val release_version = "0.8.4"
-val emmyDebuggerVersion = "1.8.4"
-val emmyluaAnalyzerProjectUrl = "https://github.com/CppCXY/emmylua-analyzer-rust"
-val buildVersion = System.getProperty("IDEA_VER") ?: buildDataList.first().ideaSDKShortVersion
-val buildVersionData = buildDataList.find { it.ideaSDKShortVersion == buildVersion }!!
-val runnerNumber = System.getenv("RUNNER_NUMBER") ?: "Dev"
-// temporary fix 
-version = "${release_version}.${runnerNumber}-IDEA${buildVersion}"
+// 动态版本配置
+private val buildVersion = System.getProperty("IDEA_VER") ?: buildDataList.first().ideaSDKShortVersion
+private val buildVersionData = buildDataList.find { it.ideaSDKShortVersion == buildVersion }
+    ?: error("Unsupported IDEA version: $buildVersion")
+private val runnerNumber = System.getenv("RUNNER_NUMBER") ?: "Dev"
 
-task("download", type = Download::class) {
-    src(
-        arrayOf(
-            "${emmyluaAnalyzerProjectUrl}/releases/download/${emmyluaAnalyzerVersion}/emmylua_ls-win32-x64.zip",
-            "${emmyluaAnalyzerProjectUrl}/releases/download/${emmyluaAnalyzerVersion}/emmylua_ls-linux-x64.tar.gz",
-            "${emmyluaAnalyzerProjectUrl}/releases/download/${emmyluaAnalyzerVersion}/emmylua_ls-darwin-arm64.tar.gz",
-            "${emmyluaAnalyzerProjectUrl}/releases/download/${emmyluaAnalyzerVersion}/emmylua_ls-darwin-x64.tar.gz",
-        )
+version = "${Versions.release}.${runnerNumber}-IDEA${buildVersion}"
+
+// 下载URL配置
+object DownloadUrls {
+    private const val emmyluaAnalyzerProjectUrl = "https://github.com/CppCXY/emmylua-analyzer-rust"
+    private const val emmyDebuggerProjectUrl = "https://github.com/EmmyLua/EmmyLuaDebugger"
+    
+    val emmyluaAnalyzer = arrayOf(
+        "$emmyluaAnalyzerProjectUrl/releases/download/${Versions.emmyluaAnalyzer}/emmylua_ls-win32-x64.zip",
+        "$emmyluaAnalyzerProjectUrl/releases/download/${Versions.emmyluaAnalyzer}/emmylua_ls-linux-x64.tar.gz",
+        "$emmyluaAnalyzerProjectUrl/releases/download/${Versions.emmyluaAnalyzer}/emmylua_ls-darwin-arm64.tar.gz",
+        "$emmyluaAnalyzerProjectUrl/releases/download/${Versions.emmyluaAnalyzer}/emmylua_ls-darwin-x64.tar.gz"
     )
-    dest("temp")
+    
+    val emmyDebugger = arrayOf(
+        "$emmyDebuggerProjectUrl/releases/download/${Versions.emmyDebugger}/darwin-arm64.zip",
+        "$emmyDebuggerProjectUrl/releases/download/${Versions.emmyDebugger}/darwin-x64.zip",
+        "$emmyDebuggerProjectUrl/releases/download/${Versions.emmyDebugger}/linux-x64.zip",
+        "$emmyDebuggerProjectUrl/releases/download/${Versions.emmyDebugger}/win32-x64.zip",
+        "$emmyDebuggerProjectUrl/releases/download/${Versions.emmyDebugger}/win32-x86.zip"
+    )
 }
 
-task("downloadEmmyDebugger", type = Download::class) {
-    src(
-        arrayOf(
-            "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/darwin-arm64.zip",
-            "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/darwin-x64.zip",
-            "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/linux-x64.zip",
-            "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/win32-x64.zip",
-            "https://github.com/EmmyLua/EmmyLuaDebugger/releases/download/${emmyDebuggerVersion}/win32-x86.zip"
-        )
-    )
+// ============= 任务配置 =============
 
+// 下载Emmy Lua分析器
+val downloadEmmyLuaAnalyzer by tasks.registering(Download::class) {
+    group = "build setup"
+    description = "Download Emmy Lua Analyzer for all platforms"
+    
+    src(DownloadUrls.emmyluaAnalyzer)
+    dest("temp/analyzer")
+    overwrite(false)
+}
+
+// 下载Emmy调试器
+val downloadEmmyDebugger by tasks.registering(Download::class) {
+    group = "build setup"
+    description = "Download Emmy Debugger for all platforms"
+    
+    src(DownloadUrls.emmyDebugger)
     dest("temp/debugger")
+    overwrite(false)
 }
 
-task("unzip", type = Copy::class) {
-    dependsOn("download", "downloadEmmyDebugger")
-    // language server
-    from(zipTree("temp/emmylua_ls-win32-x64.zip")) {
+// 解压所有下载的文件
+val extractDependencies by tasks.registering(Copy::class) {
+    group = "build setup"
+    description = "Extract downloaded Emmy dependencies"
+    
+    dependsOn(downloadEmmyLuaAnalyzer, downloadEmmyDebugger)
+    
+    // 解压语言服务器
+    from(zipTree("temp/analyzer/emmylua_ls-win32-x64.zip")) {
         into("server/win32-x64")
     }
-    from(tarTree("temp/emmylua_ls-linux-x64.tar.gz")) {
+    from(tarTree("temp/analyzer/emmylua_ls-linux-x64.tar.gz")) {
         into("server/linux-x64")
     }
-    from(tarTree("temp/emmylua_ls-darwin-arm64.tar.gz")) {
+    from(tarTree("temp/analyzer/emmylua_ls-darwin-arm64.tar.gz")) {
         into("server/darwin-arm64")
     }
-    from(tarTree("temp/emmylua_ls-darwin-x64.tar.gz")) {
+    from(tarTree("temp/analyzer/emmylua_ls-darwin-x64.tar.gz")) {
         into("server/darwin-x64")
     }
-    // debugger
+    
+    // 解压调试器
     from(zipTree("temp/debugger/win32-x86.zip")) {
         into("debugger/windows/x86")
     }
@@ -93,42 +125,73 @@ task("unzip", type = Copy::class) {
     from(zipTree("temp/debugger/linux-x64.zip")) {
         into("debugger/linux")
     }
-
-    destinationDir = file("temp/unzip")
+    
+    destinationDir = file("temp/extracted")
 }
 
-task("install", type = Copy::class) {
-    dependsOn("unzip")
-    from("temp/unzip/server") {
+// 安装依赖到资源目录
+val installDependencies by tasks.registering(Copy::class) {
+    group = "build setup"
+    description = "Install Emmy dependencies to resources directory"
+    
+    dependsOn(extractDependencies)
+    
+    // 复制语言服务器
+    from("temp/extracted/server") {
         into("server")
     }
-    from("temp/unzip/debugger/windows/x64/") {
-        include("emmy_core.dll")
-        into("debugger/emmy/windows/x64")
+    
+    // 复制调试器核心文件
+    listOf(
+        Triple("temp/extracted/debugger/windows/x64", "emmy_core.dll", "debugger/emmy/windows/x64"),
+        Triple("temp/extracted/debugger/windows/x86", "emmy_core.dll", "debugger/emmy/windows/x86"),
+        Triple("temp/extracted/debugger/linux", "emmy_core.so", "debugger/emmy/linux"),
+        Triple("temp/extracted/debugger/mac/x64", "emmy_core.dylib", "debugger/emmy/mac/x64"),
+        Triple("temp/extracted/debugger/mac/arm64", "emmy_core.dylib", "debugger/emmy/mac/arm64")
+    ).forEach { (sourcePath, fileName, targetPath) ->
+        from(sourcePath) {
+            include(fileName)
+            into(targetPath)
+        }
     }
-    from("temp/unzip/debugger/windows/x86/") {
-        include("emmy_core.dll")
-        into("debugger/emmy/windows/x86")
-    }
-    from("temp/unzip/debugger/linux/") {
-        include("emmy_core.so")
-        into("debugger/emmy/linux")
-    }
-    from("temp/unzip/debugger/mac/x64") {
-        include("emmy_core.dylib")
-        into("debugger/emmy/mac/x64")
-    }
-    from("temp/unzip/debugger/mac/arm64") {
-        include("emmy_core.dylib")
-        into("debugger/emmy/mac/arm64")
-    }
-
-
+    
     destinationDir = file("src/main/resources")
 }
 
-// Configure Gradle IntelliJ Plugin
-// Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
+// 清理任务
+val cleanDependencies by tasks.registering(Delete::class) {
+    group = "build setup"
+    description = "Clean downloaded and extracted dependencies"
+    
+    delete("temp")
+}
+
+// ============= 仓库配置 =============
+repositories {
+    mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
+}
+
+// ============= 依赖配置 =============
+dependencies {
+    intellijPlatform {
+        intellijIdeaCommunity(Versions.ideaSDK)
+        bundledPlugins("com.intellij.java", "org.jetbrains.kotlin")
+        plugins("com.redhat.devtools.lsp4ij:0.9.0")
+    }
+}
+
+// ============= 源码集配置 =============
+sourceSets {
+    main {
+        java.srcDirs("gen")
+        resources.srcDir("resources")
+    }
+}
+
+// ============= IntelliJ 平台配置 =============
 intellijPlatform {
     buildSearchableOptions = false
     projectName = "IntelliJ-EmmyLua2"
@@ -148,61 +211,55 @@ intellijPlatform {
     }
 }
 
-repositories {
-    mavenCentral()
-    intellijPlatform {
-        defaultRepositories()
-    }
-}
-
-dependencies {
-    intellijPlatform {
-        intellijIdeaCommunity("2024.3.2.1")
-        bundledPlugins("com.intellij.java", "org.jetbrains.kotlin")
-
-        plugins("com.redhat.devtools.lsp4ij:0.9.0")
-    }
-}
-
-sourceSets {
-    main {
-        java.srcDirs("gen")
-        resources.srcDir("resources")
-    }
-}
-
+// ============= 任务配置 =============
 tasks {
+    // Java 编译配置
     withType<JavaCompile> {
-        sourceCompatibility = "17"
-        targetCompatibility = "17"
+        sourceCompatibility = Versions.jvm
+        targetCompatibility = Versions.jvm
+        options.encoding = "UTF-8"
     }
 
-    kotlin {
+    // Kotlin 编译配置
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         compilerOptions {
-            jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(Versions.jvm))
         }
     }
 
+    // 插件XML配置
     patchPluginXml {
-        dependsOn("install")
+        dependsOn(installDependencies)
         sinceBuild.set(buildVersionData.sinceBuild)
         untilBuild.set(buildVersionData.untilBuild)
     }
 
+    // 构建插件
     buildPlugin {
-        dependsOn("install")
+        dependsOn(installDependencies)
     }
 
+    // 准备沙盒环境
     prepareSandbox {
+        dependsOn(installDependencies)
+        
         doLast {
+            // 复制服务器文件到沙盒
             copy {
                 from("${project.projectDir}/src/main/resources/server")
                 into("${destinationDir.path}/${pluginName.get()}/server")
             }
+            
+            // 复制调试器文件到沙盒
             copy {
                 from("${project.projectDir}/src/main/resources/debugger")
                 into("${destinationDir.path}/${pluginName.get()}/debugger")
             }
         }
+    }
+
+    // 清理任务
+    clean {
+        dependsOn(cleanDependencies)
     }
 }
