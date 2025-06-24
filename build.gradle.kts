@@ -229,7 +229,7 @@ tasks {
 
     // 插件XML配置
     patchPluginXml {
-//        dependsOn(installDependencies)
+        dependsOn(installDependencies)
         sinceBuild.set(buildVersionData.sinceBuild)
         untilBuild.set(buildVersionData.untilBuild)
     }
