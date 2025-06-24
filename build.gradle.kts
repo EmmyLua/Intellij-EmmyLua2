@@ -241,7 +241,6 @@ tasks {
 
     // 准备沙盒环境
     prepareSandbox {
-        dependsOn(installDependencies)
         
         doLast {
             // 复制服务器文件到沙盒
