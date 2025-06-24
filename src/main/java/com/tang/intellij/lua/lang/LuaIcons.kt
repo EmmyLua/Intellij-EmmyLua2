@@ -40,8 +40,8 @@ object LuaIcons {
     val ENUM = AllIcons.Nodes.Enum
     val SNIPPET = AllIcons.Nodes.Variable
     val CLASS_METHOD_OVERRIDING: Icon = RowIcon(AllIcons.Nodes.Method, AllIcons.Gutter.OverridingMethod)
-    val GLOBAL_FUNCTION: Icon = LayeredIcon(AllIcons.Nodes.Function, AllIcons.Nodes.StaticMark)
-    val GLOBAL_VAR: Icon = LayeredIcon(AllIcons.Nodes.Variable, AllIcons.Nodes.StaticMark)
+//    val GLOBAL_FUNCTION: Icon = LayeredIcon(AllIcons.Nodes.Function, AllIcons.Nodes.StaticMark)
+//    val GLOBAL_VAR: Icon = LayeredIcon(AllIcons.Nodes.Variable, AllIcons.Nodes.StaticMark)
     val LOCAL_VAR = AllIcons.Nodes.Variable
     val LOCAL_FUNCTION = AllIcons.Nodes.Function
     val PARAMETER = AllIcons.Nodes.Parameter

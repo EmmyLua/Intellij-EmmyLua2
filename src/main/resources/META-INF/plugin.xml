@@ -44,9 +44,9 @@
 
         <!--        folding-->
         <lang.foldingBuilder language="Lua" implementationClass="com.tang.intellij.lua.folding.LuaFoldingBuilder"/>
-        <!-- <lang.foldingBuilder language="Lua"
-                             implementationClass="com.redhat.devtools.lsp4ij.features.foldingRange.LSPFoldingRangeBuilder"/>  -->
-        
+<!--        <lang.foldingBuilder language="Lua"-->
+<!--                             implementationClass="com.redhat.devtools.lsp4ij.features.foldingRange.LSPFoldingRangeBuilder"/>-->
+
 
         <lang.parserDefinition language="Lua" implementationClass="com.tang.intellij.lua.lang.LuaParserDefinition"/>
         <lang.braceMatcher language="Lua" implementationClass="com.tang.intellij.lua.braces.LuaBraceMatcher"/>
@@ -57,6 +57,10 @@
 
         <customPasteProvider
                 implementation="com.tang.intellij.lua.codeInsight.editorActions.StringLiteralPasteProvider"/>
+
+        <!-- 自定义单词选择处理器 -->
+        <extendWordSelectionHandler
+                implementation="com.tang.intellij.lua.codeInsight.editorActions.LuaWordSelectionHandler"/>
 
         <!--        highlight-->
         <lang.syntaxHighlighterFactory
@@ -101,7 +105,10 @@
         <lang.psiStructureViewFactory
                 id="EmmyLua"
                 language="Lua"
-                implementationClass="com.redhat.devtools.lsp4ij.features.documentSymbol.LSPDocumentSymbolStructureViewFactory"/>
+                implementationClass="com.redhat.devtools.lsp4ij.features.documentSymbol.LSPDocumentSymbolStructureViewFactory"/>        <!-- Formatting and Indentation -->
+<!--        <enterHandlerDelegate implementation="com.tang.intellij.lua.editor.LuaEnterHandlerDelegate"/>-->
+        <lineIndentProvider implementation="com.tang.intellij.lua.editor.LuaLineIndentProvider"/>
+<!--        <typedHandler implementation="com.tang.intellij.lua.editor.LuaTypedHandler"/>-->
 
     </extensions>
 

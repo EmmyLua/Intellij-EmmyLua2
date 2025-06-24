@@ -3,7 +3,7 @@ import de.undercouch.gradle.tasks.download.Download
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "2.1.20-Beta2"
-    id("org.jetbrains.intellij.platform") version "2.2.1"
+    id("org.jetbrains.intellij.platform") version "2.6.0"
     id("de.undercouch.download") version "5.6.0"
 }
 
@@ -179,7 +179,7 @@ dependencies {
     intellijPlatform {
         intellijIdeaCommunity(Versions.ideaSDK)
         bundledPlugins("com.intellij.java", "org.jetbrains.kotlin")
-        plugins("com.redhat.devtools.lsp4ij:0.9.0")
+        plugins("com.redhat.devtools.lsp4ij:0.14.0")
     }
 }
 
@@ -229,7 +229,7 @@ tasks {
 
     // 插件XML配置
     patchPluginXml {
-        dependsOn(installDependencies)
+//        dependsOn(installDependencies)
         sinceBuild.set(buildVersionData.sinceBuild)
         untilBuild.set(buildVersionData.untilBuild)
     }
