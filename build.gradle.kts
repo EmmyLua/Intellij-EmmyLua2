@@ -171,9 +171,9 @@ val copyResourcesToSandbox by tasks.registering(Copy::class) {
     from("src/main/resources/debugger") {
         into("debugger")
     }
-    
-    // 目标目录将在执行时由prepareSandbox任务设置
-    destinationDir = layout.buildDirectory.dir("idea-sandbox/plugins/EmmyLua2").get().asFile
+
+    // 目标目录设置为沙盒的插件目录
+    destinationDir = file("build/idea-sandbox/IC-${Versions.ideaSDK}/plugins/intellij-EmmyLua2")
 }
 
 // 清理任务
