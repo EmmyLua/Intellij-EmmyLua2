@@ -208,7 +208,7 @@ dependencies {
 sourceSets {
     main {
         java.srcDirs("gen")
-        resources.srcDir("src/main/resources")
+        resources.srcDirs("resources")
     }
 }
 
