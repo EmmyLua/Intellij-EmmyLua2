@@ -265,12 +265,6 @@ tasks {
         dependsOn(copyResourcesToSandbox)
     }
 
-    // 确保处理资源文件时包含依赖
-    processResources {
-        dependsOn(installDependencies)
-        duplicatesStrategy = DuplicatesStrategy.WARN
-    }
-
     // 清理任务
     clean {
         dependsOn(cleanDependencies)
