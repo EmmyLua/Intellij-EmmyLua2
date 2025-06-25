@@ -158,6 +158,24 @@ val installDependencies by tasks.registering(Copy::class) {
     destinationDir = file("src/main/resources")
 }
 
+// 复制资源到沙盒的任务
+val copyResourcesToSandbox by tasks.registering(Copy::class) {
+    group = "build setup"
+    description = "Copy resources to sandbox"
+    
+    dependsOn(installDependencies)
+    
+    from("src/main/resources/server") {
+        into("server")
+    }
+    from("src/main/resources/debugger") {
+        into("debugger")
+    }
+    
+    // 目标目录将在执行时由prepareSandbox任务设置
+    destinationDir = layout.buildDirectory.dir("idea-sandbox/plugins/EmmyLua2").get().asFile
+}
+
 // 清理任务
 val cleanDependencies by tasks.registering(Delete::class) {
     group = "build setup"
@@ -241,22 +259,7 @@ tasks {
 
     // 准备沙盒环境
     prepareSandbox {
-        val projectDir = layout.projectDirectory
-        val pluginNameProvider = pluginName
-        
-        doLast {
-            // 复制服务器文件到沙盒
-            copy {
-                from(projectDir.dir("src/main/resources/server"))
-                into("${destinationDir.path}/${pluginNameProvider.get()}/server")
-            }
-            
-            // 复制调试器文件到沙盒
-            copy {
-                from(projectDir.dir("src/main/resources/debugger"))
-                into("${destinationDir.path}/${pluginNameProvider.get()}/debugger")
-            }
-        }
+        dependsOn(copyResourcesToSandbox)
     }
 
     // 清理任务
