@@ -94,6 +94,7 @@ val extractDependencies by tasks.registering(Copy::class) {
     description = "Extract downloaded Emmy dependencies"
     
     dependsOn(downloadEmmyLuaAnalyzer, downloadEmmyDebugger)
+    duplicatesStrategy = DuplicatesStrategy.WARN
     
     // 解压语言服务器
     from(zipTree("temp/analyzer/emmylua_ls-win32-x64.zip")) {
@@ -135,6 +136,7 @@ val installDependencies by tasks.registering(Copy::class) {
     description = "Install Emmy dependencies to resources directory"
     
     dependsOn(extractDependencies)
+    duplicatesStrategy = DuplicatesStrategy.WARN
     
     // 复制语言服务器
     from("temp/extracted/server") {
@@ -164,6 +166,7 @@ val copyResourcesToSandbox by tasks.registering(Copy::class) {
     description = "Copy resources to sandbox"
     
     dependsOn(installDependencies)
+    duplicatesStrategy = DuplicatesStrategy.WARN
     
     from("src/main/resources/server") {
         into("server")
@@ -260,6 +263,12 @@ tasks {
     // 准备沙盒环境
     prepareSandbox {
         dependsOn(copyResourcesToSandbox)
+    }
+
+    // 确保处理资源文件时包含依赖
+    processResources {
+        dependsOn(installDependencies)
+        duplicatesStrategy = DuplicatesStrategy.WARN
     }
 
     // 清理任务
