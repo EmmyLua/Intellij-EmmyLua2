@@ -43,7 +43,10 @@ bin/
 .DS_Store
 
 src/main/resources/server
+src/main/resources/debugger
 lua-language-server*
 .idea
 .run
 temp
+
+./gradle.properties
