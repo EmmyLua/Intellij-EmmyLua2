@@ -128,16 +128,6 @@ We welcome contributions of all kinds! Please check the [Contributing Guide](CON
 | `installDependencies` | Install all dependencies |
 | `cleanDependencies` | Clean downloaded dependencies |
 
-## 📊 Project Statistics
-
-<div align="center">
-
-![GitHub stars](https://img.shields.io/github/stars/CppCXY/Intellij-EmmyLua2?style=social)
-![GitHub forks](https://img.shields.io/github/forks/CppCXY/Intellij-EmmyLua2?style=social)
-![GitHub issues](https://img.shields.io/github/issues/CppCXY/Intellij-EmmyLua2)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/CppCXY/Intellij-EmmyLua2)
-
-</div>
 
 ## 🙏 Acknowledgments
 

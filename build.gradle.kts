@@ -241,18 +241,20 @@ tasks {
 
     // 准备沙盒环境
     prepareSandbox {
+        val projectDir = layout.projectDirectory
+        val pluginNameProvider = pluginName
         
         doLast {
             // 复制服务器文件到沙盒
             copy {
-                from("${project.projectDir}/src/main/resources/server")
-                into("${destinationDir.path}/${pluginName.get()}/server")
+                from(projectDir.dir("src/main/resources/server"))
+                into("${destinationDir.path}/${pluginNameProvider.get()}/server")
             }
             
             // 复制调试器文件到沙盒
             copy {
-                from("${project.projectDir}/src/main/resources/debugger")
-                into("${destinationDir.path}/${pluginName.get()}/debugger")
+                from(projectDir.dir("src/main/resources/debugger"))
+                into("${destinationDir.path}/${pluginNameProvider.get()}/debugger")
             }
         }
     }
