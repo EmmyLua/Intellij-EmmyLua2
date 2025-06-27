@@ -199,7 +199,7 @@ intellijPlatform {
     projectName = "IntelliJ-EmmyLua2"
 
     pluginConfiguration {
-        name = "EmmyLua2"
+        name = "IntelliJ-EmmyLua2"
     }
 
     publishing {
@@ -244,14 +244,15 @@ tasks {
     // 准备沙盒环境
     prepareSandbox {
         doLast {
+            val pluginNameValue = "IntelliJ-EmmyLua2"
             copy {
                 from("src/main/resources/debugger")
-                into("$destinationDir/${pluginName.get()}/debugger")
+                into("$destinationDir/$pluginNameValue/debugger")
             }
 
             copy {
                 from("src/main/resources/server")
-                into("$destinationDir/${pluginName.get()}/server")
+                into("$destinationDir/$pluginNameValue/server")
             }
         }
     }
