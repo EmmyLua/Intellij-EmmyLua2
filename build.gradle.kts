@@ -160,25 +160,6 @@ val installDependencies by tasks.registering(Copy::class) {
     destinationDir = file("src/main/resources")
 }
 
-// 复制资源到沙盒的任务
-val copyResourcesToSandbox by tasks.registering(Copy::class) {
-    group = "build setup"
-    description = "Copy resources to sandbox"
-    
-    dependsOn(installDependencies)
-    duplicatesStrategy = DuplicatesStrategy.WARN
-    
-    from("src/main/resources/server") {
-        into("server")
-    }
-    from("src/main/resources/debugger") {
-        into("debugger")
-    }
-
-    // 目标目录设置为沙盒的插件目录
-    destinationDir = file("build/idea-sandbox/IC-${Versions.ideaSDK}/plugins/intellij-EmmyLua2")
-}
-
 // 清理任务
 val cleanDependencies by tasks.registering(Delete::class) {
     group = "build setup"
@@ -262,7 +243,17 @@ tasks {
 
     // 准备沙盒环境
     prepareSandbox {
-        dependsOn(copyResourcesToSandbox)
+        doLast {
+            copy {
+                from("src/main/resources/debugger")
+                into("$destinationDir/${pluginName.get()}/debugger")
+            }
+
+            copy {
+                from("src/main/resources/server")
+                into("$destinationDir/${pluginName.get()}/server")
+            }
+        }
     }
 
     // 清理任务
