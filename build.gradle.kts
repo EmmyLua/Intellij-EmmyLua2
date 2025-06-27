@@ -12,8 +12,8 @@ group = "com.cppcxy"
 
 // 版本配置
 object Versions {
-    const val emmyluaAnalyzer = "0.8.1"
-    const val release = "0.8.4"
+    const val emmyluaAnalyzer = "0.8.2"
+    const val release = "0.8.5"
     const val emmyDebugger = "1.8.6"
     const val jvm = "17"
     const val ideaSDK = "2024.3.2.1"
@@ -33,7 +33,7 @@ private val buildDataList = listOf(
         ideaSDKShortVersion = "243",
         ideaSDKVersion = "2024.3",
         sinceBuild = "243",
-        untilBuild = "251.*"
+        untilBuild = "252.*"
     )
 )
 
@@ -190,6 +190,9 @@ sourceSets {
     main {
         java.srcDirs("gen")
         resources.srcDirs("resources")
+        // 排除二进制文件，它们将通过 prepareSandbox 任务单独处理
+        resources.exclude("debugger/**/*")
+        resources.exclude("server/**/*")
     }
 }
 
@@ -239,21 +242,27 @@ tasks {
     // 构建插件
     buildPlugin {
         dependsOn(installDependencies)
+
+        // 确保二进制文件被包含在插件分发包中
+        from("src/main/resources/server") {
+            into("server")
+        }
+
+        from("src/main/resources/debugger") {
+            into("debugger")
+        }
     }
 
     // 准备沙盒环境
     prepareSandbox {
-        doLast {
-            val pluginNameValue = "IntelliJ-EmmyLua2"
-            copy {
-                from("src/main/resources/debugger")
-                into("$destinationDir/$pluginNameValue/debugger")
-            }
+        dependsOn(installDependencies)
 
-            copy {
-                from("src/main/resources/server")
-                into("$destinationDir/$pluginNameValue/server")
-            }
+        from("src/main/resources/server") {
+            into("server")
+        }
+
+        from("src/main/resources/debugger") {
+            into("debugger")
         }
     }
 
