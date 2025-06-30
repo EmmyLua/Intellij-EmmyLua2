@@ -202,7 +202,7 @@ intellijPlatform {
     projectName = "IntelliJ-EmmyLua2"
 
     pluginConfiguration {
-        name = "IntelliJ-EmmyLua2"
+        name = "EmmyLua2"
     }
 
     publishing {
