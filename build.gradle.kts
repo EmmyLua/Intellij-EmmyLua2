@@ -12,8 +12,7 @@ group = "com.cppcxy"
 
 // 版本配置
 object Versions {
-    const val emmyluaAnalyzer = "0.8.2"
-    const val release = "0.8.6"
+    const val emmyluaAnalyzer = "0.9.1"
     const val emmyDebugger = "1.8.6"
     const val jvm = "17"
     const val ideaSDK = "2024.3.2.1"
@@ -43,7 +42,7 @@ private val buildVersionData = buildDataList.find { it.ideaSDKShortVersion == bu
     ?: error("Unsupported IDEA version: $buildVersion")
 private val runnerNumber = System.getenv("RUNNER_NUMBER") ?: "Dev"
 
-version = "${Versions.release}.${runnerNumber}-IDEA${buildVersion}"
+version = "${Versions.emmyluaAnalyzer}.${runnerNumber}-IDEA${buildVersion}"
 
 // 下载URL配置
 object DownloadUrls {
