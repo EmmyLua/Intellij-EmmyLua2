@@ -12,7 +12,7 @@ group = "com.cppcxy"
 
 // 版本配置
 object Versions {
-    const val emmyluaAnalyzer = "0.9.1"
+    const val emmyluaAnalyzer = "0.10.0"
     const val emmyDebugger = "1.8.6"
     const val jvm = "17"
     const val ideaSDK = "2024.3.2.1"
