@@ -24,8 +24,6 @@ import com.intellij.psi.StringEscapesTokenTypes
 import com.intellij.psi.tree.IElementType
 import com.tang.intellij.lua.comment.psi.LuaDocTokenType
 import com.tang.intellij.lua.comment.psi.LuaDocTypes
-import com.tang.intellij.lua.lang.LuaParserDefinition.Companion.DOC_KEYWORD_TOKENS
-import com.tang.intellij.lua.lang.LuaParserDefinition.Companion.DOC_TAG_TOKENS
 import com.tang.intellij.lua.lang.LuaParserDefinition.Companion.KEYWORD_TOKENS
 import com.tang.intellij.lua.lang.LuaParserDefinition.Companion.PRIMITIVE_TYPE_SET
 import com.tang.intellij.lua.psi.LuaRegionTypes
@@ -81,12 +79,6 @@ class LuaSyntaxHighlighter : SyntaxHighlighterBase() {
 
             fillMap(ourMap1, LuaHighlightingData.LINE_COMMENT, LuaTypes.SHORT_COMMENT, LuaTypes.BLOCK_COMMENT)
             fillMap(ourMap1, LuaHighlightingData.DOC_COMMENT, LuaTypes.REGION, LuaTypes.ENDREGION)
-            fillMap(ourMap1, DOC_TAG_TOKENS, LuaHighlightingData.DOC_COMMENT_TAG)
-            fillMap(ourMap1, LuaHighlightingData.DOC_COMMENT_TAG, LuaDocTypes.TAG_NAME)
-            fillMap(ourMap1, DOC_KEYWORD_TOKENS, LuaHighlightingData.DOC_KEYWORD)
-            fillMap(ourMap1, LuaHighlightingData.BRACKETS, LuaDocTypes.ARR)
-            fillMap(ourMap1, LuaHighlightingData.PARENTHESES, LuaDocTypes.LPAREN, LuaDocTypes.RPAREN)
-
             //primitive types
             fillMap(ourMap1, LuaHighlightingData.NUMBER, LuaTypes.NUMBER)
             fillMap(ourMap1, LuaHighlightingData.STRING, LuaTypes.STRING)

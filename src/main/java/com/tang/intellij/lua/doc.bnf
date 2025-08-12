@@ -31,56 +31,15 @@
   elementTypeClass="com.tang.intellij.lua.comment.psi.LuaDocElementType"
   elementTypeFactory="com.tang.intellij.lua.lang.LuaParserDefinitionKt.createDocType"
   tokenTypeClass="com.tang.intellij.lua.comment.psi.LuaDocTokenType"
-  extends(".*ty") = 'ty'
 
   tokens = [
-        ID="regexp:[A-Za-z0-9_]+"
-        AT = '@'
-        SHARP = '#'
-        EQ = '='
-        COMMA = ','
-        EXTENDS = ':'
-        OR = '|'
-        GT = ">"
-        LT = "<"
-        LPAREN = "("
-        RPAREN = ")"
-        LCURLY = "{"
-        RCURLY = "}"
         STRING_LITERAL = "STRING_LITERAL"
-        ARR = '[]'
-        FUN = 'fun'
-        VARARG = 'vararg'
-        PRIVATE = 'private'
-        PROTECTED = 'protected'
-        PUBLIC = 'public'
         DASHES = 'DASHES'
-        STRING_BEGIN = 'STRING_BEGIN'
         STRING = 'STRING'
-        TAG_NAME = 'TAG_NAME'
-        TAG_NAME_LANGUAGE = 'language'
-        NUMBER = 'regexp:[0-9]+'
-        ASYNC = 'async'
-        NULLABLE = '?'
-        LBRACK = '['
-        RBRACK = ']'
-        PACKAGE = 'package'
-  ]
-  implements("tag.*") = [
-    "com.tang.intellij.lua.comment.psi.LuaDocTag"
   ]
 }
 
-doc ::= (DASHES after_dash?)*
+doc ::= (DASHES comment_content?)*
 
-private after_dash ::= doc_item | STRING { recoverWhile=after_dash_recover }
-private after_dash_recover ::= !(DASHES)
-private doc_item ::= '@' tag_normal
-tag_normal ::= TAG_NAME any* {
-    pin = 1
-    recoverWhile = after_dash_recover
-}
-
-any ::= ID | STRING | NUMBER | AT | SHARP | EQ | COMMA | EXTENDS | OR | GT | LT | LPAREN | RPAREN | LCURLY | RCURLY
-| STRING_LITERAL | ARR | FUN | VARARG | PRIVATE | PROTECTED | PUBLIC | DASHES | STRING_BEGIN | TAG_NAME |
-TAG_NAME_LANGUAGE | ASYNC | NULLABLE | LBRACK | RBRACK | PACKAGE
+private comment_content ::= STRING { recoverWhile=comment_content_recover }
+private comment_content_recover ::= !(DASHES)

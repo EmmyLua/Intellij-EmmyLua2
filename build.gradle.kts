@@ -12,10 +12,10 @@ group = "com.cppcxy"
 
 // 版本配置
 object Versions {
-    const val emmyluaAnalyzer = "0.10.0"
+    const val emmyluaAnalyzer = "0.11.0"
     const val emmyDebugger = "1.8.6"
     const val jvm = "17"
-    const val ideaSDK = "2024.3.2.1"
+    const val ideaSDK = "2025.2"
 }
 
 // 构建数据配置
@@ -48,21 +48,29 @@ version = "${Versions.emmyluaAnalyzer}.${runnerNumber}-IDEA${buildVersion}"
 object DownloadUrls {
     private const val emmyluaAnalyzerProjectUrl = "https://github.com/CppCXY/emmylua-analyzer-rust"
     private const val emmyDebuggerProjectUrl = "https://github.com/EmmyLua/EmmyLuaDebugger"
-    
+
+    // GitHub 镜像配置
+    private val githubMirror = System.getProperty("github.mirror") ?: ""
+    private fun applyMirror(url: String): String {
+        return if (githubMirror.isNotEmpty() && url.startsWith("https://github.com/")) {
+            url.replace("https://github.com/", githubMirror)
+        } else url
+    }
+
     val emmyluaAnalyzer = arrayOf(
         "$emmyluaAnalyzerProjectUrl/releases/download/${Versions.emmyluaAnalyzer}/emmylua_ls-win32-x64.zip",
         "$emmyluaAnalyzerProjectUrl/releases/download/${Versions.emmyluaAnalyzer}/emmylua_ls-linux-x64.tar.gz",
         "$emmyluaAnalyzerProjectUrl/releases/download/${Versions.emmyluaAnalyzer}/emmylua_ls-darwin-arm64.tar.gz",
         "$emmyluaAnalyzerProjectUrl/releases/download/${Versions.emmyluaAnalyzer}/emmylua_ls-darwin-x64.tar.gz"
-    )
-    
+    ).map { applyMirror(it) }.toTypedArray()
+
     val emmyDebugger = arrayOf(
         "$emmyDebuggerProjectUrl/releases/download/${Versions.emmyDebugger}/darwin-arm64.zip",
         "$emmyDebuggerProjectUrl/releases/download/${Versions.emmyDebugger}/darwin-x64.zip",
         "$emmyDebuggerProjectUrl/releases/download/${Versions.emmyDebugger}/linux-x64.zip",
         "$emmyDebuggerProjectUrl/releases/download/${Versions.emmyDebugger}/win32-x64.zip",
         "$emmyDebuggerProjectUrl/releases/download/${Versions.emmyDebugger}/win32-x86.zip"
-    )
+    ).map { applyMirror(it) }.toTypedArray()
 }
 
 // ============= 任务配置 =============
@@ -71,7 +79,7 @@ object DownloadUrls {
 val downloadEmmyLuaAnalyzer by tasks.registering(Download::class) {
     group = "build setup"
     description = "Download Emmy Lua Analyzer for all platforms"
-    
+
     src(DownloadUrls.emmyluaAnalyzer)
     dest("temp/analyzer")
     overwrite(false)
@@ -81,7 +89,7 @@ val downloadEmmyLuaAnalyzer by tasks.registering(Download::class) {
 val downloadEmmyDebugger by tasks.registering(Download::class) {
     group = "build setup"
     description = "Download Emmy Debugger for all platforms"
-    
+
     src(DownloadUrls.emmyDebugger)
     dest("temp/debugger")
     overwrite(false)
@@ -91,10 +99,10 @@ val downloadEmmyDebugger by tasks.registering(Download::class) {
 val extractDependencies by tasks.registering(Copy::class) {
     group = "build setup"
     description = "Extract downloaded Emmy dependencies"
-    
+
     dependsOn(downloadEmmyLuaAnalyzer, downloadEmmyDebugger)
     duplicatesStrategy = DuplicatesStrategy.WARN
-    
+
     // 解压语言服务器
     from(zipTree("temp/analyzer/emmylua_ls-win32-x64.zip")) {
         into("server/win32-x64")
@@ -108,7 +116,7 @@ val extractDependencies by tasks.registering(Copy::class) {
     from(tarTree("temp/analyzer/emmylua_ls-darwin-x64.tar.gz")) {
         into("server/darwin-x64")
     }
-    
+
     // 解压调试器
     from(zipTree("temp/debugger/win32-x86.zip")) {
         into("debugger/windows/x86")
@@ -125,7 +133,7 @@ val extractDependencies by tasks.registering(Copy::class) {
     from(zipTree("temp/debugger/linux-x64.zip")) {
         into("debugger/linux")
     }
-    
+
     destinationDir = file("temp/extracted")
 }
 
@@ -133,15 +141,15 @@ val extractDependencies by tasks.registering(Copy::class) {
 val installDependencies by tasks.registering(Copy::class) {
     group = "build setup"
     description = "Install Emmy dependencies to resources directory"
-    
+
     dependsOn(extractDependencies)
     duplicatesStrategy = DuplicatesStrategy.WARN
-    
+
     // 复制语言服务器
     from("temp/extracted/server") {
         into("server")
     }
-    
+
     // 复制调试器核心文件
     listOf(
         Triple("temp/extracted/debugger/windows/x64", "emmy_core.dll", "debugger/emmy/windows/x64"),
@@ -155,7 +163,7 @@ val installDependencies by tasks.registering(Copy::class) {
             into(targetPath)
         }
     }
-    
+
     destinationDir = file("src/main/resources")
 }
 
@@ -163,13 +171,31 @@ val installDependencies by tasks.registering(Copy::class) {
 val cleanDependencies by tasks.registering(Delete::class) {
     group = "build setup"
     description = "Clean downloaded and extracted dependencies"
-    
+
     delete("temp")
 }
 
 // ============= 仓库配置 =============
 repositories {
+    // 添加阿里云镜像仓库优先使用
+    maven {
+        url = uri("https://maven.aliyun.com/repository/central")
+        name = "AliyunMavenCentral"
+    }
+    maven {
+        url = uri("https://maven.aliyun.com/repository/gradle-plugin")
+        name = "AliyunGradlePlugin"
+    }
+    maven {
+        url = uri("https://maven.aliyun.com/repository/google")
+        name = "AliyunGoogle"
+    }
+
+    // 保留原有仓库作为备用
     mavenCentral()
+    google()
+    gradlePluginPortal()
+
     intellijPlatform {
         defaultRepositories()
     }
@@ -263,6 +289,7 @@ tasks {
         from("src/main/resources/debugger") {
             into("debugger")
         }
+
     }
 
     // 清理任务

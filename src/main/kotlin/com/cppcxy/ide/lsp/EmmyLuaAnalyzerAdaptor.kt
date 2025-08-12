@@ -8,7 +8,20 @@ import java.io.File
 
 object EmmyLuaAnalyzerAdaptor {
     private val pluginSource: String?
-        get() = PluginManagerCore.getPlugin(PluginId.getId("com.cppcxy.Intellij-EmmyLua"))?.pluginPath?.toFile()?.path
+        get() {
+            val plugin = PluginManagerCore.getPlugin(PluginId.getId("com.cppcxy.Intellij-EmmyLua"))
+            val pluginPath = plugin?.pluginPath?.toFile()?.path
+
+            // 在开发环境中，插件路径通常指向沙盒目录，我们需要获取项目根目录
+            return if (pluginPath != null && pluginPath.contains("idea-sandbox")) {
+                // 开发环境：从沙盒路径向上找到项目根目录
+                val currentDir = File(pluginPath)
+                currentDir.parent
+            } else {
+                // 生产环境：直接使用插件路径
+                pluginPath
+            }
+        }
 
     private val exe: String
         get() {

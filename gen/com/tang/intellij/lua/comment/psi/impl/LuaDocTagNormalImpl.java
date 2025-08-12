@@ -18,7 +18,7 @@ public class LuaDocTagNormalImpl extends ASTWrapperPsiElement implements LuaDocT
   }
 
   public void accept(@NotNull LuaDocVisitor visitor) {
-    visitor.visitTagNormal(this);
+    visitor.visitPsiElement(this);
   }
 
   @Override
