@@ -10,15 +10,15 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static com.tang.intellij.lua.psi.LuaTypes.*;
 import com.tang.intellij.lua.psi.*;
 
-public class LuaIfStatImpl extends LuaStatementImpl implements LuaIfStat {
+public class LuaCompoundAssignStatImpl extends LuaStatementImpl implements LuaCompoundAssignStat {
 
-  public LuaIfStatImpl(@NotNull ASTNode node) {
+  public LuaCompoundAssignStatImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   @Override
   public void accept(@NotNull LuaVisitor visitor) {
-    visitor.visitIfStat(this);
+    visitor.visitCompoundAssignStat(this);
   }
 
   @Override
@@ -28,21 +28,22 @@ public class LuaIfStatImpl extends LuaStatementImpl implements LuaIfStat {
   }
 
   @Override
-  @Nullable
-  public LuaElseClause getElseClause() {
-    return findChildByClass(LuaElseClause.class);
+  @NotNull
+  public LuaCompoundAssignOp getCompoundAssignOp() {
+    return findNotNullChildByClass(LuaCompoundAssignOp.class);
   }
 
   @Override
   @NotNull
-  public List<LuaElseifClause> getElseifClauseList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, LuaElseifClause.class);
+  public List<LuaExpr> getExprList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, LuaExpr.class);
   }
 
   @Override
-  @Nullable
-  public LuaExpr getExpr() {
-    return findChildByClass(LuaExpr.class);
+  @NotNull
+  public LuaExpr getValueExpr() {
+    List<LuaExpr> p1 = getExprList();
+    return p1.get(0);
   }
 
 }

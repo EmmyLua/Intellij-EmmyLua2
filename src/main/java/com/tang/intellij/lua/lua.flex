@@ -91,6 +91,8 @@ REGION_END =--(endregion|\}\}\})([^\r\n]*)*
 BLOCK_COMMENT=--\[=*\[[\s\S]*(\]=*\])?
 SHORT_COMMENT=--[^\r\n]*
 DOC_COMMENT=----*[^\r\n]*(\r?\n{LINE_WS}*----*[^\r\n]*)*
+//C风格注释
+C_STYLE_COMMENT="/*"([^*]|"*"[^/])*"*/"
 
 //Strings
 DOUBLE_QUOTED_STRING=\"([^\\\"]|\\\S|\\[\r\n])*\"?  //\"([^\\\"\r\n]|\\[^\r\n])*\"?
@@ -110,6 +112,7 @@ LONG_STRING=\[=*\[[\s\S]*\]=*\]
   {WHITE_SPACE}               { return TokenType.WHITE_SPACE; }
   {REGION_START}              { return REGION; }
   {REGION_END}                { return ENDREGION; }
+  {C_STYLE_COMMENT}           { return BLOCK_COMMENT; } // C风格注释直接识别
   "--"                        {
         boolean block = checkBlock();
         if (block) {
@@ -121,6 +124,7 @@ LONG_STRING=\[=*\[[\s\S]*\]=*\]
    }
   "and"                       { return AND; }
   "break"                     { return BREAK; }
+  "continue"                  { return CONTINUE; }
   "do"                        { return DO; }
   "else"                      { return ELSE; }
   "elseif"                    { return ELSEIF; }
@@ -146,16 +150,31 @@ LONG_STRING=\[=*\[[\s\S]*\]=*\]
   ".."                        { return CONCAT; }
   "=="                        { return EQ; }
   ">="                        { return GE; }
+  ">>="                       { return BIT_RTRT_ASSIGN; } // 非标准符号
   ">>"                        { return BIT_RTRT; } //lua5.2
   "<="                        { return LE; }
+  "<<="                       { return BIT_LTLT_ASSIGN; } // 非标准符号
   "<<"                        { return BIT_LTLT; } //lua5.2
   "~="                        { return NE; }
+  "!="                        { return NOT_EQ; } // 非标准符号
   "~"                         { return BIT_TILDE; } //lua5.2
+  "||"                        { return LOGICAL_OR; } // 非标准符号
+  "|="                        { return BIT_OR_ASSIGN; } // 非标准符号
+  "|"                         { return BIT_OR; } //lua5.2
+  "&&"                        { return LOGICAL_AND; } // 非标准符号
+  "&="                        { return BIT_AND_ASSIGN; } // 非标准符号
+  "&"                         { return BIT_AND; } //lua5.2
+  "-="                        { return MINUS_ASSIGN; } // 非标准符号
   "-"                         { return MINUS; }
+  "+="                        { return PLUS_ASSIGN; } // 非标准符号
   "+"                         { return PLUS; }
+  "*="                        { return MULT_ASSIGN; } // 非标准符号
   "*"                         { return MULT; }
+  "%="                        { return MOD_ASSIGN; } // 非标准符号
   "%"                         { return MOD; }
+  "//="                       { return DOUBLE_DIV_ASSIGN; } // 非标准符号
   "//"                        { return DOUBLE_DIV; } //lua5.2
+  "/="                        { return DIV_ASSIGN; } // 非标准符号
   "/"                         { return DIV; }
   "="                         { return ASSIGN; }
   ">"                         { return GT; }
@@ -181,10 +200,10 @@ LONG_STRING=\[=*\[[\s\S]*\]=*\]
   "::"                        { return DOUBLE_COLON; } //lua5.2
   ":"                         { return COLON; }
   "."                         { return DOT; }
+  "^="                        { return EXP_ASSIGN; } // 非标准符号
   "^"                         { return EXP; }
-  "~"                         { return BIT_TILDE; } //lua5.2
-  "&"                         { return BIT_AND; } //lua5.2
-  "|"                         { return BIT_OR; } //lua5.2
+  "!"                         { return LOGICAL_NOT; } // 非标准符号
+  "`"                         { return BACKTICK; } // 非标准符号
 
   "\""                        { yybegin(xDOUBLE_QUOTED_STRING); yypushback(yylength()); }
   "'"                         { yybegin(xSINGLE_QUOTED_STRING); yypushback(yylength()); }
@@ -202,6 +221,7 @@ LONG_STRING=\[=*\[[\s\S]*\]=*\]
 <xCOMMENT> {
     {DOC_COMMENT}             {yybegin(YYINITIAL);return DOC_COMMENT;}
     {SHORT_COMMENT}           {yybegin(YYINITIAL);return SHORT_COMMENT;}
+    {C_STYLE_COMMENT}         {yybegin(YYINITIAL);return BLOCK_COMMENT;}
 }
 
 <xDOUBLE_QUOTED_STRING> {

@@ -10,6 +10,10 @@ public class LuaVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
+  public void visitAssignOp(@NotNull LuaAssignOp o) {
+    visitPsiElement(o);
+  }
+
   public void visitAssignStat(@NotNull LuaAssignStat o) {
     visitStatement(o);
   }
@@ -49,8 +53,28 @@ public class LuaVisitor extends PsiElementVisitor {
     visitExpr(o);
   }
 
+  public void visitCompoundAssignOp(@NotNull LuaCompoundAssignOp o) {
+    visitPsiElement(o);
+  }
+
+  public void visitCompoundAssignStat(@NotNull LuaCompoundAssignStat o) {
+    visitStatement(o);
+  }
+
+  public void visitContinueStat(@NotNull LuaContinueStat o) {
+    visitStatement(o);
+  }
+
   public void visitDoStat(@NotNull LuaDoStat o) {
     visitStatement(o);
+  }
+
+  public void visitElseClause(@NotNull LuaElseClause o) {
+    visitPsiElement(o);
+  }
+
+  public void visitElseifClause(@NotNull LuaElseifClause o) {
+    visitPsiElement(o);
   }
 
   public void visitEmptyStat(@NotNull LuaEmptyStat o) {
@@ -134,6 +158,10 @@ public class LuaVisitor extends PsiElementVisitor {
   }
 
   public void visitParenExpr(@NotNull LuaParenExpr o) {
+    visitExpr(o);
+  }
+
+  public void visitPrimaryExpr(@NotNull LuaPrimaryExpr o) {
     visitExpr(o);
   }
 

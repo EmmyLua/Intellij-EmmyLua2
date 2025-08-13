@@ -8,41 +8,23 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.tang.intellij.lua.psi.LuaTypes.*;
+import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.tang.intellij.lua.psi.*;
 
-public class LuaIfStatImpl extends LuaStatementImpl implements LuaIfStat {
+public class LuaElseClauseImpl extends ASTWrapperPsiElement implements LuaElseClause {
 
-  public LuaIfStatImpl(@NotNull ASTNode node) {
+  public LuaElseClauseImpl(@NotNull ASTNode node) {
     super(node);
   }
 
-  @Override
   public void accept(@NotNull LuaVisitor visitor) {
-    visitor.visitIfStat(this);
+    visitor.visitElseClause(this);
   }
 
   @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof LuaVisitor) accept((LuaVisitor)visitor);
     else super.accept(visitor);
-  }
-
-  @Override
-  @Nullable
-  public LuaElseClause getElseClause() {
-    return findChildByClass(LuaElseClause.class);
-  }
-
-  @Override
-  @NotNull
-  public List<LuaElseifClause> getElseifClauseList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, LuaElseifClause.class);
-  }
-
-  @Override
-  @Nullable
-  public LuaExpr getExpr() {
-    return findChildByClass(LuaExpr.class);
   }
 
 }

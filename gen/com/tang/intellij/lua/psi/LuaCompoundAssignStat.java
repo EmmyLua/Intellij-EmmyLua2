@@ -5,15 +5,15 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface LuaIfStat extends LuaStatement {
-
-  @Nullable
-  LuaElseClause getElseClause();
+public interface LuaCompoundAssignStat extends LuaStatement {
 
   @NotNull
-  List<LuaElseifClause> getElseifClauseList();
+  LuaCompoundAssignOp getCompoundAssignOp();
 
-  @Nullable
-  LuaExpr getExpr();
+  @NotNull
+  List<LuaExpr> getExprList();
+
+  @NotNull
+  LuaExpr getValueExpr();
 
 }

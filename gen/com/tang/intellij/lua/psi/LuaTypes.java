@@ -10,6 +10,7 @@ import com.tang.intellij.lua.psi.impl.*;
 public interface LuaTypes {
 
   IElementType ARGS = LuaParserDefinitionKt.createType("ARGS");
+  IElementType ASSIGN_OP = LuaParserDefinitionKt.createType("ASSIGN_OP");
   IElementType ASSIGN_STAT = LuaParserDefinitionKt.createType("ASSIGN_STAT");
   IElementType ATTRIBUTE = LuaParserDefinitionKt.createType("ATTRIBUTE");
   IElementType BINARY_EXPR = LuaParserDefinitionKt.createType("BINARY_EXPR");
@@ -20,7 +21,12 @@ public interface LuaTypes {
   IElementType CLASS_METHOD_DEF = LuaParserDefinitionKt.createType("CLASS_METHOD_DEF");
   IElementType CLASS_METHOD_NAME = LuaParserDefinitionKt.createType("CLASS_METHOD_NAME");
   IElementType CLOSURE_EXPR = LuaParserDefinitionKt.createType("CLOSURE_EXPR");
+  IElementType COMPOUND_ASSIGN_OP = LuaParserDefinitionKt.createType("COMPOUND_ASSIGN_OP");
+  IElementType COMPOUND_ASSIGN_STAT = LuaParserDefinitionKt.createType("COMPOUND_ASSIGN_STAT");
+  IElementType CONTINUE_STAT = LuaParserDefinitionKt.createType("CONTINUE_STAT");
   IElementType DO_STAT = LuaParserDefinitionKt.createType("DO_STAT");
+  IElementType ELSEIF_CLAUSE = LuaParserDefinitionKt.createType("ELSEIF_CLAUSE");
+  IElementType ELSE_CLAUSE = LuaParserDefinitionKt.createType("ELSE_CLAUSE");
   IElementType EMPTY_STAT = LuaParserDefinitionKt.createType("EMPTY_STAT");
   IElementType EXPR = LuaParserDefinitionKt.createType("EXPR");
   IElementType EXPR_LIST = LuaParserDefinitionKt.createType("EXPR_LIST");
@@ -42,6 +48,7 @@ public interface LuaTypes {
   IElementType NAME_LIST = LuaParserDefinitionKt.createType("NAME_LIST");
   IElementType PARAM_NAME_DEF = LuaParserDefinitionKt.createType("PARAM_NAME_DEF");
   IElementType PAREN_EXPR = LuaParserDefinitionKt.createType("PAREN_EXPR");
+  IElementType PRIMARY_EXPR = LuaParserDefinitionKt.createType("PRIMARY_EXPR");
   IElementType REPEAT_STAT = LuaParserDefinitionKt.createType("REPEAT_STAT");
   IElementType RETURN_STAT = LuaParserDefinitionKt.createType("RETURN_STAT");
   IElementType SHEBANG_LINE = LuaParserDefinitionKt.createType("SHEBANG_LINE");
@@ -56,22 +63,30 @@ public interface LuaTypes {
 
   IElementType AND = LuaParserDefinitionKt.createToken("and");
   IElementType ASSIGN = LuaParserDefinitionKt.createToken("=");
+  IElementType BACKTICK = LuaParserDefinitionKt.createToken("`");
   IElementType BIT_AND = LuaParserDefinitionKt.createToken("&");
+  IElementType BIT_AND_ASSIGN = LuaParserDefinitionKt.createToken("&=");
   IElementType BIT_LTLT = LuaParserDefinitionKt.createToken("<<");
+  IElementType BIT_LTLT_ASSIGN = LuaParserDefinitionKt.createToken("<<=");
   IElementType BIT_OR = LuaParserDefinitionKt.createToken("|");
+  IElementType BIT_OR_ASSIGN = LuaParserDefinitionKt.createToken("|=");
   IElementType BIT_RTRT = LuaParserDefinitionKt.createToken(">>");
+  IElementType BIT_RTRT_ASSIGN = LuaParserDefinitionKt.createToken(">>=");
   IElementType BIT_TILDE = LuaParserDefinitionKt.createToken("~");
   IElementType BLOCK_COMMENT = LuaParserDefinitionKt.createToken("BLOCK_COMMENT");
   IElementType BREAK = LuaParserDefinitionKt.createToken("break");
   IElementType COLON = LuaParserDefinitionKt.createToken(":");
   IElementType COMMA = LuaParserDefinitionKt.createToken(",");
   IElementType CONCAT = LuaParserDefinitionKt.createToken("..");
+  IElementType CONTINUE = LuaParserDefinitionKt.createToken("continue");
   IElementType DIV = LuaParserDefinitionKt.createToken("/");
+  IElementType DIV_ASSIGN = LuaParserDefinitionKt.createToken("/=");
   IElementType DO = LuaParserDefinitionKt.createToken("do");
   IElementType DOC_COMMENT = LuaParserDefinitionKt.createToken("DOC_COMMENT");
   IElementType DOT = LuaParserDefinitionKt.createToken(".");
   IElementType DOUBLE_COLON = LuaParserDefinitionKt.createToken("::");
   IElementType DOUBLE_DIV = LuaParserDefinitionKt.createToken("//");
+  IElementType DOUBLE_DIV_ASSIGN = LuaParserDefinitionKt.createToken("//=");
   IElementType ELLIPSIS = LuaParserDefinitionKt.createToken("...");
   IElementType ELSE = LuaParserDefinitionKt.createToken("else");
   IElementType ELSEIF = LuaParserDefinitionKt.createToken("elseif");
@@ -79,6 +94,7 @@ public interface LuaTypes {
   IElementType ENDREGION = LuaParserDefinitionKt.createToken("ENDREGION");
   IElementType EQ = LuaParserDefinitionKt.createToken("==");
   IElementType EXP = LuaParserDefinitionKt.createToken("^");
+  IElementType EXP_ASSIGN = LuaParserDefinitionKt.createToken("^=");
   IElementType FALSE = LuaParserDefinitionKt.createToken("false");
   IElementType FOR = LuaParserDefinitionKt.createToken("for");
   IElementType FUNCTION = LuaParserDefinitionKt.createToken("function");
@@ -93,17 +109,25 @@ public interface LuaTypes {
   IElementType LCURLY = LuaParserDefinitionKt.createToken("{");
   IElementType LE = LuaParserDefinitionKt.createToken("<=");
   IElementType LOCAL = LuaParserDefinitionKt.createToken("local");
+  IElementType LOGICAL_AND = LuaParserDefinitionKt.createToken("&&");
+  IElementType LOGICAL_NOT = LuaParserDefinitionKt.createToken("!");
+  IElementType LOGICAL_OR = LuaParserDefinitionKt.createToken("||");
   IElementType LPAREN = LuaParserDefinitionKt.createToken("(");
   IElementType LT = LuaParserDefinitionKt.createToken("<");
   IElementType MINUS = LuaParserDefinitionKt.createToken("-");
+  IElementType MINUS_ASSIGN = LuaParserDefinitionKt.createToken("-=");
   IElementType MOD = LuaParserDefinitionKt.createToken("%");
+  IElementType MOD_ASSIGN = LuaParserDefinitionKt.createToken("%=");
   IElementType MULT = LuaParserDefinitionKt.createToken("*");
+  IElementType MULT_ASSIGN = LuaParserDefinitionKt.createToken("*=");
   IElementType NE = LuaParserDefinitionKt.createToken("~=");
   IElementType NIL = LuaParserDefinitionKt.createToken("nil");
   IElementType NOT = LuaParserDefinitionKt.createToken("not");
+  IElementType NOT_EQ = LuaParserDefinitionKt.createToken("!=");
   IElementType NUMBER = LuaParserDefinitionKt.createToken("NUMBER");
   IElementType OR = LuaParserDefinitionKt.createToken("or");
   IElementType PLUS = LuaParserDefinitionKt.createToken("+");
+  IElementType PLUS_ASSIGN = LuaParserDefinitionKt.createToken("+=");
   IElementType RBRACK = LuaParserDefinitionKt.createToken("]");
   IElementType RCURLY = LuaParserDefinitionKt.createToken("}");
   IElementType REGION = LuaParserDefinitionKt.createToken("REGION");
@@ -123,7 +147,10 @@ public interface LuaTypes {
   class Factory {
     public static PsiElement createElement(ASTNode node) {
       IElementType type = node.getElementType();
-      if (type == ASSIGN_STAT) {
+      if (type == ASSIGN_OP) {
+        return new LuaAssignOpImpl(node);
+      }
+      else if (type == ASSIGN_STAT) {
         return new LuaAssignStatImpl(node);
       }
       else if (type == ATTRIBUTE) {
@@ -153,8 +180,23 @@ public interface LuaTypes {
       else if (type == CLOSURE_EXPR) {
         return new LuaClosureExprImpl(node);
       }
+      else if (type == COMPOUND_ASSIGN_OP) {
+        return new LuaCompoundAssignOpImpl(node);
+      }
+      else if (type == COMPOUND_ASSIGN_STAT) {
+        return new LuaCompoundAssignStatImpl(node);
+      }
+      else if (type == CONTINUE_STAT) {
+        return new LuaContinueStatImpl(node);
+      }
       else if (type == DO_STAT) {
         return new LuaDoStatImpl(node);
+      }
+      else if (type == ELSEIF_CLAUSE) {
+        return new LuaElseifClauseImpl(node);
+      }
+      else if (type == ELSE_CLAUSE) {
+        return new LuaElseClauseImpl(node);
       }
       else if (type == EMPTY_STAT) {
         return new LuaEmptyStatImpl(node);

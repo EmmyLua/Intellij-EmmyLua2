@@ -5,13 +5,7 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface LuaIfStat extends LuaStatement {
-
-  @Nullable
-  LuaElseClause getElseClause();
-
-  @NotNull
-  List<LuaElseifClause> getElseifClauseList();
+public interface LuaElseifClause extends LuaPsiElement {
 
   @Nullable
   LuaExpr getExpr();

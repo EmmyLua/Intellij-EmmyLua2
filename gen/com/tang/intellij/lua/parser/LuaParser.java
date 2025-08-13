@@ -42,11 +42,11 @@ public class LuaParser implements PsiParser, LightPsiParser {
     create_token_set_(ARGS, LIST_ARGS, SINGLE_ARG),
     create_token_set_(BINARY_EXPR, CALL_EXPR, CLOSURE_EXPR, EXPR,
       INDEX_EXPR, LITERAL_EXPR, NAME_EXPR, PAREN_EXPR,
-      TABLE_EXPR, UNARY_EXPR),
-    create_token_set_(ASSIGN_STAT, BREAK_STAT, DO_STAT, EMPTY_STAT,
-      EXPR_STAT, FOR_A_STAT, FOR_B_STAT, GOTO_STAT,
-      IF_STAT, LABEL_STAT, REPEAT_STAT, RETURN_STAT,
-      WHILE_STAT),
+      PRIMARY_EXPR, TABLE_EXPR, UNARY_EXPR),
+    create_token_set_(ASSIGN_STAT, BREAK_STAT, COMPOUND_ASSIGN_STAT, CONTINUE_STAT,
+      DO_STAT, EMPTY_STAT, EXPR_STAT, FOR_A_STAT,
+      FOR_B_STAT, GOTO_STAT, IF_STAT, LABEL_STAT,
+      REPEAT_STAT, RETURN_STAT, WHILE_STAT),
   };
 
   /* ********************************************************** */
@@ -140,6 +140,18 @@ public class LuaParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // '='
+  public static boolean assignOp(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "assignOp")) return false;
+    if (!nextTokenIs(b, ASSIGN)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ASSIGN);
+    exit_section_(b, m, ASSIGN_OP, r);
+    return r;
+  }
+
+  /* ********************************************************** */
   // varList '=' exprList
   public static boolean assignStat(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "assignStat")) return false;
@@ -187,6 +199,8 @@ public class LuaParser implements PsiParser, LightPsiParser {
   //     'and' | 'or'
   //     // lua5.3
   //     | '|' | '&' | '>>' | '<<' | '~' | '//'
+  //     // 非标准符号
+  //     | '!=' | '||' | '&&'
   public static boolean binaryOp(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "binaryOp")) return false;
     boolean r;
@@ -212,6 +226,9 @@ public class LuaParser implements PsiParser, LightPsiParser {
     if (!r) r = consumeToken(b, BIT_LTLT);
     if (!r) r = consumeToken(b, BIT_TILDE);
     if (!r) r = consumeToken(b, DOUBLE_DIV);
+    if (!r) r = consumeToken(b, NOT_EQ);
+    if (!r) r = consumeToken(b, LOGICAL_OR);
+    if (!r) r = consumeToken(b, LOGICAL_AND);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
@@ -245,16 +262,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // args {
-  // //    methods = [
-  // //        guessParentType
-  // //        getFirstStringArg
-  // //
-  // //        isMethodDotCall
-  // //        isMethodColonCall
-  // //        isFunctionCall
-  // //    ]
-  // //    stubClass = 'com.tang.intellij.lua.stubs.LuaExprStub'
-  // //    mixin = 'com.tang.intellij.lua.psi.impl.LuaCallExprMixin'
   // }
   public static boolean callExpr(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "callExpr")) return false;
@@ -267,16 +274,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
   }
 
   // {
-  // //    methods = [
-  // //        guessParentType
-  // //        getFirstStringArg
-  // //
-  // //        isMethodDotCall
-  // //        isMethodColonCall
-  // //        isFunctionCall
-  // //    ]
-  // //    stubClass = 'com.tang.intellij.lua.stubs.LuaExprStub'
-  // //    mixin = 'com.tang.intellij.lua.psi.impl.LuaCallExprMixin'
   // }
   private static boolean callExpr_1(PsiBuilder b, int l) {
     return true;
@@ -403,6 +400,56 @@ public class LuaParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // '+=' | '-=' | '*=' | '/=' | '%=' | '^=' | '//=' |
+  //     '|=' | '&=' | '<<=' | '>>='
+  public static boolean compoundAssignOp(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "compoundAssignOp")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, COMPOUND_ASSIGN_OP, "<compound assign op>");
+    r = consumeToken(b, PLUS_ASSIGN);
+    if (!r) r = consumeToken(b, MINUS_ASSIGN);
+    if (!r) r = consumeToken(b, MULT_ASSIGN);
+    if (!r) r = consumeToken(b, DIV_ASSIGN);
+    if (!r) r = consumeToken(b, MOD_ASSIGN);
+    if (!r) r = consumeToken(b, EXP_ASSIGN);
+    if (!r) r = consumeToken(b, DOUBLE_DIV_ASSIGN);
+    if (!r) r = consumeToken(b, BIT_OR_ASSIGN);
+    if (!r) r = consumeToken(b, BIT_AND_ASSIGN);
+    if (!r) r = consumeToken(b, BIT_LTLT_ASSIGN);
+    if (!r) r = consumeToken(b, BIT_RTRT_ASSIGN);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // varExpr compoundAssignOp expr
+  public static boolean compoundAssignStat(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "compoundAssignStat")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, COMPOUND_ASSIGN_STAT, "<compound assign stat>");
+    r = varExpr(b, l + 1);
+    r = r && compoundAssignOp(b, l + 1);
+    p = r; // pin = 2
+    r = r && expr(b, l + 1);
+    register_hook_(b, LEFT_BINDER, MY_LEFT_COMMENT_BINDER);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
+  // continue
+  public static boolean continueStat(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "continueStat")) return false;
+    if (!nextTokenIs(b, CONTINUE)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, CONTINUE);
+    register_hook_(b, LEFT_BINDER, MY_LEFT_COMMENT_BINDER);
+    exit_section_(b, m, CONTINUE_STAT, r);
+    return r;
+  }
+
+  /* ********************************************************** */
   // classMethodDef | funcDef | localFuncDef | localDef
   static boolean defStat(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "defStat")) return false;
@@ -435,6 +482,36 @@ public class LuaParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // 'else' <<lazyBlock>>
+  public static boolean elseClause(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "elseClause")) return false;
+    if (!nextTokenIs(b, ELSE)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, ELSE_CLAUSE, null);
+    r = consumeToken(b, ELSE);
+    p = r; // pin = 1
+    r = r && lazyBlock(b, l + 1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
+  // 'elseif' expr 'then' <<lazyBlock>>
+  public static boolean elseifClause(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "elseifClause")) return false;
+    if (!nextTokenIs(b, ELSEIF)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, ELSEIF_CLAUSE, null);
+    r = consumeToken(b, ELSEIF);
+    p = r; // pin = 1
+    r = r && report_error_(b, expr(b, l + 1));
+    r = p && report_error_(b, consumeToken(b, THEN)) && r;
+    r = p && lazyBlock(b, l + 1) && r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
   // ';'
   public static boolean emptyStat(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "emptyStat")) return false;
@@ -449,11 +526,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // <<parseExpr>> {
-  // //    mixin = "com.tang.intellij.lua.psi.impl.LuaExprMixin"
-  // //    stubClass = "com.tang.intellij.lua.stubs.LuaExprStub"
-  // //    implements = [
-  // //        "com.tang.intellij.lua.psi.LuaTypeGuessable"
-  // //    ]
   // }
   public static boolean expr(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "expr")) return false;
@@ -466,11 +538,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
   }
 
   // {
-  // //    mixin = "com.tang.intellij.lua.psi.impl.LuaExprMixin"
-  // //    stubClass = "com.tang.intellij.lua.stubs.LuaExprStub"
-  // //    implements = [
-  // //        "com.tang.intellij.lua.psi.LuaTypeGuessable"
-  // //    ]
   // }
   private static boolean expr_1(PsiBuilder b, int l) {
     return true;
@@ -478,8 +545,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // expr (',' expr)* {
-  // //    methods = [guessTypeAt]
-  // //    stubClass = "com.tang.intellij.lua.stubs.LuaPlaceholderStub"
   // }
   public static boolean exprList(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "exprList")) return false;
@@ -515,8 +580,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
   }
 
   // {
-  // //    methods = [guessTypeAt]
-  // //    stubClass = "com.tang.intellij.lua.stubs.LuaPlaceholderStub"
   // }
   private static boolean exprList_2(PsiBuilder b, int l) {
     return true;
@@ -524,8 +587,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // expr {
-  // //    mixin = "com.tang.intellij.lua.psi.impl.LuaStatMixin<com.tang.intellij.lua.stubs.LuaPlaceholderStub>"
-  // //    stubClass = "com.tang.intellij.lua.stubs.LuaPlaceholderStub"
   // }
   public static boolean exprStat(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "exprStat")) return false;
@@ -539,8 +600,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
   }
 
   // {
-  // //    mixin = "com.tang.intellij.lua.psi.impl.LuaStatMixin<com.tang.intellij.lua.stubs.LuaPlaceholderStub>"
-  // //    stubClass = "com.tang.intellij.lua.stubs.LuaPlaceholderStub"
   // }
   private static boolean exprStat_1(PsiBuilder b, int l) {
     return true;
@@ -751,7 +810,7 @@ public class LuaParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // 'if' expr 'then' <<lazyBlock>> ('elseif' expr 'then' <<lazyBlock>>)* ('else' <<lazyBlock>>)? 'end'
+  // 'if' expr 'then' <<lazyBlock>> elseifClause* elseClause? 'end'
   public static boolean ifStat(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "ifStat")) return false;
     if (!nextTokenIs(b, IF)) return false;
@@ -770,46 +829,22 @@ public class LuaParser implements PsiParser, LightPsiParser {
     return r || p;
   }
 
-  // ('elseif' expr 'then' <<lazyBlock>>)*
+  // elseifClause*
   private static boolean ifStat_4(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "ifStat_4")) return false;
     while (true) {
       int c = current_position_(b);
-      if (!ifStat_4_0(b, l + 1)) break;
+      if (!elseifClause(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "ifStat_4", c)) break;
     }
     return true;
   }
 
-  // 'elseif' expr 'then' <<lazyBlock>>
-  private static boolean ifStat_4_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "ifStat_4_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b);
-    r = consumeToken(b, ELSEIF);
-    r = r && expr(b, l + 1);
-    r = r && consumeToken(b, THEN);
-    r = r && lazyBlock(b, l + 1);
-    exit_section_(b, m, null, r);
-    return r;
-  }
-
-  // ('else' <<lazyBlock>>)?
+  // elseClause?
   private static boolean ifStat_5(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "ifStat_5")) return false;
-    ifStat_5_0(b, l + 1);
+    elseClause(b, l + 1);
     return true;
-  }
-
-  // 'else' <<lazyBlock>>
-  private static boolean ifStat_5_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "ifStat_5_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b);
-    r = consumeToken(b, ELSE);
-    r = r && lazyBlock(b, l + 1);
-    exit_section_(b, m, null, r);
-    return r;
   }
 
   /* ********************************************************** */
@@ -853,14 +888,14 @@ public class LuaParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // returnStat | breakStat
+  // returnStat | breakStat | continueStat
   static boolean lastStat(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "lastStat")) return false;
-    if (!nextTokenIs(b, "", BREAK, RETURN)) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = returnStat(b, l + 1);
     if (!r) r = breakStat(b, l + 1);
+    if (!r) r = continueStat(b, l + 1);
     register_hook_(b, LEFT_BINDER, MY_LEFT_COMMENT_BINDER);
     exit_section_(b, m, null, r);
     return r;
@@ -900,11 +935,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // nil | false | true | NUMBER | STRING | "..." {
-  // //    mixin = 'com.tang.intellij.lua.psi.impl.LuaLiteralExprMixin'
-  // //    implements = [
-  // //        "com.tang.intellij.lua.stubs.LuaExprStubElement<com.tang.intellij.lua.stubs.LuaLiteralExprStub>"
-  // //    ]
-  //     //stubClass = 'com.tang.intellij.lua.stubs.LuaExprStub'
   // }
   public static boolean literalExpr(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "literalExpr")) return false;
@@ -921,11 +951,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
   }
 
   // "..." {
-  // //    mixin = 'com.tang.intellij.lua.psi.impl.LuaLiteralExprMixin'
-  // //    implements = [
-  // //        "com.tang.intellij.lua.stubs.LuaExprStubElement<com.tang.intellij.lua.stubs.LuaLiteralExprStub>"
-  // //    ]
-  //     //stubClass = 'com.tang.intellij.lua.stubs.LuaExprStub'
   // }
   private static boolean literalExpr_5(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "literalExpr_5")) return false;
@@ -938,11 +963,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
   }
 
   // {
-  // //    mixin = 'com.tang.intellij.lua.psi.impl.LuaLiteralExprMixin'
-  // //    implements = [
-  // //        "com.tang.intellij.lua.stubs.LuaExprStubElement<com.tang.intellij.lua.stubs.LuaLiteralExprStub>"
-  // //    ]
-  //     //stubClass = 'com.tang.intellij.lua.stubs.LuaExprStub'
   // }
   private static boolean literalExpr_5_1(PsiBuilder b, int l) {
     return true;
@@ -1030,18 +1050,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // ID {
-  // //    implements = [
-  // //        "com.tang.intellij.lua.psi.LuaNamedElement"
-  // //        "com.tang.intellij.lua.psi.LuaTypeGuessable"
-  // //        "com.intellij.psi.PsiNameIdentifierOwner"
-  // //    ]
-  // //    methods = [
-  // //        getName
-  // //        setName
-  // //        getNameIdentifier
-  // //        getUseScope
-  // //    ]
-  // //    stubClass = "com.tang.intellij.lua.stubs.LuaNameDefStub"
   // }
   public static boolean nameDef(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "nameDef")) return false;
@@ -1055,18 +1063,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
   }
 
   // {
-  // //    implements = [
-  // //        "com.tang.intellij.lua.psi.LuaNamedElement"
-  // //        "com.tang.intellij.lua.psi.LuaTypeGuessable"
-  // //        "com.intellij.psi.PsiNameIdentifierOwner"
-  // //    ]
-  // //    methods = [
-  // //        getName
-  // //        setName
-  // //        getNameIdentifier
-  // //        getUseScope
-  // //    ]
-  // //    stubClass = "com.tang.intellij.lua.stubs.LuaNameDefStub"
   // }
   private static boolean nameDef_1(PsiBuilder b, int l) {
     return true;
@@ -1074,23 +1070,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // ID {
-  // //    implements = [
-  // //        "com.tang.intellij.lua.psi.LuaPsiElement"
-  // //        "com.intellij.psi.PsiNameIdentifierOwner"
-  // //        "com.tang.intellij.lua.stubs.LuaExprStubElement<com.tang.intellij.lua.stubs.LuaNameExprStub>"
-  // //        "com.tang.intellij.lua.psi.LuaModuleClassField"
-  // //    ]
-  // //    methods = [
-  // //        setName
-  // //        getName
-  // //        getNameIdentifier
-  // //        getPresentation
-  // //        getReferences
-  // //        isDeprecated
-  // //
-  // //        toString
-  // //    ]
-  // //    mixin = "com.tang.intellij.lua.psi.impl.LuaNameExprMixin"
   // }
   public static boolean nameExpr(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "nameExpr")) return false;
@@ -1104,23 +1083,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
   }
 
   // {
-  // //    implements = [
-  // //        "com.tang.intellij.lua.psi.LuaPsiElement"
-  // //        "com.intellij.psi.PsiNameIdentifierOwner"
-  // //        "com.tang.intellij.lua.stubs.LuaExprStubElement<com.tang.intellij.lua.stubs.LuaNameExprStub>"
-  // //        "com.tang.intellij.lua.psi.LuaModuleClassField"
-  // //    ]
-  // //    methods = [
-  // //        setName
-  // //        getName
-  // //        getNameIdentifier
-  // //        getPresentation
-  // //        getReferences
-  // //        isDeprecated
-  // //
-  // //        toString
-  // //    ]
-  // //    mixin = "com.tang.intellij.lua.psi.impl.LuaNameExprMixin"
   // }
   private static boolean nameExpr_1(PsiBuilder b, int l) {
     return true;
@@ -1128,7 +1090,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // nameDef attribute? (',' nameDef attribute?)* {
-  // //    stubClass = "com.tang.intellij.lua.stubs.LuaPlaceholderStub"
   // }
   public static boolean nameList(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "nameList")) return false;
@@ -1181,7 +1142,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
   }
 
   // {
-  // //    stubClass = "com.tang.intellij.lua.stubs.LuaPlaceholderStub"
   // }
   private static boolean nameList_3(PsiBuilder b, int l) {
     return true;
@@ -1311,13 +1271,13 @@ public class LuaParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // prefixExpr (suffixExpr*)
-  static boolean primaryExpr(PsiBuilder b, int l) {
+  public static boolean primaryExpr(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "primaryExpr")) return false;
     boolean r;
-    Marker m = enter_section_(b);
+    Marker m = enter_section_(b, l, _COLLAPSE_, PRIMARY_EXPR, "<primary expr>");
     r = prefixExpr(b, l + 1);
     r = r && primaryExpr_1(b, l + 1);
-    exit_section_(b, m, null, r);
+    exit_section_(b, l, m, r, false, null);
     return r;
   }
 
@@ -1351,8 +1311,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // return exprList? {
-  // //    mixin = "com.tang.intellij.lua.psi.impl.LuaStatMixin<com.tang.intellij.lua.stubs.LuaPlaceholderStub>"
-  // //    stubClass = "com.tang.intellij.lua.stubs.LuaPlaceholderStub"
   // }
   public static boolean returnStat(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "returnStat")) return false;
@@ -1375,8 +1333,6 @@ public class LuaParser implements PsiParser, LightPsiParser {
   }
 
   // {
-  // //    mixin = "com.tang.intellij.lua.psi.impl.LuaStatMixin<com.tang.intellij.lua.stubs.LuaPlaceholderStub>"
-  // //    stubClass = "com.tang.intellij.lua.stubs.LuaPlaceholderStub"
   // }
   private static boolean returnStat_2(PsiBuilder b, int l) {
     return true;
@@ -1420,6 +1376,7 @@ public class LuaParser implements PsiParser, LightPsiParser {
   //     labelStat |
   //     gotoStat |
   //     assignStat |
+  //     compoundAssignStat |
   //     exprStat
   static boolean stat_impl(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "stat_impl")) return false;
@@ -1437,6 +1394,7 @@ public class LuaParser implements PsiParser, LightPsiParser {
     if (!r) r = labelStat(b, l + 1);
     if (!r) r = gotoStat(b, l + 1);
     if (!r) r = assignStat(b, l + 1);
+    if (!r) r = compoundAssignStat(b, l + 1);
     if (!r) r = exprStat(b, l + 1);
     exit_section_(b, l, m, r, false, LuaParser::stat_recover);
     return r;
@@ -1636,6 +1594,8 @@ public class LuaParser implements PsiParser, LightPsiParser {
   // '-' | 'not' | '#'
   //     // lua5.3
   //     | '~'
+  //     // 非标准符号
+  //     | '!'
   public static boolean unaryOp(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "unaryOp")) return false;
     boolean r;
@@ -1644,6 +1604,7 @@ public class LuaParser implements PsiParser, LightPsiParser {
     if (!r) r = consumeToken(b, NOT);
     if (!r) r = consumeToken(b, GETN);
     if (!r) r = consumeToken(b, BIT_TILDE);
+    if (!r) r = consumeToken(b, LOGICAL_NOT);
     exit_section_(b, l, m, r, false, null);
     return r;
   }

@@ -108,7 +108,6 @@
                 implementationClass="com.redhat.devtools.lsp4ij.features.documentSymbol.LSPDocumentSymbolStructureViewFactory"/>        <!-- Formatting and Indentation -->
 <!--        <enterHandlerDelegate implementation="com.tang.intellij.lua.editor.LuaEnterHandlerDelegate"/>-->
         <lineIndentProvider implementation="com.tang.intellij.lua.editor.LuaLineIndentProvider"/>
-<!--        <typedHandler implementation="com.tang.intellij.lua.editor.LuaTypedHandler"/>-->
 
     </extensions>
 
