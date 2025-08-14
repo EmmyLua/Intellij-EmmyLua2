@@ -36,7 +36,7 @@ import com.tang.intellij.lua.comment.psi.LuaDocTypes;
 EOL="\r"|"\n"|"\r\n"
 LINE_WS=[\ \t\f]
 WHITE_SPACE=({LINE_WS}|{EOL})+
-STRING=[^\r\n\t\f]*
+STRING=[^\r\n\f]*
 //三个-以上
 DOC_DASHES = --+
 //Strings

@@ -65,7 +65,7 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
   private static final int [] ZZ_CMAP_BLOCKS = zzUnpackcmap_blocks();
 
   private static final String ZZ_CMAP_BLOCKS_PACKED_0 =
-    "\11\0\1\1\1\2\1\3\1\1\1\4\22\0\1\5"+
+    "\11\0\1\1\1\2\1\3\1\4\1\5\22\0\1\1"+
     "\14\0\1\6\127\0\1\3\u01a2\0\2\3\326\0\u0100\3";
 
   private static int [] zzUnpackcmap_blocks() {
@@ -149,10 +149,10 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
   private static final int [] ZZ_TRANS = zzUnpacktrans();
 
   private static final String ZZ_TRANS_PACKED_0 =
-    "\1\3\1\4\1\5\1\6\1\7\1\4\1\10\1\11"+
-    "\1\4\1\5\1\11\1\7\1\12\1\11\10\0\1\4"+
-    "\3\0\1\4\3\0\1\5\12\0\1\13\1\11\2\0"+
-    "\1\11\1\0\3\11\1\4\1\0\1\11\1\0\1\12"+
+    "\1\3\1\4\1\5\1\6\1\4\1\7\1\10\1\11"+
+    "\1\12\1\5\1\11\1\4\1\7\1\11\10\0\1\4"+
+    "\2\0\1\4\4\0\1\5\12\0\1\13\2\11\1\0"+
+    "\1\11\2\0\2\11\1\12\1\0\1\11\1\4\1\0"+
     "\1\11";
 
   private static int [] zzUnpacktrans() {
