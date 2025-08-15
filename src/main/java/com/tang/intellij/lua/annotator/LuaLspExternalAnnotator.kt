@@ -32,12 +32,19 @@ class LuaLspExternalAnnotator : ExternalAnnotator<LuaLspExternalAnnotator.Collec
         val document: Document
     )
 
+    companion object {
+        val priority = HighlightSeverity.INFORMATION.myVal + 1000 // 确保最高优先级
+        val highlight = HighlightSeverity("LuaLspHighlight", priority)
+    }
+
     override fun collectInformation(file: PsiFile): CollectedInfo? {
         if (file !is LuaPsiFile) return null
 
         val virtualFile = file.virtualFile ?: return null
         val document = file.viewProvider.document ?: return null
 
+        // 即使存在语法错误也要继续处理
+        // LSP 服务器通常能够处理语法错误的文件并提供高亮信息
         return CollectedInfo(
             psiFile = file,
             document = document,
@@ -55,26 +62,37 @@ class LuaLspExternalAnnotator : ExternalAnnotator<LuaLspExternalAnnotator.Collec
                 .getLanguageServer("EmmyLua")
                 .thenAccept { languageServerItem: LanguageServerItem? ->
                     if (languageServerItem != null) {
-                        val ls = languageServerItem.server as EmmyLuaCustomApi
-                        val annotatorInfos = ls.getAnnotator(AnnotatorParams(collectedInfo.uri))
-                        annotatorInfos.thenAccept { annotators ->
-                            if (annotators != null) {
-                                future.complete(AnnotationResult(annotators, collectedInfo.document))
-                            } else {
+                        try {
+                            val ls = languageServerItem.server as EmmyLuaCustomApi
+                            val annotatorInfos = ls.getAnnotator(AnnotatorParams(collectedInfo.uri))
+                            annotatorInfos.thenAccept { annotators ->
+                                if (annotators != null && annotators.isNotEmpty()) {
+                                    future.complete(AnnotationResult(annotators, collectedInfo.document))
+                                } else {
+                                    future.complete(null)
+                                }
+                            }.exceptionally { _ ->
+                                // 记录异常但不完全失败，允许继续处理
+                                // 语法错误不应该阻止高亮显示
                                 future.complete(null)
+                                null
                             }
-                        }.exceptionally {
+                        } catch (_: Exception) {
+                            // 即使转换失败也不要完全放弃
                             future.complete(null)
-                            null
                         }
                     } else {
                         future.complete(null)
                     }
+                }.exceptionally { _ ->
+                    future.complete(null)
+                    null
                 }
 
-            // 等待结果，但不要阻塞太久
-            future.get(2, TimeUnit.SECONDS)
-        } catch (e: Exception) {
+            // 增加超时时间，给 LSP 服务器更多时间处理有语法错误的文件
+            future.get(5, TimeUnit.SECONDS)
+        } catch (_: Exception) {
+            // 即使超时或出错，也返回 null 而不是抛出异常
             null
         }
     }
@@ -86,20 +104,23 @@ class LuaLspExternalAnnotator : ExternalAnnotator<LuaLspExternalAnnotator.Collec
     ) {
         if (annotationResult == null) return
 
-        for (annotator in annotationResult.annotators) {
-            for (range in annotator.ranges) {
-                val textRange = lspRangeToTextRange(range, annotationResult.document)
-                if (textRange != null) {
-                    val textAttributesKey = LuaHighlightingData.getLspHighlightKey(annotator.type)
-
-                    // 使用WEAK_WARNING级别，并强制使用textAttributes确保显示优先级
-                    holder.newSilentAnnotation(HighlightSeverity.WEAK_WARNING)
-                        .range(textRange)
-                        .textAttributes(textAttributesKey)
-                        .needsUpdateOnTyping(false)
-                        .create()
+        try {
+            for (annotator in annotationResult.annotators) {
+                for (range in annotator.ranges) {
+                    val textRange = lspRangeToTextRange(range, annotationResult.document)
+                    if (textRange != null && textRange.startOffset >= 0 && textRange.endOffset <= annotationResult.document.textLength) {
+                        val textAttributesKey = LuaHighlightingData.getLspHighlightKey(annotator.type)
+                        holder.newSilentAnnotation(highlight)
+                            .range(textRange)
+                            .textAttributes(textAttributesKey)
+                            .needsUpdateOnTyping(false)
+                            .create()
+                    }
                 }
             }
+        } catch (_: Exception) {
+            // 防止在应用注解时出现异常导致整个注解过程失败
+            // 语法错误情况下文档可能不稳定，需要更加谨慎
         }
     }
 
@@ -118,7 +139,7 @@ class LuaLspExternalAnnotator : ExternalAnnotator<LuaLspExternalAnnotator.Collec
             } else {
                 null
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
