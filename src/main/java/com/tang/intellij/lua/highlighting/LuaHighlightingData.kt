@@ -85,24 +85,26 @@ object LuaHighlightingData {
     )
 
     /**
-     * LSP 只读局部变 - 使用绿色高亮
+     * LSP 只读局部变 - 使用柔和的绿色系，表示安全的只读变量
      */
     val LSP_READ_ONLY_LOCAL = TextAttributesKey.createTextAttributesKey(
         "LUA_LSP_READ_ONLY_LOCAL",
         TextAttributes().apply {
-            foregroundColor = JBColor(Color(0x0000FF), Color(0x589DF6))
+            foregroundColor = JBColor(Color(0x2D5A2D), Color(0x6B9F6B))  // 更柔和的深绿色
+            backgroundColor = JBColor(Color(0xF5F8F5), Color(0x1A2A1A))   // 更淡的绿色背景
             fontType = Font.ITALIC
         }
     )
 
     /**
-     * LSP 可变局部变量 - 使用类似Java的可变量颜色
+     * LSP 可变局部变量 - 使用蓝色系，类似Java的局部变量
      */
     val LSP_MUT_LOCAL = TextAttributesKey.createTextAttributesKey(
         "LUA_LSP_MUT_LOCAL",
         TextAttributes().apply {
             foregroundColor = JBColor(Color(0x0000FF), Color(0x589DF6))  // 蓝色，类似Java变量
-            fontType = Font.PLAIN
+            backgroundColor = JBColor(Color(0xF0F5FF), Color(0x1A1F2A))   // 淡蓝背景
+            fontType = Font.PLAIN  // 普通字体，表示可变
         }
     )
 
