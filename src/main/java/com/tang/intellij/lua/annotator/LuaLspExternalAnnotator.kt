@@ -1,7 +1,6 @@
 package com.tang.intellij.lua.annotator
 
 import com.cppcxy.ide.lsp.AnnotatorParams
-import com.cppcxy.ide.lsp.AnnotatorType.*
 import com.cppcxy.ide.lsp.EmmyLuaCustomApi
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.ExternalAnnotator
@@ -17,7 +16,8 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
 /**
- * LSP 外部注解器，优先级比普通 Annotator 更高
+ * LSP 外部注解器，使用最高优先级确保渲染效果
+ * 解决多个高亮系统冲突时只有背景色高亮显示的问题
  */
 class LuaLspExternalAnnotator : ExternalAnnotator<LuaLspExternalAnnotator.CollectedInfo, LuaLspExternalAnnotator.AnnotationResult>() {
 
@@ -92,9 +92,11 @@ class LuaLspExternalAnnotator : ExternalAnnotator<LuaLspExternalAnnotator.Collec
                 if (textRange != null) {
                     val textAttributesKey = LuaHighlightingData.getLspHighlightKey(annotator.type)
 
-                    holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
+                    // 使用WEAK_WARNING级别，并强制使用textAttributes确保显示优先级
+                    holder.newSilentAnnotation(HighlightSeverity.WEAK_WARNING)
                         .range(textRange)
                         .textAttributes(textAttributesKey)
+                        .needsUpdateOnTyping(false)
                         .create()
                 }
             }

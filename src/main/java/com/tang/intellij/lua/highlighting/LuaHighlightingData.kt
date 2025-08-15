@@ -67,7 +67,6 @@ object LuaHighlightingData {
         "LUA_LSP_READ_ONLY_PARAM",
         TextAttributes().apply {
             foregroundColor = JBColor(Color(0x0070C0), Color(0x6CB4EE))  // 蓝色
-            backgroundColor = JBColor(Color(0xE6F2FF), Color(0x1A2332))   // 浅蓝背景
             fontType = Font.ITALIC
         }
     )
@@ -79,32 +78,31 @@ object LuaHighlightingData {
         "LUA_LSP_GLOBAL_VAR",
         TextAttributes().apply {
             foregroundColor = JBColor(Color(0xFF6699), Color(0xFF88AA))  // 粉红色
-            backgroundColor = JBColor(Color(0xFFF0F5), Color(0x2A1A22))   // 浅粉背景
             fontType = Font.BOLD
         }
     )
 
     /**
-     * LSP 只读局部变 - 使用柔和的绿色系，表示安全的只读变量
+     * LSP 只读局部变量 - 使用浅蓝色，表示不可变的安全变量
      */
     val LSP_READ_ONLY_LOCAL = TextAttributesKey.createTextAttributesKey(
         "LUA_LSP_READ_ONLY_LOCAL",
         TextAttributes().apply {
-            foregroundColor = JBColor(Color(0x2D5A2D), Color(0x6B9F6B))  // 更柔和的深绿色
-            backgroundColor = JBColor(Color(0xF5F8F5), Color(0x1A2A1A))   // 更淡的绿色背景
+            foregroundColor = JBColor(Color(0x4A90E2), Color(0x6BB6FF))  // 浅蓝色，清爽的色调
             fontType = Font.ITALIC
         }
     )
 
     /**
-     * LSP 可变局部变量 - 使用蓝色系，类似Java的局部变量
+     * LSP 可变局部变量 - 使用深绿色带下划线，强调可变性
      */
     val LSP_MUT_LOCAL = TextAttributesKey.createTextAttributesKey(
         "LUA_LSP_MUT_LOCAL",
         TextAttributes().apply {
-            foregroundColor = JBColor(Color(0x0000FF), Color(0x589DF6))  // 蓝色，类似Java变量
-            backgroundColor = JBColor(Color(0xF0F5FF), Color(0x1A1F2A))   // 淡蓝背景
-            fontType = Font.PLAIN  // 普通字体，表示可变
+            foregroundColor = JBColor(Color(0x2B8C2B), Color(0x4CAF50))  // 更好看的绿色
+            fontType = Font.PLAIN
+            effectType = com.intellij.openapi.editor.markup.EffectType.LINE_UNDERSCORE
+            effectColor = JBColor(Color(0x2B8C2B), Color(0x4CAF50))  // 下划线颜色与文字颜色一致
         }
     )
 
@@ -115,7 +113,6 @@ object LuaHighlightingData {
         "LUA_LSP_MUT_PARAM",
         TextAttributes().apply {
             foregroundColor = JBColor(Color(0x871094), Color(0xB381C5))  // 紫色，类似Java参数
-            backgroundColor = JBColor(Color(0xF8F0FF), Color(0x2A1A2A))   // 浅紫背景
             fontType = Font.BOLD
             effectType = com.intellij.openapi.editor.markup.EffectType.LINE_UNDERSCORE
             effectColor = JBColor(Color(0x871094), Color(0xB381C5))
@@ -129,7 +126,6 @@ object LuaHighlightingData {
         "LUA_LSP_DOC_EM",
         TextAttributes().apply {
             foregroundColor = JBColor(Color(0xB8860B), Color(0xFFD700))  // 金色
-            backgroundColor = JBColor(Color(0xFFFBF0), Color(0x2D2A1A))   // 浅金背景
             fontType = Font.ITALIC
         }
     )
@@ -141,7 +137,6 @@ object LuaHighlightingData {
         "LUA_LSP_DOC_STRONG",
         TextAttributes().apply {
             foregroundColor = JBColor(Color(0x8B0000), Color(0xFF6B6B))  // 深红色
-            backgroundColor = JBColor(Color(0xFFF0F0), Color(0x2D1A1A))   // 浅红背景
             fontType = Font.BOLD
         }
     )
