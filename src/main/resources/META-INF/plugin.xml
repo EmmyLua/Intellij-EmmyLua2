@@ -44,8 +44,8 @@
 
         <!--        folding-->
         <lang.foldingBuilder language="Lua" implementationClass="com.tang.intellij.lua.folding.LuaFoldingBuilder"/>
-<!--        <lang.foldingBuilder language="Lua"-->
-<!--                             implementationClass="com.redhat.devtools.lsp4ij.features.foldingRange.LSPFoldingRangeBuilder"/>-->
+        <!--        <lang.foldingBuilder language="Lua"-->
+        <!--                             implementationClass="com.redhat.devtools.lsp4ij.features.foldingRange.LSPFoldingRangeBuilder"/>-->
 
 
         <lang.parserDefinition language="Lua" implementationClass="com.tang.intellij.lua.lang.LuaParserDefinition"/>
@@ -67,7 +67,12 @@
                 language="Lua"
                 implementationClass="com.tang.intellij.lua.highlighting.LuaSyntaxHighlighterFactory"/>
         <!--        <highlightErrorFilter implementation="com.tang.intellij.lua.highlighting.LuaHighlightErrorFilter"/>-->
-        <!-- <annotator language="Lua" implementationClass="com.tang.intellij.lua.annotator.LuaAnnotator"/> -->
+
+        <!-- LSP 外部注解器 - 更高优先级 -->
+        <externalAnnotator language="Lua" implementationClass="com.tang.intellij.lua.annotator.LuaLspExternalAnnotator"/>
+
+        <!-- LSP 颜色配置页面 -->
+        <colorSettingsPage implementation="com.tang.intellij.lua.highlighting.LuaLspColorSettingsPage"/>
 
         <!-- <highlightUsagesHandlerFactory
                 implementation="com.tang.intellij.lua.codeInsight.highlighting.LuaHighlightUsagesHandlerFactory"/> -->
@@ -106,7 +111,7 @@
                 id="EmmyLua"
                 language="Lua"
                 implementationClass="com.redhat.devtools.lsp4ij.features.documentSymbol.LSPDocumentSymbolStructureViewFactory"/>        <!-- Formatting and Indentation -->
-<!--        <enterHandlerDelegate implementation="com.tang.intellij.lua.editor.LuaEnterHandlerDelegate"/>-->
+        <!--        <enterHandlerDelegate implementation="com.tang.intellij.lua.editor.LuaEnterHandlerDelegate"/>-->
         <lineIndentProvider implementation="com.tang.intellij.lua.editor.LuaLineIndentProvider"/>
 
     </extensions>
