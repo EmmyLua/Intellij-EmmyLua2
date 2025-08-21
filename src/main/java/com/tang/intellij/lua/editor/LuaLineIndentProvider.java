@@ -24,6 +24,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.TokenType;
 import com.intellij.psi.codeStyle.lineIndent.LineIndentProvider;
 import com.intellij.psi.tree.IElementType;
 import com.tang.intellij.lua.lang.LuaLanguage;
@@ -127,7 +128,8 @@ public class LuaLineIndentProvider implements LineIndentProvider {
         return
                 elementType == LuaTypes.SHORT_COMMENT ||
                         elementType == LuaTypes.DOC_COMMENT ||
-                        elementType == LuaTypes.BLOCK_COMMENT;
+                        elementType == LuaTypes.BLOCK_COMMENT ||
+                        elementType == TokenType.WHITE_SPACE;
     }
 
     private String calculateIndentBasedOnPreviousLine(Editor editor, Project project, PsiElement element, String baseIndent) {
@@ -140,18 +142,18 @@ public class LuaLineIndentProvider implements LineIndentProvider {
         }
 
         // 查找包含该元素的语句或块
-//        PsiElement parent = element;
-//        while (parent != null) {
-//            if (shouldIncreaseIndent(parent)) {
-//                return baseIndent + indentUnit;
-//            }
-//
-//            if (parent instanceof LuaBlock) {
-//                break;
-//            }
-//
-//            parent = parent.getParent();
-//        }
+        PsiElement parent = element;
+        while (parent != null) {
+            if (shouldIncreaseIndent(parent)) {
+                return baseIndent + indentUnit;
+            }
+
+            if (parent instanceof LuaBlock) {
+                break;
+            }
+
+            parent = parent.getParent();
+        }
 
         // 检查元素本身的类型
         IElementType elementType = element.getNode().getElementType();
@@ -175,24 +177,13 @@ public class LuaLineIndentProvider implements LineIndentProvider {
     }
 
     private boolean shouldIncreaseIndent(PsiElement element) {
-        if (element instanceof LuaBlock) {
-            // 检查是否是新开始的块
-            PsiElement parent = element.getParent();
-            return parent instanceof LuaIfStat ||
-                    parent instanceof LuaWhileStat ||
-                    parent instanceof LuaForAStat ||
-                    parent instanceof LuaForBStat ||
-                    parent instanceof LuaRepeatStat ||
-                    parent instanceof LuaFuncBody ||
-                    parent instanceof LuaDoStat;
-        }
-
-        // 对于table，只有在开始新的table时才增加缩进
-        if (element instanceof LuaTableExpr) {
-            return true;
-        }
-
-        return false;
+        return element instanceof LuaIfStat ||
+                element instanceof LuaWhileStat ||
+                element instanceof LuaForAStat ||
+                element instanceof LuaForBStat ||
+                element instanceof LuaRepeatStat ||
+                element instanceof LuaFuncBody ||
+                element instanceof LuaDoStat;
     }
 
     private @Nullable String calculateTableIndent(PsiElement element, String baseIndent, String indentUnit) {
