@@ -8,9 +8,13 @@ import com.intellij.lang.ASTNode;
 public interface LuaDocTypes {
 
 
+  IElementType AT = new LuaDocTokenType("AT");
   IElementType DASHES = new LuaDocTokenType("DASHES");
+  IElementType HASH = new LuaDocTokenType("HASH");
+  IElementType SPECIAL_SYMBOL = new LuaDocTokenType("SPECIAL_SYMBOL");
   IElementType STRING = new LuaDocTokenType("STRING");
   IElementType STRING_LITERAL = new LuaDocTokenType("STRING_LITERAL");
+  IElementType WORD = new LuaDocTokenType("WORD");
 
   class Factory {
   }

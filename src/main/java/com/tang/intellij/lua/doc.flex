@@ -43,14 +43,35 @@ DOC_DASHES = --+
 DOUBLE_QUOTED_STRING=\"([^\\\"]|\\\S|\\[\r\n])*\"?
 SINGLE_QUOTED_STRING='([^\\\']|\\\S|\\[\r\n])*'?
 
+// 单词分隔符：空格、制表符等
+WORD_SEPARATOR=[\ \t\f]
+// 单词：字母、数字、下划线等组成，不包含#和@
+WORD=[a-zA-Z_][a-zA-Z0-9_]*
+// 特殊符号：点、逗号、分号、冒号、括号等
+SPECIAL_SYMBOL=[\.,:;()\[\]{}|&!+\-*/=<>?~`'\"\\]
+// #和@符号
+HASH="#"
+AT="@"
+
 %state xCOMMENT_STRING
+%state xWORD_PARSING
 
 %%
 
 <YYINITIAL> {
     {EOL}                      { yybegin(YYINITIAL); return com.intellij.psi.TokenType.WHITE_SPACE;}
     {LINE_WS}+                 { return com.intellij.psi.TokenType.WHITE_SPACE; }
-    {DOC_DASHES}               { return DASHES; }
+    {DOC_DASHES}               { yybegin(xWORD_PARSING); return DASHES; }
+    .                          { yybegin(xCOMMENT_STRING); yypushback(yylength()); }
+}
+
+<xWORD_PARSING> {
+    {EOL}                      { yybegin(YYINITIAL); return com.intellij.psi.TokenType.WHITE_SPACE;}
+    {WORD_SEPARATOR}+          { return com.intellij.psi.TokenType.WHITE_SPACE; }
+    {WORD}                     { return WORD; }
+    {SPECIAL_SYMBOL}           { return STRING; }
+    {HASH}                     { yybegin(xCOMMENT_STRING); return HASH; }
+    {AT}                       { return AT; }
     .                          { yybegin(xCOMMENT_STRING); yypushback(yylength()); }
 }
 

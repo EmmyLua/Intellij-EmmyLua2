@@ -36,10 +36,15 @@
         STRING_LITERAL = "STRING_LITERAL"
         DASHES = 'DASHES'
         STRING = 'STRING'
+        WORD = 'WORD'
+        HASH = 'HASH'
+        AT = 'AT'
+        SPECIAL_SYMBOL = 'SPECIAL_SYMBOL'
   ]
 }
 
 doc ::= (DASHES comment_content?)*
 
-private comment_content ::= STRING { recoverWhile=comment_content_recover }
+private comment_content ::= token_sequence? { recoverWhile=comment_content_recover }
+private token_sequence ::= (WORD | STRING | HASH | AT)+
 private comment_content_recover ::= !(DASHES)

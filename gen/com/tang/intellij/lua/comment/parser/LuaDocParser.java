@@ -36,14 +36,13 @@ public class LuaDocParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // STRING
+  // token_sequence?
   static boolean comment_content(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "comment_content")) return false;
-    boolean r;
     Marker m = enter_section_(b, l, _NONE_);
-    r = consumeToken(b, STRING);
-    exit_section_(b, l, m, r, false, LuaDocParser::comment_content_recover);
-    return r;
+    token_sequence(b, l + 1);
+    exit_section_(b, l, m, true, false, LuaDocParser::comment_content_recover);
+    return true;
   }
 
   /* ********************************************************** */
@@ -85,6 +84,33 @@ public class LuaDocParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "doc_0_1")) return false;
     comment_content(b, l + 1);
     return true;
+  }
+
+  /* ********************************************************** */
+  // (WORD | STRING | HASH | AT)+
+  static boolean token_sequence(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "token_sequence")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = token_sequence_0(b, l + 1);
+    while (r) {
+      int c = current_position_(b);
+      if (!token_sequence_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "token_sequence", c)) break;
+    }
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // WORD | STRING | HASH | AT
+  private static boolean token_sequence_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "token_sequence_0")) return false;
+    boolean r;
+    r = consumeToken(b, WORD);
+    if (!r) r = consumeToken(b, STRING);
+    if (!r) r = consumeToken(b, HASH);
+    if (!r) r = consumeToken(b, AT);
+    return r;
   }
 
 }

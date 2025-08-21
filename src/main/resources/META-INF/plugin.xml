@@ -74,9 +74,6 @@
         <!-- LSP 颜色配置页面 -->
         <colorSettingsPage implementation="com.tang.intellij.lua.highlighting.LuaLspColorSettingsPage"/>
 
-        <!-- <highlightUsagesHandlerFactory
-                implementation="com.tang.intellij.lua.codeInsight.highlighting.LuaHighlightUsagesHandlerFactory"/> -->
-
         <!-- <readWriteAccessDetector implementation="com.tang.intellij.lua.codeInsight.LuaReadWriteAccessDetector"/> -->
 
         <!--        debugger-->

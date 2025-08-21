@@ -20,6 +20,7 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
   /** lexical states */
   public static final int YYINITIAL = 0;
   public static final int xCOMMENT_STRING = 2;
+  public static final int xWORD_PARSING = 4;
 
   /**
    * ZZ_LEXSTATE[l] is the state in the DFA for the lexical state l
@@ -28,7 +29,7 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
    * l is of the form l = 2*k, k a non negative integer
    */
   private static final int ZZ_LEXSTATE[] = {
-     0,  0,  1, 1
+     0,  0,  1,  1,  2, 2
   };
 
   /**
@@ -65,8 +66,10 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
   private static final int [] ZZ_CMAP_BLOCKS = zzUnpackcmap_blocks();
 
   private static final String ZZ_CMAP_BLOCKS_PACKED_0 =
-    "\11\0\1\1\1\2\1\3\1\4\1\5\22\0\1\1"+
-    "\14\0\1\6\127\0\1\3\u01a2\0\2\3\326\0\u0100\3";
+    "\11\0\1\1\1\2\1\3\1\1\1\4\22\0\1\5"+
+    "\2\6\1\7\2\0\7\6\1\10\2\6\12\11\6\6"+
+    "\1\12\32\13\3\6\1\0\1\13\1\6\32\13\4\6"+
+    "\6\0\1\3\u01a2\0\2\3\326\0\u0100\3";
 
   private static int [] zzUnpackcmap_blocks() {
     int [] result = new int[1024];
@@ -93,11 +96,11 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
   private static final int [] ZZ_ACTION = zzUnpackAction();
 
   private static final String ZZ_ACTION_PACKED_0 =
-    "\1\0\1\1\1\2\1\3\1\4\1\5\1\4\1\2"+
-    "\1\1\1\3\1\6";
+    "\1\0\1\1\1\0\1\2\1\3\1\4\1\5\1\4"+
+    "\1\2\1\1\1\3\1\6\1\7\1\10\1\11\1\12";
 
   private static int [] zzUnpackAction() {
-    int [] result = new int[11];
+    int [] result = new int[16];
     int offset = 0;
     offset = zzUnpackAction(ZZ_ACTION_PACKED_0, offset, result);
     return result;
@@ -122,11 +125,11 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
   private static final int [] ZZ_ROWMAP = zzUnpackRowMap();
 
   private static final String ZZ_ROWMAP_PACKED_0 =
-    "\0\0\0\7\0\16\0\25\0\16\0\16\0\34\0\43"+
-    "\0\52\0\61\0\43";
+    "\0\0\0\14\0\30\0\44\0\60\0\44\0\44\0\74"+
+    "\0\110\0\124\0\140\0\44\0\44\0\44\0\154\0\110";
 
   private static int [] zzUnpackRowMap() {
-    int [] result = new int[11];
+    int [] result = new int[16];
     int offset = 0;
     offset = zzUnpackRowMap(ZZ_ROWMAP_PACKED_0, offset, result);
     return result;
@@ -149,14 +152,16 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
   private static final int [] ZZ_TRANS = zzUnpacktrans();
 
   private static final String ZZ_TRANS_PACKED_0 =
-    "\1\3\1\4\1\5\1\6\1\4\1\7\1\10\1\11"+
-    "\1\12\1\5\1\11\1\4\1\7\1\11\10\0\1\4"+
-    "\2\0\1\4\4\0\1\5\12\0\1\13\2\11\1\0"+
-    "\1\11\2\0\2\11\1\12\1\0\1\11\1\4\1\0"+
-    "\1\11";
+    "\1\4\1\5\1\6\1\7\1\10\1\5\2\4\1\11"+
+    "\3\4\1\12\1\5\1\6\1\12\1\10\1\13\6\12"+
+    "\1\4\1\5\1\6\1\7\1\10\1\5\1\14\1\15"+
+    "\1\14\1\4\1\16\1\17\15\0\1\5\3\0\1\5"+
+    "\10\0\1\6\21\0\1\20\3\0\1\12\2\0\1\12"+
+    "\1\0\10\12\1\5\1\0\1\12\1\0\1\13\6\12"+
+    "\11\0\1\17\1\0\1\17";
 
   private static int [] zzUnpacktrans() {
-    int [] result = new int[56];
+    int [] result = new int[120];
     int offset = 0;
     offset = zzUnpacktrans(ZZ_TRANS_PACKED_0, offset, result);
     return result;
@@ -194,10 +199,11 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
   private static final int [] ZZ_ATTRIBUTE = zzUnpackAttribute();
 
   private static final String ZZ_ATTRIBUTE_PACKED_0 =
-    "\1\0\1\1\1\11\1\1\2\11\5\1";
+    "\1\0\1\1\1\0\1\11\1\1\2\11\4\1\3\11"+
+    "\2\1";
 
   private static int [] zzUnpackAttribute() {
-    int [] result = new int[11];
+    int [] result = new int[16];
     int offset = 0;
     offset = zzUnpackAttribute(ZZ_ATTRIBUTE_PACKED_0, offset, result);
     return result;
@@ -527,32 +533,52 @@ public class _LuaDocLexer implements FlexLexer, LuaDocTypes {
             { yybegin(YYINITIAL); return STRING;
             }
           // fall through
-          case 7: break;
+          case 11: break;
           case 2:
             { yybegin(xCOMMENT_STRING); yypushback(yylength());
             }
           // fall through
-          case 8: break;
+          case 12: break;
           case 3:
             { return com.intellij.psi.TokenType.WHITE_SPACE;
             }
           // fall through
-          case 9: break;
+          case 13: break;
           case 4:
             { yybegin(YYINITIAL); return com.intellij.psi.TokenType.WHITE_SPACE;
             }
           // fall through
-          case 10: break;
+          case 14: break;
           case 5:
             { return TokenType.WHITE_SPACE;
             }
           // fall through
-          case 11: break;
+          case 15: break;
           case 6:
-            { return DASHES;
+            { return STRING;
             }
           // fall through
-          case 12: break;
+          case 16: break;
+          case 7:
+            { yybegin(xCOMMENT_STRING); return HASH;
+            }
+          // fall through
+          case 17: break;
+          case 8:
+            { return AT;
+            }
+          // fall through
+          case 18: break;
+          case 9:
+            { return WORD;
+            }
+          // fall through
+          case 19: break;
+          case 10:
+            { yybegin(xWORD_PARSING); return DASHES;
+            }
+          // fall through
+          case 20: break;
           default:
             zzScanError(ZZ_NO_MATCH);
           }
