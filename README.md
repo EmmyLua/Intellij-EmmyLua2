@@ -81,7 +81,8 @@ end
 
 | IDE Version | Plugin Version | Status |
 |-------------|----------------|--------|
-| 2024.3+     | 0.8.x         | ✅ Actively Supported |
+| 2024.3+     | 0.8.x          | ✅ Actively Supported |
+| 2025.2+     | 0.12.x         | ✅ Actively Supported |
 
 ## 🤝 Contributing
 
