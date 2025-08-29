@@ -43,9 +43,9 @@
                   language="Lua"/>
 
         <!--        folding-->
-        <lang.foldingBuilder language="Lua" implementationClass="com.tang.intellij.lua.folding.LuaFoldingBuilder"/>
-        <!--        <lang.foldingBuilder language="Lua"-->
-        <!--                             implementationClass="com.redhat.devtools.lsp4ij.features.foldingRange.LSPFoldingRangeBuilder"/>-->
+        <!--        <lang.foldingBuilder language="Lua" implementationClass="com.tang.intellij.lua.folding.LuaFoldingBuilder"/>-->
+        <lang.foldingBuilder language="Lua"
+                             implementationClass="com.redhat.devtools.lsp4ij.features.foldingRange.LSPFoldingRangeBuilder"/>
 
 
         <lang.parserDefinition language="Lua" implementationClass="com.tang.intellij.lua.lang.LuaParserDefinition"/>
@@ -69,7 +69,8 @@
         <!--        <highlightErrorFilter implementation="com.tang.intellij.lua.highlighting.LuaHighlightErrorFilter"/>-->
 
         <!-- LSP 外部注解器 - 更高优先级 -->
-        <externalAnnotator language="Lua" implementationClass="com.tang.intellij.lua.annotator.LuaLspExternalAnnotator"/>
+        <externalAnnotator language="Lua"
+                           implementationClass="com.tang.intellij.lua.annotator.LuaLspExternalAnnotator"/>
 
         <!-- LSP 颜色配置页面 -->
         <colorSettingsPage implementation="com.tang.intellij.lua.highlighting.LuaLspColorSettingsPage"/>
