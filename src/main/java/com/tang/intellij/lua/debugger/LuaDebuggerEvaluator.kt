@@ -16,6 +16,7 @@
 
 package com.tang.intellij.lua.debugger
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.openapi.project.Project
@@ -32,11 +33,19 @@ import com.tang.intellij.lua.psi.*
  * Created by tangzx on 2017/5/1.
  */
 abstract class LuaDebuggerEvaluator : XDebuggerEvaluator() {
-    override fun getExpressionRangeAtOffset(project: Project, document: Document, offset: Int, sideEffectsAllowed: Boolean): TextRange? {
+    override fun getExpressionRangeAtOffset(
+        project: Project,
+        document: Document,
+        offset: Int,
+        sideEffectsAllowed: Boolean
+    ): TextRange? {
         var currentRange: TextRange? = null
-        PsiDocumentManager.getInstance(project).commitAndRunReadAction {
+
+        val computeRange = computeRange@{
             try {
-                val file = PsiDocumentManager.getInstance(project).getPsiFile(document) ?: return@commitAndRunReadAction
+                val psiDocManager = PsiDocumentManager.getInstance(project)
+                val file = psiDocManager.getPsiFile(document) ?: return@computeRange
+
                 if (currentRange == null) {
                     val ele = file.findElementAt(offset)
                     if (ele != null && ele.node.elementType == LuaTypes.ID) {
@@ -44,6 +53,7 @@ abstract class LuaDebuggerEvaluator : XDebuggerEvaluator() {
                         when (parent) {
                             is LuaFuncDef,
                             is LuaLocalFuncDef -> currentRange = ele.textRange
+
                             is LuaClassMethodName,
                             is PsiNameIdentifierOwner -> currentRange = parent.textRange
                         }
@@ -56,16 +66,31 @@ abstract class LuaDebuggerEvaluator : XDebuggerEvaluator() {
                         is LuaCallExpr,
                         is LuaClosureExpr,
                         is LuaLiteralExpr -> null
+
                         else -> expr?.textRange
                     }
                 }
             } catch (ignored: IndexNotReadyException) {
             }
         }
+
+        // Check if we're already in a read action to avoid deadlock
+        if (ApplicationManager.getApplication().isReadAccessAllowed) {
+            // Already in read action, just execute directly
+            computeRange()
+        } else {
+            // Not in read action, need to commit and run in read action
+            PsiDocumentManager.getInstance(project).commitAndRunReadAction(computeRange)
+        }
+
         return currentRange
     }
 
-    override fun evaluate(express: String, xEvaluationCallback: XDebuggerEvaluator.XEvaluationCallback, xSourcePosition: XSourcePosition?) {
+    override fun evaluate(
+        express: String,
+        xEvaluationCallback: XDebuggerEvaluator.XEvaluationCallback,
+        xSourcePosition: XSourcePosition?
+    ) {
         var expr = express.trim()
         if (!expr.endsWith(')')) {
             val lastDot = express.lastIndexOf('.')
@@ -76,5 +101,9 @@ abstract class LuaDebuggerEvaluator : XDebuggerEvaluator() {
         eval(expr, xEvaluationCallback, xSourcePosition)
     }
 
-    protected abstract fun eval(express: String, xEvaluationCallback: XDebuggerEvaluator.XEvaluationCallback, xSourcePosition: XSourcePosition?)
+    protected abstract fun eval(
+        express: String,
+        xEvaluationCallback: XDebuggerEvaluator.XEvaluationCallback,
+        xSourcePosition: XSourcePosition?
+    )
 }

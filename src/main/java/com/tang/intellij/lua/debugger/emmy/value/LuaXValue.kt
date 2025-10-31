@@ -33,13 +33,13 @@ abstract class LuaXValue(val value: VariableValue) : XValue() {
     companion object {
         fun create(v: VariableValue, frame: EmmyDebugStackFrame): LuaXValue {
             return when(v.valueTypeValue) {
-                LuaValueType.TSTRING -> StringXValue(v)
-                LuaValueType.TNUMBER -> NumberXValue(v)
-                LuaValueType.TBOOLEAN -> BoolXValue(v)
+                LuaValueType.TSTRING -> StringXValue(v, frame)
+                LuaValueType.TNUMBER -> NumberXValue(v, frame)
+                LuaValueType.TBOOLEAN -> BoolXValue(v, frame)
                 LuaValueType.TUSERDATA,
                 LuaValueType.TTABLE -> TableXValue(v, frame)
                 LuaValueType.GROUP -> GroupXValue(v, frame)
-                else -> AnyXValue(v)
+                else -> AnyXValue(v, frame)
             }
         }
     }
@@ -55,13 +55,34 @@ abstract class LuaXValue(val value: VariableValue) : XValue() {
      * This is called by IntelliJ to determine where to show the variable value
      */
     override fun computeInlineDebuggerData(callback: XInlineDebuggerDataCallback): ThreeState {
-        // Compute and provide source position for inline display
-        computeSourcePosition { position ->
-            if (position != null) {
-                callback.computed(position)
+        println("LuaXValue.computeInlineDebuggerData: Called for variable '${name}' (${this.javaClass.simpleName})")
+        
+        try {
+            // Compute and provide source position for inline display
+            var hasValidPosition = false
+            computeSourcePosition { position ->
+                println("LuaXValue.computeInlineDebuggerData: Received position: $position for '${name}'")
+                if (position != null) {
+                    try {
+                        callback.computed(position)
+                        hasValidPosition = true
+                        println("LuaXValue.computeInlineDebuggerData: Successfully called callback.computed() for '${name}' at $position")
+                    } catch (e: Exception) {
+                        println("LuaXValue.computeInlineDebuggerData: Exception calling callback.computed(): ${e.message}")
+                        e.printStackTrace()
+                    }
+                }
             }
+            
+            // Return YES only if we found at least one valid position
+            val result = if (hasValidPosition) ThreeState.YES else ThreeState.NO
+            println("LuaXValue.computeInlineDebuggerData: Returning $result for '${name}'")
+            return result
+        } catch (e: Exception) {
+            println("LuaXValue.computeInlineDebuggerData: Exception: ${e.message}")
+            e.printStackTrace()
+            return ThreeState.NO
         }
-        return ThreeState.YES
     }
     
     /**
@@ -84,47 +105,66 @@ private object VariableComparator : Comparator<VariableValue> {
     }
 }
 
-class StringXValue(v: VariableValue) : LuaXValue(v) {
+class StringXValue(v: VariableValue, val frame: EmmyDebugStackFrame) : LuaXValue(v) {
     override fun computePresentation(xValueNode: XValueNode, place: XValuePlace) {
         xValueNode.setPresentation(null, LuaXStringPresentation(value.value), false)
     }
     
     override fun computeSourcePosition(callback: (com.intellij.xdebugger.XSourcePosition?) -> Unit) {
-        // String values can have inline display
-        callback(null)
+        println("StringXValue.computeSourcePosition: Called for '${name}'")
+        try {
+            // Get all positions for this variable, use the LAST one (closest to current line)
+            val positions = frame.getVariableContext().getAllSourcePositionsFor(this)
+            println("StringXValue.computeSourcePosition: Found ${positions.size} positions for '${name}'")
+            if (positions.isNotEmpty()) {
+                val lastPosition = positions.last()
+                println("StringXValue.computeSourcePosition: Using last position: $lastPosition")
+                callback(lastPosition)
+            } else {
+                println("StringXValue.computeSourcePosition: No positions found, calling callback with null")
+                callback(null)
+            }
+        } catch (e: Exception) {
+            println("StringXValue.computeSourcePosition: Exception: ${e.message}")
+            e.printStackTrace()
+            callback(null)
+        }
     }
 }
 
-class NumberXValue(v: VariableValue) : LuaXValue(v) {
+class NumberXValue(v: VariableValue, val frame: EmmyDebugStackFrame) : LuaXValue(v) {
     override fun computePresentation(xValueNode: XValueNode, place: XValuePlace) {
         xValueNode.setPresentation(null, LuaXNumberPresentation(value.value), false)
     }
     
     override fun computeSourcePosition(callback: (com.intellij.xdebugger.XSourcePosition?) -> Unit) {
-        // Number values can have inline display
-        callback(null)
+        // Use the LAST occurrence (closest to current line)
+        val positions = frame.getVariableContext().getAllSourcePositionsFor(this)
+        callback(positions.lastOrNull())
     }
 }
 
-class BoolXValue(val v: VariableValue) : LuaXValue(v) {
+class BoolXValue(val v: VariableValue, val frame: EmmyDebugStackFrame) : LuaXValue(v) {
     override fun computePresentation(xValueNode: XValueNode, place: XValuePlace) {
         xValueNode.setPresentation(null, LuaXBoolPresentation(v.value), false)
     }
     
     override fun computeSourcePosition(callback: (com.intellij.xdebugger.XSourcePosition?) -> Unit) {
-        // Boolean values can have inline display
-        callback(null)
+        // Use the LAST occurrence (closest to current line)
+        val positions = frame.getVariableContext().getAllSourcePositionsFor(this)
+        callback(positions.lastOrNull())
     }
 }
 
-class AnyXValue(val v: VariableValue) : LuaXValue(v) {
+class AnyXValue(val v: VariableValue, val frame: EmmyDebugStackFrame) : LuaXValue(v) {
     override fun computePresentation(xValueNode: XValueNode, place: XValuePlace) {
         xValueNode.setPresentation(null, v.valueTypeName, v.value, false)
     }
     
     override fun computeSourcePosition(callback: (com.intellij.xdebugger.XSourcePosition?) -> Unit) {
-        // Other values can have inline display
-        callback(null)
+        // Use the LAST occurrence (closest to current line)
+        val positions = frame.getVariableContext().getAllSourcePositionsFor(this)
+        callback(positions.lastOrNull())
     }
 }
 
@@ -211,9 +251,9 @@ class TableXValue(v: VariableValue, val frame: EmmyDebugStackFrame) : LuaXValue(
     }
     
     override fun computeSourcePosition(callback: (com.intellij.xdebugger.XSourcePosition?) -> Unit) {
-        // Try to find position for this variable in the frame
-        val position = frame.getSourcePositionFor(this)
-        callback(position)
+        // Use the LAST occurrence (closest to current line)
+        val positions = frame.getVariableContext().getAllSourcePositionsFor(this)
+        callback(positions.lastOrNull())
     }
 
     private val evalExpr: String
