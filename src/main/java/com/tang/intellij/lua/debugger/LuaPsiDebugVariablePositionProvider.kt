@@ -18,6 +18,7 @@ package com.tang.intellij.lua.debugger
 
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.editor.Document
+import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
@@ -25,11 +26,14 @@ import com.intellij.xdebugger.XSourcePosition
 import com.tang.intellij.lua.debugger.emmy.value.LuaXValue
 import com.tang.intellij.lua.psi.LuaFuncBody
 import com.tang.intellij.lua.psi.LuaNameExpr
+import com.tang.intellij.lua.psi.LuaNameDef
+import com.tang.intellij.lua.psi.LuaParamNameDef
 import com.tang.intellij.lua.psi.LuaPsiFile
 
 /**
  * Provider that uses PSI tree to find variable positions
- * Collects all NameExpr from current position up to the first FuncBody or file root
+ * Collects all NameExpr, NameDef (local variables), and ParamNameDef (function parameters)
+ * from current position up to the first FuncBody or file root
  */
 class LuaPsiDebugVariablePositionProvider : LuaDebugVariablePositionProvider {
     
@@ -92,7 +96,7 @@ class LuaPsiDebugVariablePositionProvider : LuaDebugVariablePositionProvider {
     }
     
     /**
-     * Collect all NameExpr in the scope up to the specified line end offset
+     * Collect all NameExpr, NameDef, and ParamNameDef in the scope up to the specified line end offset
      */
     private fun collectNameExprsInScope(
         scopeElement: PsiElement,
@@ -100,14 +104,22 @@ class LuaPsiDebugVariablePositionProvider : LuaDebugVariablePositionProvider {
         document: Document,
         context: LuaDebugVariableContext
     ) {
-        // Find all NameExpr within the scope element
+        // Find all NameExpr (variable usages) within the scope element
         val nameExprs = PsiTreeUtil.findChildrenOfType(scopeElement, LuaNameExpr::class.java)
         
-        println("LuaPsiDebugVariablePositionProvider: Found ${nameExprs.size} NameExpr in scope")
+        // Find all NameDef (local variable definitions) within the scope element
+        val nameDefs = PsiTreeUtil.findChildrenOfType(scopeElement, LuaNameDef::class.java)
         
-        // For each variable, we want to keep track of ALL occurrences before or on current line
-        // This allows inline values to be shown at each usage location
-        var addedCount = 0
+        // Find all ParamNameDef (function parameter definitions) within the scope element
+        val paramNameDefs = PsiTreeUtil.findChildrenOfType(scopeElement, LuaParamNameDef::class.java)
+        
+        println("LuaPsiDebugVariablePositionProvider: Found ${nameExprs.size} NameExpr, ${nameDefs.size} NameDef, ${paramNameDefs.size} ParamNameDef in scope")
+        
+        // Collect all elements with their positions into a single list
+        data class ElementWithPosition(val name: String, val offset: Int, val textRange: TextRange, val type: String)
+        val allElements = mutableListOf<ElementWithPosition>()
+        
+        // Collect NameExpr (variable usages)
         for (nameExpr in nameExprs) {
             val textRange = nameExpr.textRange
             
@@ -116,12 +128,53 @@ class LuaPsiDebugVariablePositionProvider : LuaDebugVariablePositionProvider {
                 val variableName = nameExpr.text.trim()
                 
                 if (variableName.isNotBlank() && !isKeyword(variableName)) {
-                    println("LuaPsiDebugVariablePositionProvider: Adding variable '$variableName' at ${textRange.startOffset}")
-                    // Use a composite key (variable name + offset) to store multiple occurrences
-                    context.addVariableRange(variableName, textRange)
-                    addedCount++
+                    allElements.add(ElementWithPosition(variableName, textRange.startOffset, textRange, "NameExpr"))
                 }
             }
+        }
+        
+        // Collect NameDef (local variable definitions)
+        for (nameDef in nameDefs) {
+            // Skip if this is a ParamNameDef (already handled below)
+            if (nameDef is LuaParamNameDef) continue
+            
+            val textRange = nameDef.textRange
+            
+            // Only include NameDef that appear before or on the current line
+            if (textRange.startOffset <= lineEndOffset) {
+                val variableName = nameDef.text.trim()
+                
+                if (variableName.isNotBlank() && !isKeyword(variableName)) {
+                    allElements.add(ElementWithPosition(variableName, textRange.startOffset, textRange, "NameDef"))
+                }
+            }
+        }
+        
+        // Collect ParamNameDef (function parameter definitions)
+        for (paramNameDef in paramNameDefs) {
+            val textRange = paramNameDef.textRange
+            
+            // Only include ParamNameDef that appear before or on the current line
+            if (textRange.startOffset <= lineEndOffset) {
+                val variableName = paramNameDef.text.trim()
+                
+                if (variableName.isNotBlank() && !isKeyword(variableName)) {
+                    allElements.add(ElementWithPosition(variableName, textRange.startOffset, textRange, "ParamNameDef"))
+                }
+            }
+        }
+        
+        // Sort all elements by their start offset to ensure correct order
+        allElements.sortBy { it.offset }
+        
+        println("LuaPsiDebugVariablePositionProvider: Collected ${allElements.size} total elements, sorted by position")
+        
+        // Add them to context in sorted order
+        var addedCount = 0
+        for (element in allElements) {
+            println("LuaPsiDebugVariablePositionProvider: Adding ${element.type} variable '${element.name}' at ${element.offset}")
+            context.addVariableRange(element.name, element.textRange)
+            addedCount++
         }
         
         println("LuaPsiDebugVariablePositionProvider: Added $addedCount variables to context")
