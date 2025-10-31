@@ -17,6 +17,7 @@
 package com.tang.intellij.lua.debugger.emmy.value
 
 import com.intellij.icons.AllIcons
+import com.intellij.util.ThreeState
 import com.intellij.xdebugger.evaluation.XDebuggerEvaluator
 import com.intellij.xdebugger.frame.*
 import com.tang.intellij.lua.debugger.LuaXBoolPresentation
@@ -48,6 +49,29 @@ abstract class LuaXValue(val value: VariableValue) : XValue() {
     }
 
     var parent: LuaXValue? = null
+    
+    /**
+     * Compute inline debugger data for displaying variable values inline in the editor
+     * This is called by IntelliJ to determine where to show the variable value
+     */
+    override fun computeInlineDebuggerData(callback: XInlineDebuggerDataCallback): ThreeState {
+        // Compute and provide source position for inline display
+        computeSourcePosition { position ->
+            if (position != null) {
+                callback.computed(position)
+            }
+        }
+        return ThreeState.YES
+    }
+    
+    /**
+     * Compute source position for this variable
+     * Delegates to the stack frame to find the variable position
+     */
+    open fun computeSourcePosition(callback: (com.intellij.xdebugger.XSourcePosition?) -> Unit) {
+        // Default implementation - subclasses can override
+        callback(null)
+    }
 }
 
 private object VariableComparator : Comparator<VariableValue> {
@@ -64,11 +88,21 @@ class StringXValue(v: VariableValue) : LuaXValue(v) {
     override fun computePresentation(xValueNode: XValueNode, place: XValuePlace) {
         xValueNode.setPresentation(null, LuaXStringPresentation(value.value), false)
     }
+    
+    override fun computeSourcePosition(callback: (com.intellij.xdebugger.XSourcePosition?) -> Unit) {
+        // String values can have inline display
+        callback(null)
+    }
 }
 
 class NumberXValue(v: VariableValue) : LuaXValue(v) {
     override fun computePresentation(xValueNode: XValueNode, place: XValuePlace) {
         xValueNode.setPresentation(null, LuaXNumberPresentation(value.value), false)
+    }
+    
+    override fun computeSourcePosition(callback: (com.intellij.xdebugger.XSourcePosition?) -> Unit) {
+        // Number values can have inline display
+        callback(null)
     }
 }
 
@@ -76,11 +110,21 @@ class BoolXValue(val v: VariableValue) : LuaXValue(v) {
     override fun computePresentation(xValueNode: XValueNode, place: XValuePlace) {
         xValueNode.setPresentation(null, LuaXBoolPresentation(v.value), false)
     }
+    
+    override fun computeSourcePosition(callback: (com.intellij.xdebugger.XSourcePosition?) -> Unit) {
+        // Boolean values can have inline display
+        callback(null)
+    }
 }
 
 class AnyXValue(val v: VariableValue) : LuaXValue(v) {
     override fun computePresentation(xValueNode: XValueNode, place: XValuePlace) {
         xValueNode.setPresentation(null, v.valueTypeName, v.value, false)
+    }
+    
+    override fun computeSourcePosition(callback: (com.intellij.xdebugger.XSourcePosition?) -> Unit) {
+        // Other values can have inline display
+        callback(null)
     }
 }
 
@@ -106,6 +150,11 @@ class GroupXValue(v: VariableValue, val frame: EmmyDebugStackFrame) : LuaXValue(
             cl.add(it.name, it)
         }
         node.addChildren(cl, true)
+    }
+    
+    override fun computeSourcePosition(callback: (com.intellij.xdebugger.XSourcePosition?) -> Unit) {
+        // Groups don't have inline display typically
+        callback(null)
     }
 }
 
@@ -159,6 +208,12 @@ class TableXValue(v: VariableValue, val frame: EmmyDebugStackFrame) : LuaXValue(
             }, 2)
         }
         else super.computeChildren(node)
+    }
+    
+    override fun computeSourcePosition(callback: (com.intellij.xdebugger.XSourcePosition?) -> Unit) {
+        // Try to find position for this variable in the frame
+        val position = frame.getSourcePositionFor(this)
+        callback(position)
     }
 
     private val evalExpr: String

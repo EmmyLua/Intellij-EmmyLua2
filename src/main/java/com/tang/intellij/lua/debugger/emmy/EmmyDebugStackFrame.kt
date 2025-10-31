@@ -16,6 +16,7 @@
 
 package com.tang.intellij.lua.debugger.emmy
 
+import com.intellij.openapi.application.ReadAction
 import com.intellij.ui.ColoredTextContainer
 import com.intellij.ui.SimpleTextAttributes
 import com.intellij.xdebugger.XSourcePosition
@@ -23,16 +24,19 @@ import com.intellij.xdebugger.frame.XCompositeNode
 import com.intellij.xdebugger.frame.XStackFrame
 import com.intellij.xdebugger.frame.XValueChildrenList
 import com.intellij.xdebugger.impl.XSourcePositionImpl
+import com.tang.intellij.lua.debugger.LuaDebugVariableContext
 import com.tang.intellij.lua.debugger.emmy.value.LuaXValue
 import com.tang.intellij.lua.psi.LuaFileUtil
+import java.util.concurrent.atomic.AtomicBoolean
 
 class EmmyDebugStackFrame(val data: Stack, val process: EmmyDebugProcessBase) : XStackFrame() {
     private val values = XValueChildrenList()
     private var evaluator: EmmyEvaluator? = null
-    private val sourcePosition by lazy {
-        val file = LuaFileUtil.findFile(process.session.project, data.file)
-        if (file == null) null else XSourcePositionImpl.create(file, data.line - 1)
-    }
+    private var _sourcePosition: XSourcePosition? = null
+    private val sourcePositionInitialized = java.util.concurrent.atomic.AtomicBoolean(false)
+    
+    // Variable context for inline values
+    private var variableContext: LuaDebugVariableContext? = null
 
     init {
         data.localVariables.forEach {
@@ -62,6 +66,38 @@ class EmmyDebugStackFrame(val data: Stack, val process: EmmyDebugProcessBase) : 
     }
 
     override fun getSourcePosition(): XSourcePosition? {
-        return sourcePosition
+        // Initialize source position with read access
+        if (!sourcePositionInitialized.get()) {
+            com.intellij.openapi.application.ReadAction.run<RuntimeException> {
+                if (!sourcePositionInitialized.get()) {
+                    _sourcePosition = try {
+                        val file = LuaFileUtil.findFile(process.session.project, data.file)
+                        if (file == null) null else XSourcePositionImpl.create(file, data.line - 1)
+                    } catch (e: Exception) {
+                        null
+                    }
+                    sourcePositionInitialized.set(true)
+                }
+            }
+        }
+        return _sourcePosition
+    }
+    
+    /**
+     * Get or create variable context for inline value support
+     */
+    fun getVariableContext(): LuaDebugVariableContext {
+        if (variableContext == null) {
+            variableContext = LuaDebugVariableContext(this)
+            variableContext!!.configureContext()
+        }
+        return variableContext!!
+    }
+    
+    /**
+     * Get source position for a variable value
+     */
+    fun getSourcePositionFor(value: LuaXValue): XSourcePosition? {
+        return getVariableContext().getSourcePositionFor(value)
     }
 }
