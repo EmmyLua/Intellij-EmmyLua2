@@ -50,3 +50,6 @@ lua-language-server*
 temp
 
 ./gradle.properties
+idea-flex.skeleton
+jflex-*.jar
+kotlin-compiler*
