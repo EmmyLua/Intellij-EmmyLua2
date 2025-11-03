@@ -27,23 +27,37 @@ import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.XDebuggerManager
 import com.tang.intellij.lua.debugger.LuaRunner
 
+/**
+ * Runner for the refactored Emmy debugger
+ * 
+ * This runner uses the clean, modern architecture with proper separation of concerns.
+ */
 class EmmyDebuggerRunner : LuaRunner() {
+    
     companion object {
         const val ID = "lua.emmy.runner"
     }
+    
     override fun getRunnerId() = ID
-
+    
     override fun canRun(executorId: String, runProfile: RunProfile): Boolean {
-        return DefaultDebugExecutor.EXECUTOR_ID == executorId && runProfile is EmmyDebugConfiguration
+        return DefaultDebugExecutor.EXECUTOR_ID == executorId && 
+               runProfile is EmmyDebugConfiguration
     }
-
-    override fun doExecute(state: RunProfileState, environment: ExecutionEnvironment): RunContentDescriptor {
+    
+    override fun doExecute(
+        state: RunProfileState,
+        environment: ExecutionEnvironment
+    ): RunContentDescriptor {
         val manager = XDebuggerManager.getInstance(environment.project)
+        
         val session = manager.startSession(environment, object : XDebugProcessStarter() {
             override fun start(session: XDebugSession): XDebugProcess {
+                // Use the refactored debug process
                 return EmmyDebugProcess(session)
             }
         })
+        
         return session.runContentDescriptor
     }
 }

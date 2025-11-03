@@ -16,36 +16,48 @@
 
 package com.tang.intellij.lua.debugger.emmy
 
-import com.intellij.xdebugger.XSourcePosition
-import com.tang.intellij.lua.debugger.LuaDebuggerEvaluator
-import com.tang.intellij.lua.debugger.emmy.value.LuaXValue
+import com.intellij.xdebugger.evaluation.XDebuggerEvaluator
+import com.tang.intellij.lua.debugger.emmy.value.LuaXValueFactory
 
-class EmmyEvaluator(val frame: EmmyDebugStackFrame, val process: EmmyDebugProcessBase) : LuaDebuggerEvaluator(), IEvalResultHandler {
-
-    private val callbackMap = mutableMapOf<Int, XEvaluationCallback>()
-
-    init {
-        process.addEvalResultHandler(this)
+/**
+ * Evaluator for Emmy debugger - evaluates expressions in the debug context
+ */
+class EmmyEvaluator(
+    private val frame: EmmyDebugStackFrame,
+    private val process: EmmyDebugProcess
+) : XDebuggerEvaluator() {
+    
+    override fun evaluate(
+        expression: String,
+        callback: XEvaluationCallback,
+        expressionPosition: com.intellij.xdebugger.XSourcePosition?
+    ) {
+        evaluate(expression, 0, callback)
     }
-
-    override fun handleMessage(msg: EvalRsp) {
-        val callback = callbackMap[msg.seq]
-        if (callback != null) {
-            if (msg.success)
-                callback.evaluated(LuaXValue.create(msg.value!!, frame))
-            else
-                callback.errorOccurred(msg.error ?: "unknown error")
-            callbackMap.remove(msg.seq)
-        }
-    }
-
-    fun eval(express: String, cacheId: Int, xEvaluationCallback: XEvaluationCallback, depth: Int = 1) {
-        val req = EvalReq(express, frame.data.level, cacheId, depth)
-        process.send(req)
-        callbackMap[req.seq] = xEvaluationCallback
-    }
-
-    override fun eval(express: String, xEvaluationCallback: XEvaluationCallback, xSourcePosition: XSourcePosition?) {
-        eval(express, 0, xEvaluationCallback)
+    
+    /**
+     * Evaluate expression with custom cache ID
+     */
+    fun evaluate(
+        expression: String,
+        cacheId: Int,
+        callback: XEvaluationCallback
+    ) {
+        process.evaluate(
+            expression,
+            frame.stackData.level,
+            cacheId,
+            1, // depth
+            object : EmmyDebugProcess.EvalHandler {
+                override fun onSuccess(variable: com.tang.intellij.lua.debugger.model.DebugVariable) {
+                    val value = LuaXValueFactory.create(variable, frame)
+                    callback.evaluated(value)
+                }
+                
+                override fun onError(error: String) {
+                    callback.errorOccurred(error)
+                }
+            }
+        )
     }
 }
