@@ -80,7 +80,16 @@
         <configurationType implementation="com.tang.intellij.lua.debugger.emmy.EmmyDebugConfigurationType"/>
         <xdebugger.breakpointType implementation="com.tang.intellij.lua.debugger.LuaLineBreakpointType"/>
         <!-- file template provider -->
-        <fileTemplateGroup implementation="com.tang.intellij.lua.actions.LuaFileTemplateProvider"/>
+        <!-- Commented out to prevent templates from appearing directly in New menu -->
+        <!-- <fileTemplateGroup implementation="com.tang.intellij.lua.actions.LuaFileTemplateProvider"/> -->
+        
+        <!-- Internal file templates - must be registered for CreateFileFromTemplateAction -->
+        <internalFileTemplate name="LuaClass"/>
+        <internalFileTemplate name="LuaModule"/>
+        <internalFileTemplate name="LuaEnum"/>
+        <internalFileTemplate name="LuaUnity"/>
+        <internalFileTemplate name="LuaEmpty"/>
+        
         <!--CreateFromTemplate-->
         <createFromTemplateHandler implementation="com.tang.intellij.lua.actions.LuaCreateFromTemplateHandler"/>
         

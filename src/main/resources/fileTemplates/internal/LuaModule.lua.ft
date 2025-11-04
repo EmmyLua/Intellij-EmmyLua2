@@ -1,0 +1,14 @@
+---
+--- ${NAME} module
+--- Created by ${USER}
+--- DateTime: ${DATE} ${TIME}
+---
+
+---@class ${NAME}
+local M = {}
+
+---@return ${NAME}
+function M.new()
+end
+
+return M

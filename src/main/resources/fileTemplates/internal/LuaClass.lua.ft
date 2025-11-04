@@ -18,22 +18,4 @@ function ${NAME}.new(name)
     return self
 end
 
----Example method
----@return string
-function ${NAME}:getName()
-    return self.name
-end
-
----Example method
----@param name string
-function ${NAME}:setName(name)
-    self.name = name
-end
-
----String representation
----@return string
-function ${NAME}:__tostring()
-    return string.format("${NAME}(%s)", self.name)
-end
-
 return ${NAME}

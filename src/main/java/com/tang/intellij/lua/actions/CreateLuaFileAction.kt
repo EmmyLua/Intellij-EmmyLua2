@@ -14,11 +14,11 @@ class CreateLuaFileAction : CreateFileFromTemplateAction("Lua File", "Create a n
     
     override fun buildDialog(project: Project, directory: PsiDirectory, builder: CreateFileFromTemplateDialog.Builder) {
         builder.setTitle("New Lua Class/File")
+            .addKind("Empty File", LuaIcons.FILE, "LuaEmpty.lua")
             .addKind("Class", LuaIcons.FILE, "LuaClass.lua")
             .addKind("Module", LuaIcons.FILE, "LuaModule.lua")
             .addKind("Enum", LuaIcons.FILE, "LuaEnum.lua")
             .addKind("Unity", LuaIcons.FILE, "LuaUnity.lua")
-            .addKind("Empty File", LuaIcons.FILE, "LuaEmpty.lua")
     }
 
     override fun getActionName(directory: PsiDirectory, newName: String, templateName: String): String {

@@ -1,0 +1,16 @@
+---
+--- ${NAME} enum
+--- Created by ${USER}
+--- DateTime: ${DATE} ${TIME}
+---
+
+---@enum ${NAME}
+local ${NAME} = {
+    -- Define enum values
+    NONE = 0,
+    FIRST = 1,
+    SECOND = 2,
+    THIRD = 3,
+}
+
+return ${NAME}
