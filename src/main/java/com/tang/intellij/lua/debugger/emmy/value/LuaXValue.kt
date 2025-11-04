@@ -17,7 +17,9 @@
 package com.tang.intellij.lua.debugger.emmy.value
 
 import com.intellij.icons.AllIcons
+import com.intellij.xdebugger.XSourcePosition
 import com.intellij.xdebugger.frame.*
+import com.tang.intellij.lua.debugger.LuaDebugVariableContext
 import com.tang.intellij.lua.debugger.LuaXBoolPresentation
 import com.tang.intellij.lua.debugger.LuaXNumberPresentation
 import com.tang.intellij.lua.debugger.LuaXStringPresentation
@@ -52,9 +54,49 @@ sealed class LuaXValue(val variable: DebugVariable) : XValue() {
     
     var parent: LuaXValue? = null
     
+    // Lazy variable context for inline values support
+    protected val variableContext: LuaDebugVariableContext? by lazy {
+        (stackFrame() as? EmmyDebugStackFrame)?.let { frame ->
+            frame.getVariableContext()
+        }
+    }
+    
     companion object {
         fun create(variable: DebugVariable, frame: EmmyDebugStackFrame): LuaXValue {
             return LuaXValueFactory.create(variable, frame)
+        }
+    }
+    
+    /**
+     * Get the stack frame this value belongs to
+     */
+    protected abstract fun stackFrame(): Any?
+    
+    /**
+     * Get evaluation expression for inline values
+     */
+    override fun getEvaluationExpression(): String {
+        return name
+    }
+    
+    /**
+     * Compute source position for inline values
+     */
+    override fun computeSourcePosition(callback: XNavigatable) {
+        println("LuaXValue.computeSourcePosition: Computing for variable '${name}'")
+        
+        val ctx = variableContext
+        if (ctx == null) {
+            println("LuaXValue.computeSourcePosition: variableContext is null for '${name}'")
+            return
+        }
+        
+        val position = ctx.getSourcePosition(name)
+        if (position != null) {
+            println("LuaXValue.computeSourcePosition: Found position for '${name}': line ${position.line}")
+            callback.setSourcePosition(position)
+        } else {
+            println("LuaXValue.computeSourcePosition: No position found for '${name}'")
         }
     }
     
@@ -98,6 +140,8 @@ class SimpleXValue(
     private val frame: EmmyDebugStackFrame
 ) : LuaXValue(variable) {
     
+    override fun stackFrame() = frame
+    
     override fun computePresentation(node: XValueNode, place: XValuePlace) {
         node.setPresentation(null, variable.valueTypeName, variable.value, false)
     }
@@ -110,6 +154,8 @@ class StringXValue(
     variable: DebugVariable,
     private val frame: EmmyDebugStackFrame
 ) : LuaXValue(variable) {
+    
+    override fun stackFrame() = frame
     
     override fun computePresentation(node: XValueNode, place: XValuePlace) {
         node.setPresentation(null, LuaXStringPresentation(variable.value), false)
@@ -124,6 +170,8 @@ class NumberXValue(
     private val frame: EmmyDebugStackFrame
 ) : LuaXValue(variable) {
     
+    override fun stackFrame() = frame
+    
     override fun computePresentation(node: XValueNode, place: XValuePlace) {
         node.setPresentation(null, LuaXNumberPresentation(variable.value), false)
     }
@@ -137,6 +185,8 @@ class BoolXValue(
     private val frame: EmmyDebugStackFrame
 ) : LuaXValue(variable) {
     
+    override fun stackFrame() = frame
+    
     override fun computePresentation(node: XValueNode, place: XValuePlace) {
         node.setPresentation(null, LuaXBoolPresentation(variable.value), false)
     }
@@ -149,6 +199,8 @@ class GroupXValue(
     variable: DebugVariable,
     private val frame: EmmyDebugStackFrame
 ) : LuaXValue(variable) {
+    
+    override fun stackFrame() = frame
     
     private val children: List<LuaXValue> by lazy {
         variable.children?.sortedWith(compareBy(
@@ -183,6 +235,8 @@ class TableXValue(
     variable: DebugVariable,
     private val frame: EmmyDebugStackFrame
 ) : LuaXValue(variable) {
+    
+    override fun stackFrame() = frame
     
     private val children: List<LuaXValue> by lazy {
         variable.children?.sortedWith(compareBy(

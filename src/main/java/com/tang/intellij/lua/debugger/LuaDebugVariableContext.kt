@@ -73,6 +73,11 @@ class LuaDebugVariableContext(
                     psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor!!.document)
                     println("LuaDebugVariableContext: psiFile = $psiFile (${psiFile?.javaClass?.simpleName})")
                 }
+                
+                // Configure context immediately after initialization
+                println("LuaDebugVariableContext: Calling configureContext()...")
+                configureContext()
+                println("LuaDebugVariableContext: configureContext() completed")
             }
         }
     }

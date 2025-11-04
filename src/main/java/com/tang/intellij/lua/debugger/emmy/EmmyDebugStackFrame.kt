@@ -24,6 +24,7 @@ import com.intellij.xdebugger.frame.XCompositeNode
 import com.intellij.xdebugger.frame.XStackFrame
 import com.intellij.xdebugger.frame.XValueChildrenList
 import com.intellij.xdebugger.impl.XSourcePositionImpl
+import com.tang.intellij.lua.debugger.LuaDebugVariableContext
 import com.tang.intellij.lua.debugger.model.DebugStackFrame
 import com.tang.intellij.lua.debugger.emmy.value.LuaXValue
 import com.tang.intellij.lua.psi.LuaFileUtil
@@ -40,7 +41,20 @@ class EmmyDebugStackFrame(
     private var sourcePosition: XSourcePosition? = null
     private var sourcePositionInitialized = false
     
+    // Variable context for inline values
+    private var variableContext: LuaDebugVariableContext? = null
+    
     override fun getEvaluator() = evaluator
+    
+    /**
+     * Get or create variable context for inline values
+     */
+    fun getVariableContext(): LuaDebugVariableContext {
+        if (variableContext == null) {
+            variableContext = LuaDebugVariableContext(this)
+        }
+        return variableContext!!
+    }
     
     override fun customizePresentation(component: ColoredTextContainer) {
         val fileName = stackData.file.substringAfterLast('/')
@@ -88,3 +102,4 @@ class EmmyDebugStackFrame(
         return sourcePosition
     }
 }
+
