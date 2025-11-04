@@ -135,6 +135,18 @@ public class LuaLineIndentProvider implements LineIndentProvider {
     private String calculateIndentBasedOnPreviousLine(Editor editor, Project project, PsiElement element, String baseIndent) {
         String indentUnit = getIndentUnit(editor, project);
 
+        // 检查元素本身的类型
+        IElementType elementType = element.getNode().getElementType();
+
+        // 如果前一行是 'end', 'until' 或 'elseif'，返回到该块的基础缩进
+        if (elementType == LuaTypes.END || elementType == LuaTypes.UNTIL) {
+            // 找到对应的块结构并返回其基础缩进
+            String blockIndent = findBlockBaseIndent(element);
+            if (blockIndent != null) {
+                return blockIndent;
+            }
+        }
+
         // 检查是否是table相关的缩进
         String tableIndent = calculateTableIndent(element, baseIndent, indentUnit);
         if (tableIndent != null) {
@@ -155,9 +167,6 @@ public class LuaLineIndentProvider implements LineIndentProvider {
             parent = parent.getParent();
         }
 
-        // 检查元素本身的类型
-        IElementType elementType = element.getNode().getElementType();
-
         // 需要增加缩进的情况
         if (elementType == LuaTypes.DO ||
                 elementType == LuaTypes.THEN ||
@@ -174,6 +183,65 @@ public class LuaLineIndentProvider implements LineIndentProvider {
             return baseIndent + indentUnit;
         }
         return baseIndent;
+    }
+
+    /**
+     * 查找块结构的基础缩进（即包含该块的外层缩进）
+     */
+    private @Nullable String findBlockBaseIndent(PsiElement endElement) {
+        // 向上遍历找到包含该 end 的块结构
+        PsiElement current = endElement;
+        while (current != null) {
+            if (current instanceof LuaDoStat ||
+                    current instanceof LuaIfStat ||
+                    current instanceof LuaWhileStat ||
+                    current instanceof LuaForAStat ||
+                    current instanceof LuaForBStat ||
+                    current instanceof LuaRepeatStat ||
+                    current instanceof LuaFuncDef ||
+                    current instanceof LuaLocalFuncDef ||
+                    current instanceof LuaClassMethodDef) {
+
+                // 找到块的父元素
+                PsiElement parent = current.getParent();
+                if (parent != null) {
+                    // 如果父元素是 LuaBlock，继续向上找
+                    while (parent instanceof LuaBlock) {
+                        parent = parent.getParent();
+                    }
+
+                    // 获取父元素所在行的缩进
+                    if (parent != null) {
+                        int startOffset = parent.getTextRange().getStartOffset();
+                        Document document = PsiDocumentManager.getInstance(current.getProject())
+                                .getDocument(current.getContainingFile());
+                        if (document != null) {
+                            int lineNumber = document.getLineNumber(startOffset);
+                            int lineStartOffset = document.getLineStartOffset(lineNumber);
+                            String lineText = document.getText(new TextRange(lineStartOffset, startOffset));
+
+                            // 提取缩进
+                            StringBuilder indent = new StringBuilder();
+                            for (char c : lineText.toCharArray()) {
+                                if (c == ' ' || c == '\t') {
+                                    indent.append(c);
+                                } else {
+                                    break;
+                                }
+                            }
+                            return indent.toString();
+                        }
+                    }
+                }
+
+                // 如果没有父元素或父元素是文件，返回空缩进
+                return "";
+            }
+
+            current = current.getParent();
+        }
+
+        return null;
     }
 
     private boolean shouldIncreaseIndent(PsiElement element) {
