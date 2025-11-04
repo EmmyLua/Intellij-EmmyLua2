@@ -49,8 +49,7 @@ abstract class LuaDebuggerEvaluator : XDebuggerEvaluator() {
                 if (currentRange == null) {
                     val ele = file.findElementAt(offset)
                     if (ele != null && ele.node.elementType == LuaTypes.ID) {
-                        val parent = ele.parent
-                        when (parent) {
+                        when (val parent = ele.parent) {
                             is LuaFuncDef,
                             is LuaLocalFuncDef -> currentRange = ele.textRange
 
@@ -88,7 +87,7 @@ abstract class LuaDebuggerEvaluator : XDebuggerEvaluator() {
 
     override fun evaluate(
         express: String,
-        xEvaluationCallback: XDebuggerEvaluator.XEvaluationCallback,
+        xEvaluationCallback: XEvaluationCallback,
         xSourcePosition: XSourcePosition?
     ) {
         var expr = express.trim()
@@ -103,7 +102,7 @@ abstract class LuaDebuggerEvaluator : XDebuggerEvaluator() {
 
     protected abstract fun eval(
         express: String,
-        xEvaluationCallback: XDebuggerEvaluator.XEvaluationCallback,
+        xEvaluationCallback: XEvaluationCallback,
         xSourcePosition: XSourcePosition?
     )
 }

@@ -40,28 +40,28 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Modern Emmy Debug Process
- * 
+ *
  * Clean separation of concerns:
  * - Transport layer handles communication
  * - Breakpoint manager handles breakpoints
  * - This class coordinates between IntelliJ and Emmy debugger
  */
 class EmmyDebugProcess(session: XDebugSession) : LuaDebugProcess(session) {
-    
+
     private val logger = Logger.getInstance(javaClass)
     private val configuration = session.runProfile as EmmyDebugConfiguration
     private val editorsProvider = LuaDebuggerEditorsProvider()
-    
+
     // Core components
     private var transport: DebugTransport? = null
     private val breakpointManager = DebugBreakpointManager(session.project)
-    
+
     // Evaluation handlers
     private val evalHandlers = ConcurrentHashMap<Int, EvalHandler>()
-    
+
     // State
     private var isConnected = false
-    
+
     /**
      * Evaluation handler interface
      */
@@ -69,31 +69,31 @@ class EmmyDebugProcess(session: XDebugSession) : LuaDebugProcess(session) {
         fun onSuccess(variable: DebugVariable)
         fun onError(error: String)
     }
-    
+
     // ================================================================================================
     // LIFECYCLE
     // ================================================================================================
-    
+
     override fun sessionInitialized() {
         super.sessionInitialized()
-        
+
         // Connect breakpoint manager to transport
         breakpointManager.onSendRequest = { request ->
             send(request as DebugMessage)
         }
-        
+
         // Start transport on background thread
         ApplicationManager.getApplication().executeOnPooledThread {
             setupTransport()
         }
     }
-    
+
     override fun stop() {
         logger.info("Stopping debug session")
-        
+
         // Send stop command
         send(DebugActionRequest(DebugAction.Stop))
-        
+
         // Cleanup
         transport?.stop()
         transport = null
@@ -101,11 +101,11 @@ class EmmyDebugProcess(session: XDebugSession) : LuaDebugProcess(session) {
         evalHandlers.clear()
         isConnected = false
     }
-    
+
     // ================================================================================================
     // TRANSPORT SETUP
     // ================================================================================================
-    
+
     private fun setupTransport() {
         try {
             // Create transport based on configuration
@@ -113,19 +113,19 @@ class EmmyDebugProcess(session: XDebugSession) : LuaDebugProcess(session) {
                 EmmyDebugTransportType.TCP_CLIENT -> TransportMode.CLIENT
                 EmmyDebugTransportType.TCP_SERVER -> TransportMode.SERVER
             }
-            
+
             transport = TransportFactory.create(mode, configuration.host, configuration.port).apply {
                 handler = TransportHandlerImpl()
                 start()
             }
-            
+
         } catch (e: Exception) {
             logger.error("Failed to setup transport", e)
             error(e.localizedMessage ?: "Failed to setup transport")
             stop()
         }
     }
-    
+
     /**
      * Transport event handler implementation
      */
@@ -140,7 +140,7 @@ class EmmyDebugProcess(session: XDebugSession) : LuaDebugProcess(session) {
                 stop()
             }
         }
-        
+
         override fun onDisconnect() {
             if (isConnected) {
                 isConnected = false
@@ -149,24 +149,24 @@ class EmmyDebugProcess(session: XDebugSession) : LuaDebugProcess(session) {
                 session.stop()
             }
         }
-        
+
         override fun onMessage(command: DebugCommand, json: String) {
             handleMessage(command, json)
         }
-        
+
         override fun onError(message: String, exception: Throwable?) {
             error(message)
         }
-        
+
         override fun onLog(message: String) {
             println(message, LogConsoleType.NORMAL, ConsoleViewContentType.SYSTEM_OUTPUT)
         }
     }
-    
+
     // ================================================================================================
     // INITIALIZATION
     // ================================================================================================
-    
+
     private fun sendInitialization() {
         // Send init request with Emmy helper code
         val helperPath = LuaFileUtil.getPluginVirtualFile("debugger/emmy/emmyHelper.lua")
@@ -182,15 +182,15 @@ class EmmyDebugProcess(session: XDebugSession) : LuaDebugProcess(session) {
         }
 
         breakpointManager.initializeBreakpoints()
-        
+
         // Send ready signal
         send(ReadyRequest())
     }
-    
+
     // ================================================================================================
     // MESSAGE HANDLING
     // ================================================================================================
-    
+
     private fun handleMessage(command: DebugCommand, json: String) {
         try {
             when (command) {
@@ -203,35 +203,35 @@ class EmmyDebugProcess(session: XDebugSession) : LuaDebugProcess(session) {
             logger.error("Error handling message: $command", e)
         }
     }
-    
+
     private fun handleBreakNotification(json: String) {
         val notification = parseMessage<BreakpointNotification>(json) ?: return
-        
+
         logger.info("Break at ${notification.stacks.firstOrNull()?.file}:${notification.stacks.firstOrNull()?.line}")
-        
+
         // Create stack frames
         val frames = notification.stacks.map { EmmyDebugStackFrame(it, this) }
-        
+
         // Find the best frame to show
         val topFrame = frames.firstOrNull { it.sourcePosition != null }
             ?: frames.firstOrNull { it.stackData.line > 0 }
             ?: frames.firstOrNull()
-        
+
         if (topFrame == null) {
             logger.warn("No valid stack frame found")
             return
         }
-        
+
         // Create execution stack
         val stack = LuaExecutionStack(frames)
         stack.setTopFrame(topFrame)
-        
+
         // Check if we hit a breakpoint
         val sourcePos = topFrame.sourcePosition
         val breakpoint = if (sourcePos != null) {
             breakpointManager.getBreakpoint(sourcePos)
         } else null
-        
+
         // Notify IntelliJ
         ApplicationManager.getApplication().invokeLater {
             if (breakpoint != null) {
@@ -242,10 +242,10 @@ class EmmyDebugProcess(session: XDebugSession) : LuaDebugProcess(session) {
             session.showExecutionPoint()
         }
     }
-    
+
     private fun handleEvalResponse(json: String) {
         val response = parseMessage<EvalResponse>(json) ?: return
-        
+
         val handler = evalHandlers.remove(response.seq)
         if (handler != null) {
             if (response.success && response.value != null) {
@@ -257,57 +257,61 @@ class EmmyDebugProcess(session: XDebugSession) : LuaDebugProcess(session) {
             logger.warn("No handler for eval response seq=${response.seq}")
         }
     }
-    
+
     private fun handleLogNotification(json: String) {
         val notification = parseMessage<LogNotification>(json) ?: return
-        
+
         val contentType = when (notification.type) {
             1 -> ConsoleViewContentType.LOG_WARNING_OUTPUT
             2 -> ConsoleViewContentType.ERROR_OUTPUT
             else -> ConsoleViewContentType.SYSTEM_OUTPUT
         }
-        
+
         println(notification.message, LogConsoleType.NORMAL, contentType)
     }
-    
+
     // ================================================================================================
     // DEBUG ACTIONS
     // ================================================================================================
-    
+
     override fun run() {
         send(DebugActionRequest(DebugAction.Continue))
     }
-    
+
     override fun startPausing() {
         send(DebugActionRequest(DebugAction.Break))
     }
-    
+
     override fun startStepOver(context: XSuspendContext?) {
         send(DebugActionRequest(DebugAction.StepOver))
     }
-    
+
     override fun startStepInto(context: XSuspendContext?) {
         send(DebugActionRequest(DebugAction.StepIn))
     }
-    
+
     override fun startStepOut(context: XSuspendContext?) {
         send(DebugActionRequest(DebugAction.StepOut))
     }
-    
+
     override fun runToPosition(position: XSourcePosition, context: XSuspendContext?) {
         // Add temporary breakpoint and continue
         position.file.canonicalPath?.let { file ->
-            send(AddBreakpointRequest(listOf(
-                DebugBreakpoint(file, position.line + 1, runToHere = true)
-            )))
+            send(
+                AddBreakpointRequest(
+                    listOf(
+                        DebugBreakpoint(file, position.line + 1, runToHere = true)
+                    )
+                )
+            )
             run()
         }
     }
-    
+
     // ================================================================================================
     // BREAKPOINT HANDLER
     // ================================================================================================
-    
+
     override fun getBreakpointHandlers(): Array<XBreakpointHandler<*>> {
         return arrayOf(object : XBreakpointHandler<XLineBreakpoint<XBreakpointProperties<*>>>(
             LuaLineBreakpointType::class.java
@@ -317,7 +321,7 @@ class EmmyDebugProcess(session: XDebugSession) : LuaDebugProcess(session) {
                     breakpointManager.onBreakpointAdded(position, breakpoint)
                 }
             }
-            
+
             override fun unregisterBreakpoint(
                 breakpoint: XLineBreakpoint<XBreakpointProperties<*>>,
                 temporary: Boolean
@@ -328,13 +332,13 @@ class EmmyDebugProcess(session: XDebugSession) : LuaDebugProcess(session) {
             }
         })
     }
-    
+
     // ================================================================================================
     // EVALUATION
     // ================================================================================================
-    
+
     override fun getEditorsProvider(): XDebuggerEditorsProvider = editorsProvider
-    
+
     /**
      * Evaluate expression at given stack level
      */
@@ -349,11 +353,11 @@ class EmmyDebugProcess(session: XDebugSession) : LuaDebugProcess(session) {
         evalHandlers[request.seq] = handler
         send(request)
     }
-    
+
     // ================================================================================================
     // UTILITY
     // ================================================================================================
-    
+
     private fun send(message: DebugMessage) {
         transport?.send(message)
     }

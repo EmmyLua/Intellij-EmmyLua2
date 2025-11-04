@@ -28,37 +28,49 @@ object LuaExpressionParser {
     enum class ExprType(val ops: TokenSet) {
         // or
         T_OR(TokenSet.create(OR, LOGICAL_OR)),
+
         // and
         T_AND(TokenSet.create(AND, LOGICAL_AND)),
+
         // < > <= >= ~= ==
         T_CONDITION(TokenSet.create(GT, LT, GE, LE, NE, EQ, NOT_EQ)),
+
         // |
         T_BIT_OR(TokenSet.create(BIT_OR)),
+
         // ~
         T_BIT_TILDE(TokenSet.create(BIT_TILDE)),
+
         // &
         T_BIT_AND(TokenSet.create(BIT_AND)),
+
         // << >>
         T_BIT_SHIFT(TokenSet.create(BIT_LTLT, BIT_RTRT)),
+
         // ..
         T_CONCAT(TokenSet.create(CONCAT)),
+
         // + -
         T_ADDITIVE(TokenSet.create(PLUS, MINUS)),
+
         // * / // %
         T_MULTIPLICATIVE(TokenSet.create(MULT, DIV, DOUBLE_DIV, MOD)),
+
         // not # - ~
         T_UNARY(TokenSet.create(NOT, GETN, MINUS, BIT_TILDE, LOGICAL_NOT)),
+
         // ^
         T_EXP(TokenSet.create(EXP)),
+
         // value expr
         T_VALUE(TokenSet.EMPTY)
     }
 
-    fun parseExpr(builder: PsiBuilder, l:Int): PsiBuilder.Marker? {
+    fun parseExpr(builder: PsiBuilder, l: Int): PsiBuilder.Marker? {
         return parseExpr(builder, ExprType.T_OR, l)
     }
 
-    private fun parseExpr(builder: PsiBuilder, type: ExprType, l:Int): PsiBuilder.Marker? = when (type) {
+    private fun parseExpr(builder: PsiBuilder, type: ExprType, l: Int): PsiBuilder.Marker? = when (type) {
         ExprType.T_OR -> parseBinary(builder, type.ops, ExprType.T_AND, l)
         ExprType.T_AND -> parseBinary(builder, type.ops, ExprType.T_CONDITION, l)
         ExprType.T_CONDITION -> parseBinary(builder, type.ops, ExprType.T_BIT_OR, l)
@@ -74,7 +86,7 @@ object LuaExpressionParser {
         ExprType.T_VALUE -> parseValue(builder, l)
     }
 
-    private fun parseBinary(builder: PsiBuilder, ops: TokenSet, next: ExprType, l:Int): PsiBuilder.Marker? {
+    private fun parseBinary(builder: PsiBuilder, ops: TokenSet, next: ExprType, l: Int): PsiBuilder.Marker? {
         var result = parseExpr(builder, next, l + 1) ?: return null
         while (true) {
             if (ops.contains(builder.tokenType)) {
@@ -171,6 +183,7 @@ object LuaExpressionParser {
                 m.done(INDEX_EXPR)
                 return m
             }
+
             LBRACK -> {
                 b.advanceLexer() // [
 
@@ -200,6 +213,7 @@ object LuaExpressionParser {
                 m.done(CALL_EXPR)
                 return m
             }
+
             STRING -> { // singleArg ::= tableExpr | stringExpr
                 val stringExpr = b.mark()
                 b.advanceLexer()
@@ -210,6 +224,7 @@ object LuaExpressionParser {
                 m.done(CALL_EXPR)
                 return m
             }
+
             LCURLY -> {
                 val tableExpr = parseTableExpr(b, l)
                 tableExpr?.precede()?.done(SINGLE_ARG)
@@ -218,6 +233,7 @@ object LuaExpressionParser {
                 m.done(CALL_EXPR)
                 return m
             }
+
             else -> return null
         }
     }
@@ -235,18 +251,21 @@ object LuaExpressionParser {
                 m.done(PAREN_EXPR)
                 return Pair(m, PAREN_EXPR)
             }
+
             ID -> { // nameExpr ::= ID
                 val m = b.mark()
                 b.advanceLexer()
                 m.done(NAME_EXPR)
                 return Pair(m, NAME_EXPR)
             }
+
             NUMBER, STRING, NIL, TRUE, FALSE, ELLIPSIS -> { //literalExpr ::= nil | false | true | NUMBER | STRING | "..."
                 val m = b.mark()
                 b.advanceLexer()
                 m.done(LITERAL_EXPR)
                 return Pair(m, LITERAL_EXPR)
             }
+
             LCURLY -> { // table expr
                 val tableExpr = parseTableExpr(b, l)
                 return if (tableExpr != null)
@@ -316,6 +335,7 @@ object LuaExpressionParser {
                 m.setCustomEdgeTokenBinders(MY_LEFT_COMMENT_BINDER, MY_RIGHT_COMMENT_BINDER)
                 return m
             }
+
             ID -> { // ID '=' expr
                 val m = b.mark()
                 b.advanceLexer()
@@ -331,7 +351,7 @@ object LuaExpressionParser {
         }
 
         // expr
-        val expr = LuaExpressionParser.parseExpr(b, l + 1)
+        val expr = parseExpr(b, l + 1)
         if (expr != null) {
             val m = expr.precede()
             m.done(TABLE_FIELD)

@@ -41,7 +41,7 @@ class LuaExecutionStack(private val stackFrameList: List<XStackFrame>) : XExecut
         _topFrame = frame
     }
 
-    override fun computeStackFrames(i: Int, xStackFrameContainer: XExecutionStack.XStackFrameContainer) {
+    override fun computeStackFrames(i: Int, xStackFrameContainer: XStackFrameContainer) {
         val stackFrameContainerEx = xStackFrameContainer as XStackFrameContainerEx
         stackFrameContainerEx.addStackFrames(stackFrameList, topFrame, true)
     }

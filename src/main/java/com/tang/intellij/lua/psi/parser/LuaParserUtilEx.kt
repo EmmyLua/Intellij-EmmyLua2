@@ -57,32 +57,32 @@ internal fun expectExprList(b: PsiBuilder, l: Int, error: Boolean = true): PsiBu
 }
 
 private val L_BINDERS = TokenSet.create(
-        LOCAL_DEF,
-        ASSIGN_STAT,
-        TABLE_FIELD,
+    LOCAL_DEF,
+    ASSIGN_STAT,
+    TABLE_FIELD,
 
-        FUNC_DEF,
-        CLASS_METHOD_DEF,
-        LOCAL_FUNC_DEF,
+    FUNC_DEF,
+    CLASS_METHOD_DEF,
+    LOCAL_FUNC_DEF,
 
-        ASSIGN_STAT,
-        BREAK_STAT,
-        DO_STAT,
-        EXPR_STAT,
-        FOR_A_STAT,
-        FOR_B_STAT,
-        GOTO_STAT,
-        IF_STAT,
-        LABEL_STAT,
-        REPEAT_STAT,
-        RETURN_STAT,
-        WHILE_STAT
+    ASSIGN_STAT,
+    BREAK_STAT,
+    DO_STAT,
+    EXPR_STAT,
+    FOR_A_STAT,
+    FOR_B_STAT,
+    GOTO_STAT,
+    IF_STAT,
+    LABEL_STAT,
+    REPEAT_STAT,
+    RETURN_STAT,
+    WHILE_STAT
 )
 
 private val R_BINDERS = TokenSet.create(
-        LOCAL_DEF,
-        ASSIGN_STAT,
-        TABLE_FIELD
+    LOCAL_DEF,
+    ASSIGN_STAT,
+    TABLE_FIELD
 )
 
 internal fun done(m: PsiBuilder.Marker, type: IElementType) {

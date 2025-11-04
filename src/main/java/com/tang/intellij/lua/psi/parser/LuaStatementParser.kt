@@ -56,7 +56,7 @@ object LuaStatementParser : GeneratedParserUtilBase() {
     }
 
     // 'if' expr 'then' <<lazyBlock>> ('elseif' expr 'then' <<lazyBlock>>)* ('else' <<lazyBlock>>)? 'end'
-    private fun parseIfStatement(b: PsiBuilder, l: Int): PsiBuilder.Marker? {
+    private fun parseIfStatement(b: PsiBuilder, l: Int): PsiBuilder.Marker {
         val m = b.mark()
         b.advanceLexer() // if
 
@@ -253,7 +253,7 @@ object LuaStatementParser : GeneratedParserUtilBase() {
         return null
     }
 
-    private fun parseNameList(b: PsiBuilder): PsiBuilder.Marker? {
+    private fun parseNameList(b: PsiBuilder): PsiBuilder.Marker {
         var m = b.mark()
         if (expectError(b, ID) { "ID" }) {
             m.done(NAME_DEF)
@@ -427,7 +427,7 @@ object LuaStatementParser : GeneratedParserUtilBase() {
         return null
     }
 
-    private fun parseEmptyStatement(b: PsiBuilder): PsiBuilder.Marker? {
+    private fun parseEmptyStatement(b: PsiBuilder): PsiBuilder.Marker {
         val m = b.mark()
         while (b.tokenType == SEMI) {
             b.advanceLexer() // ;
@@ -436,7 +436,7 @@ object LuaStatementParser : GeneratedParserUtilBase() {
         return m
     }
 
-    private fun doneStat(b:PsiBuilder, m: PsiBuilder.Marker, type: IElementType) {
+    private fun doneStat(b: PsiBuilder, m: PsiBuilder.Marker, type: IElementType) {
         expect(b, SEMI)
         done(m, type)
     }
@@ -447,6 +447,7 @@ object LuaStatementParser : GeneratedParserUtilBase() {
             PLUS_ASSIGN, MINUS_ASSIGN, MULT_ASSIGN, DIV_ASSIGN,
             MOD_ASSIGN, EXP_ASSIGN, DOUBLE_DIV_ASSIGN,
             BIT_OR_ASSIGN, BIT_AND_ASSIGN, BIT_LTLT_ASSIGN, BIT_RTRT_ASSIGN -> true
+
             else -> false
         }
     }

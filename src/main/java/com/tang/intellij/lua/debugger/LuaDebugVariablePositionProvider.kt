@@ -27,7 +27,7 @@ interface LuaDebugVariablePositionProvider {
      * Configure the context by scanning for variables
      */
     fun configureContext(context: LuaDebugVariableContext)
-    
+
     /**
      * Get source position for a variable value
      */

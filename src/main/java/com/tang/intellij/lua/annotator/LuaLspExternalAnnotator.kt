@@ -19,7 +19,8 @@ import java.util.concurrent.TimeUnit
  * LSP 外部注解器，使用最高优先级确保渲染效果
  * 解决多个高亮系统冲突时只有背景色高亮显示的问题
  */
-class LuaLspExternalAnnotator : ExternalAnnotator<LuaLspExternalAnnotator.CollectedInfo, LuaLspExternalAnnotator.AnnotationResult>() {
+class LuaLspExternalAnnotator :
+    ExternalAnnotator<LuaLspExternalAnnotator.CollectedInfo, LuaLspExternalAnnotator.AnnotationResult>() {
 
     data class CollectedInfo(
         val psiFile: PsiFile,

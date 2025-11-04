@@ -33,31 +33,31 @@ import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Manages breakpoints for Emmy debugger
- * 
+ *
  * Responsibilities:
  * - Track breakpoints and assign unique IDs
  * - Convert between IntelliJ breakpoints and Emmy protocol breakpoints
  * - Synchronize breakpoints with the debugger
  */
 class DebugBreakpointManager(private val project: Project) {
-    
+
     private val logger = Logger.getInstance(javaClass)
-    
+
     // Breakpoint ID management
     private val idCounter = AtomicInteger(0)
     private val breakpointById = ConcurrentHashMap<Int, DebugBreakpoint>()
     private val idByBreakpoint = ConcurrentHashMap<XLineBreakpoint<*>, Int>()
-    
+
     // Callback for sending breakpoint requests
     var onSendRequest: ((request: Any) -> Unit)? = null
-    
+
     companion object {
         /**
          * User data key for storing breakpoint ID
          */
         private val BREAKPOINT_ID_KEY = Key.create<Int>("lua.debugger.breakpoint.id")
     }
-    
+
     /**
      * Initialize breakpoints - send all existing breakpoints to debugger
      * This should be called after the debugger connects
@@ -65,29 +65,29 @@ class DebugBreakpointManager(private val project: Project) {
     fun initializeBreakpoints() {
         ApplicationManager.getApplication().runReadAction {
             val breakpoints = getAllLuaBreakpoints()
-            
+
             logger.info("Initializing ${breakpoints.size} breakpoints")
-            
+
             val debugBreakpoints = mutableListOf<DebugBreakpoint>()
-            
+
             breakpoints.forEach { xBreakpoint ->
                 xBreakpoint.sourcePosition?.let { position ->
                     convertToDebugBreakpoint(position, xBreakpoint)?.let { debugBp ->
                         val id = registerBreakpoint(xBreakpoint, debugBp)
                         xBreakpoint.putUserData(BREAKPOINT_ID_KEY, id)
                         debugBreakpoints.add(debugBp)
-                        
+
                         logger.info("Registered breakpoint: ${debugBp.file}:${debugBp.line} (ID: $id)")
                     }
                 }
             }
-            
+
             if (debugBreakpoints.isNotEmpty()) {
                 sendAddRequest(debugBreakpoints)
             }
         }
     }
-    
+
     /**
      * Register a new breakpoint
      */
@@ -95,13 +95,13 @@ class DebugBreakpointManager(private val project: Project) {
         convertToDebugBreakpoint(position, xBreakpoint)?.let { debugBp ->
             val id = registerBreakpoint(xBreakpoint, debugBp)
             xBreakpoint.putUserData(BREAKPOINT_ID_KEY, id)
-            
+
             logger.info("Added breakpoint: ${debugBp.file}:${debugBp.line} (ID: $id)")
-            
+
             sendAddRequest(listOf(debugBp))
         }
     }
-    
+
     /**
      * Unregister a breakpoint
      */
@@ -109,12 +109,12 @@ class DebugBreakpointManager(private val project: Project) {
         val id = xBreakpoint.getUserData(BREAKPOINT_ID_KEY) ?: return
         val debugBp = breakpointById.remove(id) ?: return
         idByBreakpoint.remove(xBreakpoint)
-        
+
         logger.info("Removed breakpoint: ${debugBp.file}:${debugBp.line} (ID: $id)")
-        
+
         sendRemoveRequest(listOf(debugBp))
     }
-    
+
     /**
      * Clear all breakpoints
      */
@@ -123,7 +123,7 @@ class DebugBreakpointManager(private val project: Project) {
         idByBreakpoint.clear()
         idCounter.set(0)
     }
-    
+
     /**
      * Get breakpoint by source position
      */
@@ -134,29 +134,32 @@ class DebugBreakpointManager(private val project: Project) {
             } ?: false
         }
     }
-    
+
     // Private helper methods
-    
+
     private fun registerBreakpoint(xBreakpoint: XLineBreakpoint<*>, debugBp: DebugBreakpoint): Int {
         val id = idCounter.getAndIncrement()
         breakpointById[id] = debugBp
         idByBreakpoint[xBreakpoint] = id
         return id
     }
-    
+
     private fun getAllLuaBreakpoints(): Collection<XLineBreakpoint<*>> {
         return XDebuggerManager.getInstance(project)
             .breakpointManager
-            .getBreakpoints(DAPBreakpointType::class.java)
+            .allBreakpoints.filter { xBreakpoint ->
+                xBreakpoint is XLineBreakpoint<*> &&
+                        (xBreakpoint.type is LuaLineBreakpointType || xBreakpoint.type is DAPBreakpointType)
+            }.map { it as XLineBreakpoint<*> }
     }
-    
+
     private fun convertToDebugBreakpoint(
         position: XSourcePosition,
         xBreakpoint: XLineBreakpoint<*>
     ): DebugBreakpoint? {
         val file = position.file.canonicalPath ?: return null
         val line = position.line + 1 // Convert to 1-based
-        
+
         return if (xBreakpoint.isLogMessage) {
             // Log point
             DebugBreakpoint(
@@ -174,11 +177,11 @@ class DebugBreakpointManager(private val project: Project) {
             )
         }
     }
-    
+
     private fun sendAddRequest(breakpoints: List<DebugBreakpoint>) {
         onSendRequest?.invoke(AddBreakpointRequest(breakpoints))
     }
-    
+
     private fun sendRemoveRequest(breakpoints: List<DebugBreakpoint>) {
         onSendRequest?.invoke(RemoveBreakpointRequest(breakpoints))
     }

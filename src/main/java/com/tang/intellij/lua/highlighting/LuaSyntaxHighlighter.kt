@@ -23,13 +23,11 @@ import com.intellij.openapi.fileTypes.SyntaxHighlighterBase
 import com.intellij.psi.StringEscapesTokenTypes
 import com.intellij.psi.tree.IElementType
 import com.tang.intellij.lua.comment.psi.LuaDocTokenType
-import com.tang.intellij.lua.comment.psi.LuaDocTypes
 import com.tang.intellij.lua.lang.LuaParserDefinition.Companion.KEYWORD_TOKENS
 import com.tang.intellij.lua.lang.LuaParserDefinition.Companion.PRIMITIVE_TYPE_SET
 import com.tang.intellij.lua.psi.LuaRegionTypes
 import com.tang.intellij.lua.psi.LuaStringTypes
 import com.tang.intellij.lua.psi.LuaTypes
-import java.util.*
 
 /**
  * Created by tangzx
@@ -43,18 +41,23 @@ class LuaSyntaxHighlighter : SyntaxHighlighterBase() {
 
     override fun getTokenHighlights(type: IElementType): Array<TextAttributesKey> {
         return when {
-            ourMap1.containsKey(type) -> SyntaxHighlighterBase.pack(ourMap1[type], ourMap2[type])
-            type is LuaDocTokenType -> SyntaxHighlighterBase.pack(LuaHighlightingData.DOC_COMMENT)
-            type === LuaStringTypes.NEXT_LINE -> SyntaxHighlighterBase.pack(DefaultLanguageHighlighterColors.VALID_STRING_ESCAPE)
-            type === StringEscapesTokenTypes.VALID_STRING_ESCAPE_TOKEN -> SyntaxHighlighterBase.pack(DefaultLanguageHighlighterColors.VALID_STRING_ESCAPE)
-            type === StringEscapesTokenTypes.INVALID_CHARACTER_ESCAPE_TOKEN -> SyntaxHighlighterBase.pack(DefaultLanguageHighlighterColors.INVALID_STRING_ESCAPE)
-            type === LuaStringTypes.INVALID_NEXT_LINE -> SyntaxHighlighterBase.pack(DefaultLanguageHighlighterColors.INVALID_STRING_ESCAPE)//for string
-            else -> SyntaxHighlighterBase.pack(null)
+            ourMap1.containsKey(type) -> pack(ourMap1[type], ourMap2[type])
+            type is LuaDocTokenType -> pack(LuaHighlightingData.DOC_COMMENT)
+            type === LuaStringTypes.NEXT_LINE -> pack(DefaultLanguageHighlighterColors.VALID_STRING_ESCAPE)
+            type === StringEscapesTokenTypes.VALID_STRING_ESCAPE_TOKEN -> pack(
+                DefaultLanguageHighlighterColors.VALID_STRING_ESCAPE
+            )
+
+            type === StringEscapesTokenTypes.INVALID_CHARACTER_ESCAPE_TOKEN -> pack(
+                DefaultLanguageHighlighterColors.INVALID_STRING_ESCAPE
+            )
+
+            type === LuaStringTypes.INVALID_NEXT_LINE -> pack(DefaultLanguageHighlighterColors.INVALID_STRING_ESCAPE)//for string
+            else -> pack(null)
         }
     }
 
     companion object {
-
 
 
         private val ourMap1: Map<IElementType, TextAttributesKey>

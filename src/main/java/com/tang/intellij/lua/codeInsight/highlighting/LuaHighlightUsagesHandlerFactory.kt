@@ -37,10 +37,12 @@ import com.tang.intellij.lua.psi.*
  */
 class LuaHighlightUsagesHandlerFactory : HighlightUsagesHandlerFactoryBase() {
 
-    override fun createHighlightUsagesHandler(editor: Editor,
-                                              psiFile: PsiFile,
-                                              psiElement: PsiElement): HighlightUsagesHandlerBase<*>? {
-        when(psiElement.node.elementType) {
+    override fun createHighlightUsagesHandler(
+        editor: Editor,
+        psiFile: PsiFile,
+        psiElement: PsiElement
+    ): HighlightUsagesHandlerBase<*>? {
+        when (psiElement.node.elementType) {
             LuaTypes.RETURN -> {
                 val returnStat = PsiTreeUtil.getParentOfType(psiElement, LuaReturnStat::class.java)
                 if (returnStat != null) {
@@ -56,7 +58,10 @@ class LuaHighlightUsagesHandlerFactory : HighlightUsagesHandlerFactoryBase() {
                 val parentType = parent.node.elementType
                 if (parentType == LuaTypes.BINARY_OP || parentType == LuaTypes.UNARY_OP) {
                     return object : HighlightUsagesHandlerBase<PsiElement>(editor, psiFile) {
-                        override fun selectTargets(list: MutableList<out PsiElement>, consumer: Consumer<in MutableList<out PsiElement>>) {
+                        override fun selectTargets(
+                            list: MutableList<out PsiElement>,
+                            consumer: Consumer<in MutableList<out PsiElement>>
+                        ) {
                         }
 
                         override fun computeUsages(list: MutableList<out PsiElement>) {
@@ -65,8 +70,7 @@ class LuaHighlightUsagesHandlerFactory : HighlightUsagesHandlerFactoryBase() {
 
                         override fun getTargets() = arrayListOf(psiElement)
                     }
-                }
-                else if (parent is LuaNameExpr || parent is LuaIndexExpr) {
+                } else if (parent is LuaNameExpr || parent is LuaIndexExpr) {
                     return ReferenceHighlightHandler(editor, psiFile, parent)
                 }
             }
@@ -78,7 +82,8 @@ class LuaHighlightUsagesHandlerFactory : HighlightUsagesHandlerFactoryBase() {
 /**
  * 由于新版本IDEA 202采用了新的Reference高亮算法，导致Lua高亮失效，这里自己处理高亮
  */
-private class ReferenceHighlightHandler(editor: Editor, psiFile: PsiFile, val psi:PsiElement) : HighlightUsagesHandlerBase<PsiElement>(editor, psiFile) {
+private class ReferenceHighlightHandler(editor: Editor, psiFile: PsiFile, val psi: PsiElement) :
+    HighlightUsagesHandlerBase<PsiElement>(editor, psiFile) {
 
     private val list: List<PsiElement> by lazy {
         val result = mutableListOf<PsiElement>()
@@ -94,13 +99,15 @@ private class ReferenceHighlightHandler(editor: Editor, psiFile: PsiFile, val ps
 
     override fun getTargets() = arrayListOf(psi)
 
-    override fun selectTargets(list: MutableList<out PsiElement>, consumer: Consumer<in MutableList<out PsiElement>>) = Unit
+    override fun selectTargets(list: MutableList<out PsiElement>, consumer: Consumer<in MutableList<out PsiElement>>) =
+        Unit
 
     override fun computeUsages(list: MutableList<out PsiElement>) {
         val detector = LuaReadWriteAccessDetector()
         this.list.forEach { psi ->
             val rangeElement = (psi as? PsiNameIdentifierOwner)?.nameIdentifier ?: psi
-            val range = InjectedLanguageManager.getInstance(this.psi.project).injectedToHost(rangeElement, rangeElement.textRange)
+            val range = InjectedLanguageManager.getInstance(this.psi.project)
+                .injectedToHost(rangeElement, rangeElement.textRange)
             val access = detector.getExpressionAccess(psi)
             if (access == ReadWriteAccessDetector.Access.Read)
                 myReadUsages.add(range)

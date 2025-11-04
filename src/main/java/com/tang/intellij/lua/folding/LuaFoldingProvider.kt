@@ -12,7 +12,8 @@ class LuaFoldingProvider : CustomFoldingProvider() {
 
     override fun getPlaceholderText(elementText: String): String {
         val textAfterMarker = elementText.replaceFirst("--\\s*\\{\\{\\{(.*)".toRegex(), "$1")
-        val result = if (elementText.startsWith("/*")) StringUtil.trimEnd(textAfterMarker, "*/").trim { it <= ' ' } else textAfterMarker.trim { it <= ' ' }
+        val result = if (elementText.startsWith("/*")) StringUtil.trimEnd(textAfterMarker, "*/")
+            .trim { it <= ' ' } else textAfterMarker.trim { it <= ' ' }
         return if (result.isEmpty()) "..." else result
     }
 

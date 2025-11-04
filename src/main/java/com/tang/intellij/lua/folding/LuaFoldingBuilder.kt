@@ -28,11 +28,15 @@ class LuaFoldingBuilder : FoldingBuilderEx() {
         }
     }
 
-    private fun buildLanguageFoldRegions(list: MutableList<FoldingDescriptor>, psiElement: PsiElement, document: Document) {
+    private fun buildLanguageFoldRegions(
+        list: MutableList<FoldingDescriptor>,
+        psiElement: PsiElement,
+        document: Document
+    ) {
         psiElement.accept(object : PsiRecursiveElementVisitor() {
             override fun visitElement(element: PsiElement) {
                 val node = element.node
-                when(node.elementType) {
+                when (node.elementType) {
                     LuaTypes.BLOCK -> {
                         val prev = node.treePrev//element.prevSibling
                         val next = node.treeNext//element.nextSibling
@@ -46,11 +50,13 @@ class LuaFoldingBuilder : FoldingBuilderEx() {
                             }
                         }
                     }
+
                     LuaTypes.TABLE_EXPR -> {
                         val textRange = node.textRange
                         if (document.getLineNumber(textRange.startOffset) != document.getLineNumber(textRange.endOffset))
                             list.add(FoldingDescriptor(node, textRange))
                     }
+
                     LuaTypes.BLOCK_COMMENT, LuaTypes.DOC_COMMENT, LuaTypes.STRING -> {
                         val textRange = node.textRange
                         if (document.getLineNumber(textRange.startOffset) != document.getLineNumber(textRange.endOffset))
@@ -64,7 +70,7 @@ class LuaFoldingBuilder : FoldingBuilderEx() {
 
     override fun getPlaceholderText(astNode: ASTNode): String? {
         val type = astNode.elementType
-        return when(type) {
+        return when (type) {
             LuaTypes.BLOCK -> HOLDER_TEXT
             LuaTypes.DOC_COMMENT -> "/** ... */"
             LuaTypes.BLOCK_COMMENT -> "--[[ ... ]]"
@@ -74,7 +80,13 @@ class LuaFoldingBuilder : FoldingBuilderEx() {
         }
     }
 
-    private fun addOneLineMethodFolding(descriptors: MutableList<FoldingDescriptor>, block: PsiElement, range: TextRange, prev: ASTNode, next: ASTNode): Boolean {
+    private fun addOneLineMethodFolding(
+        descriptors: MutableList<FoldingDescriptor>,
+        block: PsiElement,
+        range: TextRange,
+        prev: ASTNode,
+        next: ASTNode
+    ): Boolean {
         val children = block.children
         if (children.isEmpty()) return false
 

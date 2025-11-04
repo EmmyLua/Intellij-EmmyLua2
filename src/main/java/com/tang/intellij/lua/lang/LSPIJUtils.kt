@@ -26,7 +26,7 @@ import org.eclipse.lsp4j.Range
  * Similar to lsp4ij's LSPIJUtils but for Lua debugging
  */
 object LSPIJUtils {
-    
+
     /**
      * Convert TextRange to LSP Range
      */
@@ -35,7 +35,7 @@ object LSPIJUtils {
         val end = toPosition(textRange.endOffset, document)
         return Range(start, end)
     }
-    
+
     /**
      * Convert offset to LSP Position
      */

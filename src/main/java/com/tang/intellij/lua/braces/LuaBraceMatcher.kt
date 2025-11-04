@@ -27,13 +27,14 @@ class LuaBraceMatcher : PairedBraceMatcher {
     }
 
     companion object {
-        private val PAIRS = arrayOf(BracePair(LuaTypes.LCURLY, LuaTypes.RCURLY, true), //{}
-                BracePair(LuaTypes.LPAREN, LuaTypes.RPAREN, true), //()
-                BracePair(LuaTypes.LBRACK, LuaTypes.RBRACK, true), //[]
-                BracePair(LuaTypes.DO, LuaTypes.END, true), //do end
-                BracePair(LuaTypes.IF, LuaTypes.END, true), //if end
-                BracePair(LuaTypes.REPEAT, LuaTypes.UNTIL, true), //repeat until
-                BracePair(LuaTypes.FUNCTION, LuaTypes.END, true)    //function end
+        private val PAIRS = arrayOf(
+            BracePair(LuaTypes.LCURLY, LuaTypes.RCURLY, true), //{}
+            BracePair(LuaTypes.LPAREN, LuaTypes.RPAREN, true), //()
+            BracePair(LuaTypes.LBRACK, LuaTypes.RBRACK, true), //[]
+            BracePair(LuaTypes.DO, LuaTypes.END, true), //do end
+            BracePair(LuaTypes.IF, LuaTypes.END, true), //if end
+            BracePair(LuaTypes.REPEAT, LuaTypes.UNTIL, true), //repeat until
+            BracePair(LuaTypes.FUNCTION, LuaTypes.END, true)    //function end
         )
     }
 }

@@ -29,39 +29,39 @@ import com.tang.intellij.lua.psi.LuaTypes
  * This is the main strategy used by lsp4ij
  */
 class LuaHighlighterDebugVariablePositionProvider : LuaDebugVariablePositionProvider {
-    
+
     override fun configureContext(context: LuaDebugVariableContext) {
         val editor = context.getEditor()
         if (editor !is EditorEx) {
             return
         }
-        
+
         val endLineOffset = context.getEndLineOffset()
         if (endLineOffset < 0) {
             return
         }
-        
+
         try {
             val highlighter = editor.highlighter
             val iterator: HighlighterIterator = highlighter.createIterator(0)
-            
+
             while (!iterator.atEnd()) {
                 if (iterator.end > endLineOffset) {
                     break
                 }
-                
+
                 val tokenType = iterator.tokenType
                 if (isVariableToken(tokenType)) {
                     val start = iterator.start
                     val end = iterator.end
                     val textRange = TextRange(start, end)
                     val variableName = editor.document.getText(textRange).trim()
-                    
+
                     if (variableName.isNotBlank() && !isKeyword(variableName)) {
                         context.addVariableRange(variableName, textRange)
                     }
                 }
-                
+
                 iterator.advance()
             }
         } catch (e: Exception) {
@@ -69,11 +69,11 @@ class LuaHighlighterDebugVariablePositionProvider : LuaDebugVariablePositionProv
             e.printStackTrace()
         }
     }
-    
+
     override fun getSourcePosition(value: LuaXValue, context: LuaDebugVariableContext): XSourcePosition? {
         return context.getSourcePosition(value.name)
     }
-    
+
     /**
      * Check if a token type represents a variable
      */
@@ -85,7 +85,7 @@ class LuaHighlighterDebugVariablePositionProvider : LuaDebugVariablePositionProv
                 tokenString.contains("NAME", ignoreCase = true) ||
                 tokenType == LuaTypes.ID  // Lua specific identifier
     }
-    
+
     /**
      * Check if a string is a Lua keyword (should not be treated as variable)
      */

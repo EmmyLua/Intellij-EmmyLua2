@@ -11,7 +11,12 @@ import com.tang.intellij.lua.psi.*
 
  * Created by tangzx on 2017/3/18.
  */
-class LuaHighlightExitPointsHandler internal constructor(editor: Editor, file: PsiFile, private val target: LuaReturnStat, private val funcBody: LuaFuncBody) : HighlightUsagesHandlerBase<PsiElement>(editor, file) {
+class LuaHighlightExitPointsHandler internal constructor(
+    editor: Editor,
+    file: PsiFile,
+    private val target: LuaReturnStat,
+    private val funcBody: LuaFuncBody
+) : HighlightUsagesHandlerBase<PsiElement>(editor, file) {
 
     override fun getTargets(): List<PsiElement> {
         return listOf<PsiElement>(target)

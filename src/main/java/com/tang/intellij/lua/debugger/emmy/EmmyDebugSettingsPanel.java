@@ -53,9 +53,9 @@ public class EmmyDebugSettingsPanel extends SettingsEditor<EmmyDebugConfiguratio
     private JRadioButton x64RadioButton;
     private JRadioButton x86RadioButton;
     private JPanel winArchPanel;
-    private ButtonGroup winArchGroup;
+    private final ButtonGroup winArchGroup;
 
-    private EditorEx editorEx;
+    private final EditorEx editorEx;
 
     public EmmyDebugSettingsPanel(Project project) {
         // type

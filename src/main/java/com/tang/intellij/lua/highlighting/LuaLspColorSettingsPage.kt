@@ -1,7 +1,5 @@
 package com.tang.intellij.lua.highlighting
 
-import com.intellij.application.options.colors.ColorAndFontOptions
-import com.intellij.application.options.colors.ColorAndFontSettingsListener
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.options.colors.AttributesDescriptor
 import com.intellij.openapi.options.colors.ColorDescriptor
@@ -81,13 +79,13 @@ local <local_var>myTable</local_var> = {
 
     override fun getDisplayName(): String = "Lua LSP"
 
-    override fun getIcon(): Icon? = LuaIcons.FILE
+    override fun getIcon(): Icon = LuaIcons.FILE
 
     override fun getHighlighter() = LuaSyntaxHighlighterFactory().getSyntaxHighlighter(null, null)
 
     override fun getDemoText(): String = DEMO_TEXT
 
-    override fun getAdditionalHighlightingTagToDescriptorMap(): Map<String, TextAttributesKey>? {
+    override fun getAdditionalHighlightingTagToDescriptorMap(): Map<String, TextAttributesKey> {
         return mapOf(
             "lsp_readonly_param" to LuaHighlightingData.LSP_READ_ONLY_PARAM,
             "lsp_global" to LuaHighlightingData.LSP_GLOBAL_VAR,

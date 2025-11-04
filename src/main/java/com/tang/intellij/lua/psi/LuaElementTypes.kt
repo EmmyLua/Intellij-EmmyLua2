@@ -16,20 +16,23 @@
 
 package com.tang.intellij.lua.psi
 
-import com.tang.intellij.lua.psi.impl.*
 //import com.tang.intellij.lua.stubs.*
 
 object LuaElementTypes {
-    val BINARY_OPS by lazy { arrayOf(
+    val BINARY_OPS by lazy {
+        arrayOf(
             LuaTypes.CONCAT,
             LuaTypes.LE, LuaTypes.EQ, LuaTypes.LT, LuaTypes.NE, LuaTypes.GE, LuaTypes.GT,
             LuaTypes.AND, LuaTypes.OR,
             LuaTypes.BIT_AND, LuaTypes.BIT_LTLT, LuaTypes.BIT_OR, LuaTypes.BIT_RTRT, LuaTypes.BIT_TILDE, LuaTypes.EXP,
             LuaTypes.PLUS, LuaTypes.MINUS, LuaTypes.MULT, LuaTypes.DIV, LuaTypes.DOUBLE_DIV, LuaTypes.MOD
-    )}
-    val UNARY_OPS by lazy { arrayOf(
+        )
+    }
+    val UNARY_OPS by lazy {
+        arrayOf(
             LuaTypes.MINUS, LuaTypes.GETN
-    )}
+        )
+    }
 
     val LOCAL_DEF = LuaElementType("LOCAL_DEF")
     val SINGLE_ARG = LuaElementType("LOCAL_DEF")

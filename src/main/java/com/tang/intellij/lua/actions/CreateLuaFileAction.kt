@@ -2,10 +2,10 @@ package com.tang.intellij.lua.actions
 
 import com.intellij.ide.actions.CreateFileFromTemplateAction
 import com.intellij.ide.actions.CreateFileFromTemplateDialog
+import com.intellij.openapi.project.DumbAware
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDirectory
 import com.tang.intellij.lua.lang.LuaIcons
-import com.intellij.openapi.project.DumbAware;
-import com.intellij.openapi.project.Project;
 
 
 /**

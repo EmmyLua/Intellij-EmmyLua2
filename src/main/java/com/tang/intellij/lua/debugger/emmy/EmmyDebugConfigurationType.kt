@@ -71,7 +71,7 @@ enum class EmmyWinArch(val desc: String) {
     X64("x64");
 
     override fun toString(): String {
-        return desc;
+        return desc
     }
 }
 
@@ -81,7 +81,8 @@ class EmmyDebuggerConfigurationFactory(val type: EmmyDebugConfigurationType) : L
     }
 }
 
-class EmmyDebugConfiguration(project: Project, factory: EmmyDebuggerConfigurationFactory) : LuaRunConfiguration(project, factory), RunConfigurationWithSuppressedDefaultRunAction {
+class EmmyDebugConfiguration(project: Project, factory: EmmyDebuggerConfigurationFactory) :
+    LuaRunConfiguration(project, factory), RunConfigurationWithSuppressedDefaultRunAction {
     var type = EmmyDebugTransportType.TCP_CLIENT
 
     var host = "localhost"

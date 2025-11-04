@@ -3,13 +3,13 @@ package com.tang.intellij.lua.codeInsight.editorActions
 import com.intellij.ide.PasteProvider
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.DataContext
-import java.awt.datatransfer.DataFlavor
-import com.intellij.openapi.ide.CopyPasteManager
-import com.intellij.psi.PsiElement
-import com.tang.intellij.lua.psi.LuaTypes
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.EditorModificationUtil
+import com.intellij.openapi.ide.CopyPasteManager
+import com.intellij.psi.PsiElement
 import com.tang.intellij.lua.lang.type.LuaString
+import com.tang.intellij.lua.psi.LuaTypes
+import java.awt.datatransfer.DataFlavor
 
 
 class StringLiteralPasteProvider : PasteProvider {

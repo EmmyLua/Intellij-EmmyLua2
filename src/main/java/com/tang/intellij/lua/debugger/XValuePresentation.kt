@@ -22,7 +22,8 @@ import com.intellij.xdebugger.frame.presentation.XStringValuePresentation
 import com.intellij.xdebugger.frame.presentation.XValuePresentation
 import com.tang.intellij.lua.highlighting.LuaHighlightingData
 
-open class LuaXValuePresentation(val sType: String, val sValue:String, val tkey : TextAttributesKey? = null) : XValuePresentation() {
+open class LuaXValuePresentation(val sType: String, val sValue: String, val tkey: TextAttributesKey? = null) :
+    XValuePresentation() {
     override fun renderValue(renderer: XValueTextRenderer) {
         if (tkey == null) renderer.renderValue(sValue)
         else renderer.renderValue(sValue, tkey)
@@ -39,4 +40,5 @@ class LuaXNumberPresentation(sValue: String) : XNumericValuePresentation(sValue)
     override fun getType() = "number"
 }
 
-class LuaXBoolPresentation(sValue: String) : LuaXValuePresentation("boolean", sValue, LuaHighlightingData.PRIMITIVE_TYPE)
+class LuaXBoolPresentation(sValue: String) :
+    LuaXValuePresentation("boolean", sValue, LuaHighlightingData.PRIMITIVE_TYPE)

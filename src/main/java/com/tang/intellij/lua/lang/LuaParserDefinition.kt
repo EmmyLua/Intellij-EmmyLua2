@@ -16,6 +16,8 @@
 
 package com.tang.intellij.lua.lang
 
+//import com.tang.intellij.lua.comment.psi.LuaDocElementType
+//import com.tang.intellij.lua.comment.psi.impl.LuaCommentImpl
 import com.intellij.lang.ASTNode
 import com.intellij.lang.ParserDefinition
 import com.intellij.lang.PsiParser
@@ -29,14 +31,11 @@ import com.intellij.psi.tree.IElementType
 import com.intellij.psi.tree.IFileElementType
 import com.intellij.psi.tree.TokenSet
 import com.tang.intellij.lua.comment.psi.LuaDocElementType
-import com.tang.intellij.lua.comment.psi.LuaDocTokenType
-//import com.tang.intellij.lua.comment.psi.LuaDocElementType
-import com.tang.intellij.lua.comment.psi.LuaDocTypes
 import com.tang.intellij.lua.comment.psi.impl.LuaCommentImpl
-//import com.tang.intellij.lua.comment.psi.impl.LuaCommentImpl
 import com.tang.intellij.lua.lexer.LuaLexerAdapter
 import com.tang.intellij.lua.parser.LuaParser
 import com.tang.intellij.lua.psi.*
+
 //import com.tang.intellij.lua.stubs.LuaFileElementType
 
 /**

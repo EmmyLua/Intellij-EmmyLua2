@@ -17,6 +17,7 @@
 package com.tang.intellij.lua.lexer
 
 import com.tang.intellij.lua.lang.LuaLanguageLevel
+
 //import com.tang.intellij.lua.project.LuaSettings
 
 /**

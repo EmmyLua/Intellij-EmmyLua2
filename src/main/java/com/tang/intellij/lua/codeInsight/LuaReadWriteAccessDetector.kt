@@ -4,7 +4,6 @@ import com.intellij.codeInsight.highlighting.ReadWriteAccessDetector
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
 import com.tang.intellij.lua.psi.LuaExpr
-import com.tang.intellij.lua.psi.LuaIndexExpr
 import com.tang.intellij.lua.psi.LuaNameDef
 import com.tang.intellij.lua.psi.LuaPsiElement
 

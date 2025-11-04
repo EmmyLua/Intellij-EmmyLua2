@@ -46,7 +46,11 @@ abstract class LuaDebugProcess protected constructor(session: XDebugSession) : X
         session.consoleView.addMessageFilter(LuaTracebackFilter(session.project))
     }
 
-    override fun registerAdditionalActions(leftToolbar: DefaultActionGroup, topToolbar: DefaultActionGroup, settings: DefaultActionGroup) {
+    override fun registerAdditionalActions(
+        leftToolbar: DefaultActionGroup,
+        topToolbar: DefaultActionGroup,
+        settings: DefaultActionGroup
+    ) {
         val actionManager = ActionManager.getInstance()
         topToolbar.remove(actionManager.getAction(XDebuggerActions.RUN_TO_CURSOR))
         topToolbar.remove(actionManager.getAction(XDebuggerActions.FORCE_STEP_INTO))
@@ -85,7 +89,8 @@ abstract class LuaDebugProcess protected constructor(session: XDebugSession) : X
     }
 
     override fun getBreakpointHandlers(): Array<XBreakpointHandler<*>> {
-        return arrayOf(object : XBreakpointHandler<XLineBreakpoint<XBreakpointProperties<*>>>(LuaLineBreakpointType::class.java) {
+        return arrayOf(object :
+            XBreakpointHandler<XLineBreakpoint<XBreakpointProperties<*>>>(LuaLineBreakpointType::class.java) {
             override fun registerBreakpoint(breakpoint: XLineBreakpoint<XBreakpointProperties<*>>) {
                 val sourcePosition = breakpoint.sourcePosition
                 if (sourcePosition != null) {
@@ -93,7 +98,10 @@ abstract class LuaDebugProcess protected constructor(session: XDebugSession) : X
                 }
             }
 
-            override fun unregisterBreakpoint(breakpoint: XLineBreakpoint<XBreakpointProperties<*>>, temporary: Boolean) {
+            override fun unregisterBreakpoint(
+                breakpoint: XLineBreakpoint<XBreakpointProperties<*>>,
+                temporary: Boolean
+            ) {
                 val sourcePosition = breakpoint.sourcePosition
                 if (sourcePosition != null) {
                     unregisterBreakpoint(sourcePosition, breakpoint)
@@ -105,8 +113,8 @@ abstract class LuaDebugProcess protected constructor(session: XDebugSession) : X
     protected fun processBreakpoint(processor: Processor<XLineBreakpoint<*>>) {
         ApplicationManager.getApplication().runReadAction {
             val breakpoints = XDebuggerManager.getInstance(session.project)
-                    .breakpointManager
-                    .getBreakpoints(LuaLineBreakpointType::class.java)
+                .breakpointManager
+                .getBreakpoints(LuaLineBreakpointType::class.java)
             ContainerUtil.process(breakpoints, processor)
         }
     }
@@ -118,7 +126,7 @@ abstract class LuaDebugProcess protected constructor(session: XDebugSession) : X
     }
 
     protected fun getBreakpoint(file: VirtualFile, line: Int): XLineBreakpoint<*>? {
-        var bp:XLineBreakpoint<*>? = null
+        var bp: XLineBreakpoint<*>? = null
         processBreakpoint(Processor {
             val pos = it.sourcePosition
             if (file == pos?.file && line == pos.line) {

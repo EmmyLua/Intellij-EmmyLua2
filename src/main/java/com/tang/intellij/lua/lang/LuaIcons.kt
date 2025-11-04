@@ -17,7 +17,6 @@ package com.tang.intellij.lua.lang
 
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.util.IconLoader.getIcon
-import com.intellij.ui.LayeredIcon
 import com.intellij.ui.RowIcon
 import javax.swing.Icon
 
@@ -40,7 +39,8 @@ object LuaIcons {
     val ENUM = AllIcons.Nodes.Enum
     val SNIPPET = AllIcons.Nodes.Variable
     val CLASS_METHOD_OVERRIDING: Icon = RowIcon(AllIcons.Nodes.Method, AllIcons.Gutter.OverridingMethod)
-//    val GLOBAL_FUNCTION: Icon = LayeredIcon(AllIcons.Nodes.Function, AllIcons.Nodes.StaticMark)
+
+    //    val GLOBAL_FUNCTION: Icon = LayeredIcon(AllIcons.Nodes.Function, AllIcons.Nodes.StaticMark)
 //    val GLOBAL_VAR: Icon = LayeredIcon(AllIcons.Nodes.Variable, AllIcons.Nodes.StaticMark)
     val LOCAL_VAR = AllIcons.Nodes.Variable
     val LOCAL_FUNCTION = AllIcons.Nodes.Function

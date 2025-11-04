@@ -28,8 +28,6 @@ import com.intellij.xdebugger.frame.XStackFrame
 import com.tang.intellij.lua.debugger.emmy.EmmyDebugStackFrame
 import com.tang.intellij.lua.debugger.emmy.value.LuaXValue
 import com.tang.intellij.lua.editor.LuaEditorUtil
-import com.tang.intellij.lua.lang.LSPIJUtils
-import com.tang.intellij.lua.psi.LuaPsiFile
 
 /**
  * Context for tracking variable positions during debugging
@@ -46,34 +44,34 @@ class LuaDebugVariableContext(
     private var endLineOffset: Int = -1
     private var psiFile: PsiFile? = null
     private var sourcePosition: XSourcePosition? = null
-    
+
     init {
         // Register PSI-based provider (more accurate than highlighter-based)
         providers.add(LuaPsiDebugVariablePositionProvider())
-        
+
         println("LuaDebugVariableContext: Initializing...")
-        
+
         // Initialize editor and PSI file if available
         sourcePosition = stackFrame.sourcePosition
         println("LuaDebugVariableContext: sourcePosition = $sourcePosition")
-        
+
         if (sourcePosition != null && stackFrame is EmmyDebugStackFrame) {
             val project = stackFrame.process.session.project
             val editors = LuaEditorUtil.findEditors(project, sourcePosition!!.file)
             editor = editors.firstOrNull()
-            
+
             println("LuaDebugVariableContext: Found ${editors.size} editors, using first: $editor")
-            
+
             if (editor != null) {
                 endLineOffset = editor!!.document.getLineEndOffset(sourcePosition!!.line)
                 println("LuaDebugVariableContext: endLineOffset = $endLineOffset")
-                
+
                 // Get PSI file from document - must be done in ReadAction
                 ReadAction.run<RuntimeException> {
                     psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor!!.document)
                     println("LuaDebugVariableContext: psiFile = $psiFile (${psiFile?.javaClass?.simpleName})")
                 }
-                
+
                 // Configure context immediately after initialization
                 println("LuaDebugVariableContext: Calling configureContext()...")
                 configureContext()
@@ -81,39 +79,39 @@ class LuaDebugVariableContext(
             }
         }
     }
-    
+
     /**
      * Configure context by scanning for variables
      */
     fun configureContext() {
         providers.forEach { it.configureContext(this) }
     }
-    
+
     /**
      * Get the file for this context
      */
     fun getFile(): VirtualFile? = stackFrame.sourcePosition?.file
-    
+
     /**
      * Get the editor for this context
      */
     fun getEditor(): Editor? = editor
-    
+
     /**
      * Get the end line offset
      */
     fun getEndLineOffset(): Int = endLineOffset
-    
+
     /**
      * Get the PSI file for this context
      */
     fun getPsiFile(): PsiFile? = psiFile
-    
+
     /**
      * Get the source position for this context
      */
     fun getSourcePosition(): XSourcePosition? = sourcePosition
-    
+
     /**
      * Add a variable range (supports multiple occurrences of the same variable)
      */
@@ -121,7 +119,7 @@ class LuaDebugVariableContext(
         val ranges = variableRanges.getOrPut(variableName) { mutableListOf() }
         ranges.add(textRange)
     }
-    
+
     /**
      * Add a variable position
      */
@@ -129,14 +127,14 @@ class LuaDebugVariableContext(
         val positions = variablePositions.getOrPut(variableName) { mutableListOf() }
         positions.add(position)
     }
-    
+
     /**
      * Get all source positions for a variable name
      * This is used to display inline values at all occurrences of the variable
      */
     fun getAllSourcePositions(name: String): List<XSourcePosition> {
         println("LuaDebugVariableContext.getAllSourcePositions: Looking for all positions of '$name'")
-        
+
         // Return cached positions if available
         variablePositions[name]?.let {
             if (it.isNotEmpty()) {
@@ -144,7 +142,7 @@ class LuaDebugVariableContext(
                 return it
             }
         }
-        
+
         // Try to create positions from all ranges
         val ranges = variableRanges[name]
         if (ranges == null || ranges.isEmpty()) {
@@ -152,43 +150,43 @@ class LuaDebugVariableContext(
             println("LuaDebugVariableContext.getAllSourcePositions: Available variables: ${variableRanges.keys}")
             return emptyList()
         }
-        
+
         val file = getFile()
         if (file == null) {
             println("LuaDebugVariableContext.getAllSourcePositions: file is null")
             return emptyList()
         }
-        
+
         val ed = editor
         if (ed == null) {
             println("LuaDebugVariableContext.getAllSourcePositions: editor is null")
             return emptyList()
         }
-        
+
         // Create positions for all occurrences
         val positions = mutableListOf<XSourcePosition>()
         for (textRange in ranges) {
             val range = com.tang.intellij.lua.lang.LSPIJUtils.toRange(textRange, ed.document)
             println("LuaDebugVariableContext.getAllSourcePositions: Range for '$name': line ${range.start.line}, char ${range.start.character}-${range.end.character}")
-            
+
             val position = XDebuggerUtil.getInstance()
                 .createPosition(file, range.start.line, range.start.character)
-            
+
             if (position != null) {
                 println("LuaDebugVariableContext.getAllSourcePositions: Created position: $position")
                 positions.add(position)
             }
         }
-        
+
         // Cache the positions
         if (positions.isNotEmpty()) {
             variablePositions[name] = positions.toMutableList()
         }
-        
+
         println("LuaDebugVariableContext.getAllSourcePositions: Returning ${positions.size} positions for '$name'")
         return positions
     }
-    
+
     /**
      * Get source position for a variable name
      * Returns the first occurrence position (can be extended to return all)
@@ -197,7 +195,7 @@ class LuaDebugVariableContext(
         val positions = getAllSourcePositions(name)
         return positions.firstOrNull()
     }
-    
+
     /**
      * Get all source positions for a variable value
      */
@@ -212,7 +210,7 @@ class LuaDebugVariableContext(
         }
         return emptyList()
     }
-    
+
     /**
      * Get source position for a variable value
      */

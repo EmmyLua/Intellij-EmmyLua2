@@ -37,10 +37,10 @@ public class LuaParserUtil extends GeneratedParserUtilBase {
      * right:
      * --- comment
      * local obj
-     *
+     * <p>
      * wrong:
      * --- comment
-     *
+     * <p>
      * local obj
      */
     public static WhitespacesAndCommentsBinder MY_LEFT_COMMENT_BINDER = (list, b, tokenTextGetter) -> {
@@ -92,7 +92,7 @@ public class LuaParserUtil extends GeneratedParserUtilBase {
 
     public static boolean lazyBlock(PsiBuilder builder_, int level_) {
         int i = 0;
-        IElementType begin=  builder_.rawLookup(--i);
+        IElementType begin = builder_.rawLookup(--i);
         while (begin == TokenType.WHITE_SPACE)
             begin = builder_.rawLookup(--i);
 
@@ -109,34 +109,29 @@ public class LuaParserUtil extends GeneratedParserUtilBase {
         return true;
     }
 
-    private static TokenSet END_SET = TokenSet.create(END);
-    private static TokenSet IF_SKIPS = TokenSet.create(THEN, ELSE, ELSEIF);
-    private static TokenSet REPEAT_TYPES = TokenSet.create(UNTIL);
-    private static TokenSet THEN_TYPES1 = TokenSet.create(ELSE, ELSEIF, END);
-    private static TokenSet THEN_SKIPS2 = TokenSet.create(ELSE, ELSEIF);
-    private static TokenSet BRACE_L_SET = TokenSet.create(LCURLY, LBRACK, LPAREN);
-    private static TokenSet BRACE_R_SET = TokenSet.create(RCURLY, RBRACK, RPAREN);
+    private static final TokenSet END_SET = TokenSet.create(END);
+    private static final TokenSet IF_SKIPS = TokenSet.create(THEN, ELSE, ELSEIF);
+    private static final TokenSet REPEAT_TYPES = TokenSet.create(UNTIL);
+    private static final TokenSet THEN_TYPES1 = TokenSet.create(ELSE, ELSEIF, END);
+    private static final TokenSet THEN_SKIPS2 = TokenSet.create(ELSE, ELSEIF);
+    private static final TokenSet BRACE_L_SET = TokenSet.create(LCURLY, LBRACK, LPAREN);
+    private static final TokenSet BRACE_R_SET = TokenSet.create(RCURLY, RBRACK, RPAREN);
 
     private static boolean matchStart(boolean advanced, PsiBuilder builder, int level, IElementType begin) {
         if (begin == DO) {
             return matchEnd(advanced, builder, level, TokenSet.EMPTY, END_SET);
-        }
-        else if (begin == REPEAT) {
+        } else if (begin == REPEAT) {
             return matchEnd(advanced, builder, level, TokenSet.EMPTY, REPEAT_TYPES);
-        }
-        else if (begin == IF) {
-            return matchEnd(advanced, builder ,level, IF_SKIPS, END_SET);
-        }
-        else if (begin == THEN) {
+        } else if (begin == IF) {
+            return matchEnd(advanced, builder, level, IF_SKIPS, END_SET);
+        } else if (begin == THEN) {
             if (level == 0)
                 return matchEnd(advanced, builder, level, TokenSet.EMPTY, THEN_TYPES1);
             else
                 return matchEnd(advanced, builder, level, THEN_SKIPS2, END_SET);
-        }
-        else if (begin == ELSE) {
+        } else if (begin == ELSE) {
             return matchEnd(advanced, builder, level, TokenSet.EMPTY, END_SET);
-        }
-        else if (begin == FUNCTION) {
+        } else if (begin == FUNCTION) {
             return matchEnd(advanced, builder, level, TokenSet.EMPTY, END_SET);
         }
 //        else if (BRACE_L_SET.contains(begin)) {

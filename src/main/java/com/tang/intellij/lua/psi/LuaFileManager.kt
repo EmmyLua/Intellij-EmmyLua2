@@ -27,22 +27,23 @@ class LuaFileManager : FileTypeListener {
         private var myExtensions = mutableListOf<String>()
         private var dirty = true
 
-        val extensions: Array<String> get() {
-            if (dirty) {
-                dirty = false
-                val all = FileTypeManager.getInstance().getAssociations(LuaFileType.INSTANCE).mapNotNull {
-                    // *.lua -> .lua
-                    // *.lua.txt -> .lua.txt
-                    if (it.presentableString.startsWith("*."))
-                        it.presentableString.substring(1)
-                    else null
+        val extensions: Array<String>
+            get() {
+                if (dirty) {
+                    dirty = false
+                    val all = FileTypeManager.getInstance().getAssociations(LuaFileType.INSTANCE).mapNotNull {
+                        // *.lua -> .lua
+                        // *.lua.txt -> .lua.txt
+                        if (it.presentableString.startsWith("*."))
+                            it.presentableString.substring(1)
+                        else null
+                    }
+                    myExtensions.clear()
+                    myExtensions.addAll(all)
+                    myExtensions.add("")
                 }
-                myExtensions.clear()
-                myExtensions.addAll(all)
-                myExtensions.add("")
+                return myExtensions.toTypedArray()
             }
-            return myExtensions.toTypedArray()
-        }
     }
 
     override fun fileTypesChanged(event: FileTypeEvent) {

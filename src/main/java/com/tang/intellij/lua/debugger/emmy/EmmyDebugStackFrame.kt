@@ -25,8 +25,8 @@ import com.intellij.xdebugger.frame.XStackFrame
 import com.intellij.xdebugger.frame.XValueChildrenList
 import com.intellij.xdebugger.impl.XSourcePositionImpl
 import com.tang.intellij.lua.debugger.LuaDebugVariableContext
-import com.tang.intellij.lua.debugger.model.DebugStackFrame
 import com.tang.intellij.lua.debugger.emmy.value.LuaXValue
+import com.tang.intellij.lua.debugger.model.DebugStackFrame
 import com.tang.intellij.lua.psi.LuaFileUtil
 
 /**
@@ -36,16 +36,16 @@ class EmmyDebugStackFrame(
     val stackData: DebugStackFrame,
     val process: EmmyDebugProcess
 ) : XStackFrame() {
-    
+
     private val evaluator = EmmyEvaluator(this, process)
     private var sourcePosition: XSourcePosition? = null
     private var sourcePositionInitialized = false
-    
+
     // Variable context for inline values
     private var variableContext: LuaDebugVariableContext? = null
-    
+
     override fun getEvaluator() = evaluator
-    
+
     /**
      * Get or create variable context for inline values
      */
@@ -55,7 +55,7 @@ class EmmyDebugStackFrame(
         }
         return variableContext!!
     }
-    
+
     override fun customizePresentation(component: ColoredTextContainer) {
         val fileName = stackData.file.substringAfterLast('/')
             .substringAfterLast('\\')
@@ -64,25 +64,25 @@ class EmmyDebugStackFrame(
             SimpleTextAttributes.REGULAR_ATTRIBUTES
         )
     }
-    
+
     override fun computeChildren(node: XCompositeNode) {
         val children = XValueChildrenList()
-        
+
         // Add local variables
         stackData.localVariables.forEach { variable ->
             val value = LuaXValue.create(variable, this)
             children.add(value.name, value)
         }
-        
+
         // Add upvalues
         stackData.upvalueVariables.forEach { variable ->
             val value = LuaXValue.create(variable, this)
             children.add(value.name, value)
         }
-        
+
         node.addChildren(children, true)
     }
-    
+
     override fun getSourcePosition(): XSourcePosition? {
         if (!sourcePositionInitialized) {
             sourcePosition = ReadAction.compute<XSourcePosition?, RuntimeException> {

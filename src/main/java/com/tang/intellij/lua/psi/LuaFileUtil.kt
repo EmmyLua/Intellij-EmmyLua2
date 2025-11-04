@@ -61,13 +61,12 @@ object LuaFileUtil {
         // Check if the fixedShortUrl already has an extension
         val hasExtension = fixedShortUrl.contains(".")
         if (hasExtension) {
-            val virtualFile = findVirtualFile(project, fixedShortUrl);
+            val virtualFile = findVirtualFile(project, fixedShortUrl)
             if (virtualFile != null && virtualFile.exists()) {
                 return virtualFile
             }
             return null
-        }
-        else {
+        } else {
             val extensions = LuaFileManager.extensions
             for (extension in extensions) {
                 val fileName = if (extension.isEmpty()) fixedShortUrl else "$fixedShortUrl$extension"
@@ -96,7 +95,7 @@ object LuaFileUtil {
             return perfect
         }
 
-        return VfsUtil.findRelativeFile(filename, project.baseDir);
+        return VfsUtil.findRelativeFile(filename, project.baseDir)
     }
 
     fun getPluginVirtualFile(path: String): String? {

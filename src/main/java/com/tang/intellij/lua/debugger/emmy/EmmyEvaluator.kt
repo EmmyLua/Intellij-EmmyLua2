@@ -26,7 +26,7 @@ class EmmyEvaluator(
     private val frame: EmmyDebugStackFrame,
     private val process: EmmyDebugProcess
 ) : XDebuggerEvaluator() {
-    
+
     override fun evaluate(
         expression: String,
         callback: XEvaluationCallback,
@@ -34,7 +34,7 @@ class EmmyEvaluator(
     ) {
         evaluate(expression, 0, callback)
     }
-    
+
     /**
      * Evaluate expression with custom cache ID
      */
@@ -53,7 +53,7 @@ class EmmyEvaluator(
                     val value = LuaXValueFactory.create(variable, frame)
                     callback.evaluated(value)
                 }
-                
+
                 override fun onError(error: String) {
                     callback.errorOccurred(error)
                 }

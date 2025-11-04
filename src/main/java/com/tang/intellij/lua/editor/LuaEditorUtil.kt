@@ -26,14 +26,14 @@ import com.intellij.openapi.vfs.VirtualFile
  * Utility for finding editors
  */
 object LuaEditorUtil {
-    
+
     /**
      * Find all editors for a given file
      */
     fun findEditors(project: Project, file: VirtualFile): Array<Editor> {
         val fileEditorManager = FileEditorManager.getInstance(project)
         val editors = fileEditorManager.getEditors(file)
-        
+
         return editors
             .filterIsInstance<TextEditor>()
             .map { it.editor }

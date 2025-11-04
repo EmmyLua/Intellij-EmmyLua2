@@ -29,8 +29,13 @@ import com.tang.intellij.lua.psi.LuaExprCodeFragment
  * Created by TangZX on 2016/12/30.
  */
 class LuaDebuggerEditorsProvider : XDebuggerEditorsProviderBase() {
-    override fun createExpressionCodeFragment(project: Project, text: String, context: PsiElement?, isPhysical: Boolean): PsiFile {
-        val fragment = LuaExprCodeFragment(project,"fragment.lua", text, isPhysical)
+    override fun createExpressionCodeFragment(
+        project: Project,
+        text: String,
+        context: PsiElement?,
+        isPhysical: Boolean
+    ): PsiFile {
+        val fragment = LuaExprCodeFragment(project, "fragment.lua", text, isPhysical)
         fragment.context = context
         return fragment
     }

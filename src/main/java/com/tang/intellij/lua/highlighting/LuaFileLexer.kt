@@ -43,6 +43,10 @@ internal class LuaFileLexer : LayeredLexer(LuaLexerAdapter()) {
         val stringLexer = MergingLexerAdapter(FlexAdapter(_LuaStringLexer()), TokenSet.create(LuaTypes.STRING))
         registerSelfStoppingLayer(stringLexer, arrayOf(LuaTypes.STRING), IElementType.EMPTY_ARRAY)
 
-        registerSelfStoppingLayer(LuaRegionLexer(), arrayOf(LuaTypes.REGION, LuaTypes.ENDREGION), IElementType.EMPTY_ARRAY)
+        registerSelfStoppingLayer(
+            LuaRegionLexer(),
+            arrayOf(LuaTypes.REGION, LuaTypes.ENDREGION),
+            IElementType.EMPTY_ARRAY
+        )
     }
 }

@@ -20,7 +20,7 @@ import com.google.gson.Gson
 
 /**
  * Emmy Debugger Protocol - Clean and well-documented protocol definitions
- * 
+ *
  * This file contains all protocol-related classes for communication between
  * the IDE and the Emmy debugger. The protocol uses a simple line-based format:
  * Line 1: Command ID (int)
@@ -36,28 +36,28 @@ import com.google.gson.Gson
  */
 enum class DebugCommand {
     Unknown,
-    
+
     // Initialization
     InitReq, InitRsp,
-    
+
     // Ready state
     ReadyReq, ReadyRsp,
-    
+
     // Breakpoint management
     AddBreakPointReq, AddBreakPointRsp,
     RemoveBreakPointReq, RemoveBreakPointRsp,
-    
+
     // Debug actions (step, continue, etc.)
     ActionReq, ActionRsp,
-    
+
     // Expression evaluation
     EvalReq, EvalRsp,
-    
+
     // Notifications from debugger to IDE
     BreakNotify,       // Debugger hit a breakpoint
     AttachedNotify,    // Debugger attached successfully
     LogNotify,         // Log message from debugger
-    
+
     // Hook management
     StartHookReq, StartHookRsp
 }
@@ -87,7 +87,7 @@ enum class LuaValueType {
     TFUNCTION,
     TUSERDATA,
     TTHREAD,
-    
+
     // Special types for grouping
     GROUP
 }
@@ -109,12 +109,12 @@ interface DebugMessage {
  */
 open class BaseDebugMessage(command: DebugCommand) : DebugMessage {
     override val cmd: Int = command.ordinal
-    
+
     override fun toJSON(): String = Gson().toJson(this)
-    
+
     companion object {
         private var sequenceCounter = 0
-        
+
         /**
          * Generate unique sequence number for request/response matching
          */
@@ -141,7 +141,7 @@ data class InitRequest(
         other as InitRequest
         return emmyHelper == other.emmyHelper && ext.contentEquals(other.ext)
     }
-    
+
     override fun hashCode(): Int {
         var result = emmyHelper.hashCode()
         result = 31 * result + ext.contentHashCode()
@@ -304,25 +304,25 @@ data class DebugVariable(
      */
     val nameTypeValue: LuaValueType
         get() = LuaValueType.values().getOrNull(nameType) ?: LuaValueType.TSTRING
-    
+
     /**
      * Get display name (handles table keys)
      */
     val displayName: String
         get() = if (nameTypeValue == LuaValueType.TSTRING) name else "[$name]"
-    
+
     /**
      * Get the value type as enum
      */
     val valueTypeValue: LuaValueType
         get() = LuaValueType.values().getOrNull(valueType) ?: LuaValueType.TSTRING
-    
+
     /**
      * Check if this is a fake/synthetic variable (like groups)
      */
     val isFake: Boolean
         get() = valueTypeValue.ordinal > LuaValueType.TTHREAD.ordinal
-    
+
     /**
      * Check if this variable has children
      */

@@ -29,7 +29,8 @@ import com.intellij.openapi.roots.ModuleRootManager
  *
  * Created by tangzx on 2017/6/4.
  */
-abstract class LuaRunConfiguration(project: Project, factory: ConfigurationFactory) : AbstractRunConfiguration(project, factory) {
+abstract class LuaRunConfiguration(project: Project, factory: ConfigurationFactory) :
+    AbstractRunConfiguration(project, factory) {
     @Throws(RuntimeConfigurationException::class)
     protected fun checkSourceRoot() {
         var sourceRootExist = false

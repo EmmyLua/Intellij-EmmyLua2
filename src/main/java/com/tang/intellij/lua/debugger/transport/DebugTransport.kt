@@ -23,7 +23,6 @@ import com.tang.intellij.lua.debugger.model.DebugMessage
 import com.tang.intellij.lua.debugger.model.parseCommand
 import java.io.BufferedReader
 import java.io.IOException
-import java.io.InputStream
 import java.io.InputStreamReader
 import java.net.InetAddress
 import java.net.InetSocketAddress
@@ -39,7 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 enum class TransportMode {
     /** IDE connects to debugger (active connection) */
     CLIENT,
-    
+
     /** IDE waits for debugger to connect (passive connection) */
     SERVER
 }
@@ -53,26 +52,26 @@ interface TransportHandler {
      * @param success true if connected successfully
      */
     fun onConnect(success: Boolean)
-    
+
     /**
      * Called when connection is lost
      */
     fun onDisconnect()
-    
+
     /**
      * Called when a message is received
      * @param command The command type
      * @param json The JSON payload
      */
     fun onMessage(command: DebugCommand, json: String)
-    
+
     /**
      * Called when an error occurs
      * @param message Error message
      * @param exception Optional exception
      */
     fun onError(message: String, exception: Throwable? = null)
-    
+
     /**
      * Called for log messages
      * @param message Log message
@@ -89,18 +88,18 @@ abstract class DebugTransport(
     protected val port: Int
 ) {
     private val logger = Logger.getInstance(javaClass)
-    
+
     var handler: TransportHandler? = null
-    
+
     protected val messageQueue = LinkedBlockingQueue<DebugMessage>()
     protected val isRunning = AtomicBoolean(false)
     protected val isStopped = AtomicBoolean(false)
-    
+
     /**
      * Start the transport connection
      */
     abstract fun start()
-    
+
     /**
      * Stop the transport and clean up resources
      */
@@ -108,15 +107,15 @@ abstract class DebugTransport(
         if (isStopped.getAndSet(true)) {
             return // Already stopped
         }
-        
+
         isRunning.set(false)
-        
+
         // Add stop signal to queue
         messageQueue.put(StopSignal)
-        
+
         log("Transport stopped")
     }
-    
+
     /**
      * Send a message to the debugger
      * @param message The message to send
@@ -126,17 +125,17 @@ abstract class DebugTransport(
             log("Cannot send message, transport is stopped")
             return
         }
-        
+
         messageQueue.put(message)
     }
-    
+
     /**
      * Check if transport is connected
      */
     abstract fun isConnected(): Boolean
-    
+
     // Protected helper methods
-    
+
     protected fun notifyConnected(success: Boolean) {
         if (success) {
             log("Connected to $host:$port")
@@ -145,12 +144,12 @@ abstract class DebugTransport(
         }
         handler?.onConnect(success)
     }
-    
+
     protected fun notifyDisconnected() {
         log("Disconnected from $host:$port")
         handler?.onDisconnect()
     }
-    
+
     protected fun notifyMessage(command: DebugCommand, json: String) {
         try {
             handler?.onMessage(command, json)
@@ -158,12 +157,12 @@ abstract class DebugTransport(
             error("Error handling message: ${e.message}", e)
         }
     }
-    
+
     protected fun error(message: String, exception: Throwable? = null) {
         logger.error(message, exception)
         handler?.onError(message, exception)
     }
-    
+
     protected fun log(message: String) {
         logger.info(message)
         handler?.onLog(message)
@@ -185,29 +184,29 @@ abstract class SocketChannelTransport(
     host: String,
     port: Int
 ) : DebugTransport(host, port) {
-    
+
     protected var socket: SocketChannel? = null
-    
+
     /**
      * Start receive and send threads
      */
     protected fun startIO() {
         isRunning.set(true)
-        
+
         // Start receiver thread
         ApplicationManager.getApplication().executeOnPooledThread {
             receiveLoop()
         }
-        
+
         // Start sender thread
         ApplicationManager.getApplication().executeOnPooledThread {
             sendLoop()
         }
     }
-    
+
     override fun stop() {
         super.stop()
-        
+
         try {
             socket?.close()
         } catch (e: Exception) {
@@ -216,11 +215,11 @@ abstract class SocketChannelTransport(
             socket = null
         }
     }
-    
+
     override fun isConnected(): Boolean {
         return socket?.isConnected == true
     }
-    
+
     /**
      * Receive messages from debugger
      */
@@ -231,28 +230,28 @@ abstract class SocketChannelTransport(
             error("Failed to get input stream", e)
             return
         }
-        
+
         if (inputStream == null) {
             error("Input stream is null")
             return
         }
-        
+
         try {
             val reader = BufferedReader(InputStreamReader(inputStream, Charsets.UTF_8))
-            
+
             while (isRunning.get() && !isStopped.get()) {
                 try {
                     // Read command line
                     val cmdLine = reader.readLine() ?: break
                     val cmdValue = cmdLine.toIntOrNull() ?: continue
-                    
+
                     // Read JSON line
                     val json = reader.readLine() ?: break
-                    
+
                     // Parse and notify
                     val command = parseCommand(cmdValue)
                     notifyMessage(command, json)
-                    
+
                 } catch (e: IOException) {
                     if (isRunning.get()) {
                         error("IO error while receiving", e)
@@ -270,7 +269,7 @@ abstract class SocketChannelTransport(
             messageQueue.put(StopSignal)
         }
     }
-    
+
     /**
      * Send messages to debugger
      */
@@ -278,19 +277,19 @@ abstract class SocketChannelTransport(
         try {
             while (true) {
                 val message = messageQueue.take()
-                
+
                 // Check for stop signal
                 if (message === StopSignal || isStopped.get()) {
                     break
                 }
-                
+
                 try {
                     val json = message.toJSON()
                     val data = "${message.cmd}\n$json\n"
-                    
+
                     socket?.write(ByteBuffer.wrap(data.toByteArray(Charsets.UTF_8)))
                         ?: break
-                    
+
                 } catch (e: IOException) {
                     if (isRunning.get()) {
                         error("IO error while sending", e)
@@ -312,15 +311,15 @@ class ClientTransport(
     host: String,
     port: Int
 ) : SocketChannelTransport(host, port) {
-    
+
     override fun start() {
         log("Connecting to $host:$port...")
-        
+
         ApplicationManager.getApplication().executeOnPooledThread {
             try {
                 val channel = SocketChannel.open()
                 val address = InetAddress.getByName(host)
-                
+
                 if (channel.connect(InetSocketAddress(address, port))) {
                     socket = channel
                     startIO()
@@ -345,33 +344,33 @@ class ServerTransport(
     host: String,
     port: Int
 ) : SocketChannelTransport(host, port) {
-    
+
     private var serverSocket: ServerSocketChannel? = null
-    
+
     override fun start() {
         ApplicationManager.getApplication().executeOnPooledThread {
             try {
                 val server = ServerSocketChannel.open()
                 server.bind(InetSocketAddress(InetAddress.getByName(host), port))
                 serverSocket = server
-                
+
                 log("Server listening on $host:$port, waiting for connection...")
-                
+
                 while (!isStopped.get()) {
                     try {
                         val channel = server.accept()
-                        
+
                         // Only accept one connection at a time
                         if (socket != null) {
                             log("Rejecting connection, already connected")
                             channel.close()
                             continue
                         }
-                        
+
                         socket = channel
                         startIO()
                         notifyConnected(true)
-                        
+
                     } catch (e: IOException) {
                         if (!isStopped.get()) {
                             error("Error accepting connection", e)
@@ -385,10 +384,10 @@ class ServerTransport(
             }
         }
     }
-    
+
     override fun stop() {
         super.stop()
-        
+
         try {
             serverSocket?.close()
         } catch (e: Exception) {

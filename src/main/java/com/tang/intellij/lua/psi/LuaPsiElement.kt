@@ -17,8 +17,7 @@
 package com.tang.intellij.lua.psi
 
 import com.intellij.psi.NavigatablePsiElement
-import com.intellij.psi.PsiElement
-import com.tang.intellij.lua.lang.LuaLanguageLevel
+
 //import com.tang.intellij.lua.project.LuaSettings
 
 /**

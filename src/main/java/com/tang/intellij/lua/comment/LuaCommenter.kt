@@ -1,7 +1,6 @@
 package com.tang.intellij.lua.comment
 
 import com.intellij.codeInsight.generation.IndentedCommenter
-import com.intellij.lang.Commenter
 
 class LuaCommenter : IndentedCommenter {
     override fun getLineCommentPrefix(): String {

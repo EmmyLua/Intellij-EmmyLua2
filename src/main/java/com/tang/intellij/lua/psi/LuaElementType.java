@@ -21,7 +21,6 @@ import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.PsiBuilderFactory;
 import com.intellij.lang.PsiParser;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.tree.CustomParsingType;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.ILazyParseableElementType;
@@ -33,7 +32,6 @@ import com.tang.intellij.lua.lang.LuaLanguage;
 import com.tang.intellij.lua.lang.LuaParserDefinition;
 import com.tang.intellij.lua.lexer.LuaLexerAdapter;
 import com.tang.intellij.lua.parser.LuaParser;
-//import com.tang.intellij.lua.stubs.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,7 +44,7 @@ public class LuaElementType extends IElementType {
         super(debugName, LuaLanguage.INSTANCE);
     }
 
-    public static CustomParsingType DOC_COMMENT =  new CustomParsingType ("DOC_COMMENT", LuaLanguage.INSTANCE) {
+    public static CustomParsingType DOC_COMMENT = new CustomParsingType("DOC_COMMENT", LuaLanguage.INSTANCE) {
         @NotNull
         @Override
         public ASTNode parse(@NotNull CharSequence charSequence, @NotNull CharTable charTable) {
