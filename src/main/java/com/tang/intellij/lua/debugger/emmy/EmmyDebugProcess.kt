@@ -176,9 +176,11 @@ class EmmyDebugProcess(session: XDebugSession) : LuaDebugProcess(session) {
             send(InitRequest(code, extensions))
         } else {
             logger.error("Emmy helper file not found")
+            val code = ""
+            val extensions = LuaFileManager.extensions
+            send(InitRequest(code, extensions))
         }
-        
-        // Initialize breakpoints
+
         breakpointManager.initializeBreakpoints()
         
         // Send ready signal

@@ -50,22 +50,17 @@ class LuaPsiDebugVariablePositionProvider : LuaDebugVariablePositionProvider {
                 val document = editor.document
                 val lineStartOffset = document.getLineStartOffset(sourcePosition.line)
                 val lineEndOffset = document.getLineEndOffset(sourcePosition.line)
-                
-                println("LuaPsiDebugVariablePositionProvider: Line offsets: $lineStartOffset - $lineEndOffset")
-                
+
                 // Find element at the breakpoint line
                 val elementAtLine = psiFile.findElementAt(lineStartOffset)
                 if (elementAtLine == null) {
                     println("LuaPsiDebugVariablePositionProvider: elementAtLine is null")
                     return@run
                 }
-                
-                println("LuaPsiDebugVariablePositionProvider: Element at line: ${elementAtLine.text}")
-                
+
                 // Find the scope boundary (function body or file root)
                 val scopeElement = findScopeElement(elementAtLine, psiFile)
-                println("LuaPsiDebugVariablePositionProvider: Scope element: ${scopeElement.javaClass.simpleName}")
-                
+
                 // Collect all NameExpr from line start up to the scope boundary
                 collectNameExprsInScope(scopeElement, lineEndOffset, document, context)
             }
@@ -112,9 +107,7 @@ class LuaPsiDebugVariablePositionProvider : LuaDebugVariablePositionProvider {
         
         // Find all ParamNameDef (function parameter definitions) within the scope element
         val paramNameDefs = PsiTreeUtil.findChildrenOfType(scopeElement, LuaParamNameDef::class.java)
-        
-        println("LuaPsiDebugVariablePositionProvider: Found ${nameExprs.size} NameExpr, ${nameDefs.size} NameDef, ${paramNameDefs.size} ParamNameDef in scope")
-        
+
         // Collect all elements with their positions into a single list
         data class ElementWithPosition(val name: String, val offset: Int, val textRange: TextRange, val type: String)
         val allElements = mutableListOf<ElementWithPosition>()
@@ -166,18 +159,12 @@ class LuaPsiDebugVariablePositionProvider : LuaDebugVariablePositionProvider {
         
         // Sort all elements by their start offset to ensure correct order
         allElements.sortBy { it.offset }
-        
-        println("LuaPsiDebugVariablePositionProvider: Collected ${allElements.size} total elements, sorted by position")
-        
         // Add them to context in sorted order
         var addedCount = 0
         for (element in allElements) {
-            println("LuaPsiDebugVariablePositionProvider: Adding ${element.type} variable '${element.name}' at ${element.offset}")
             context.addVariableRange(element.name, element.textRange)
             addedCount++
         }
-        
-        println("LuaPsiDebugVariablePositionProvider: Added $addedCount variables to context")
     }
     
     /**

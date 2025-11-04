@@ -23,6 +23,7 @@ import com.intellij.openapi.util.Key
 import com.intellij.xdebugger.XDebuggerManager
 import com.intellij.xdebugger.XSourcePosition
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint
+import com.redhat.devtools.lsp4ij.dap.breakpoints.DAPBreakpointType
 import com.tang.intellij.lua.debugger.LuaLineBreakpointType
 import com.tang.intellij.lua.debugger.model.AddBreakpointRequest
 import com.tang.intellij.lua.debugger.model.DebugBreakpoint
@@ -146,7 +147,7 @@ class DebugBreakpointManager(private val project: Project) {
     private fun getAllLuaBreakpoints(): Collection<XLineBreakpoint<*>> {
         return XDebuggerManager.getInstance(project)
             .breakpointManager
-            .getBreakpoints(LuaLineBreakpointType::class.java)
+            .getBreakpoints(DAPBreakpointType::class.java)
     }
     
     private fun convertToDebugBreakpoint(
