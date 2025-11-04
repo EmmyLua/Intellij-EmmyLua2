@@ -1,0 +1,68 @@
+---
+--- ${NAME} Unity script
+--- Created by ${USER}
+--- DateTime: ${DATE} ${TIME}
+---
+
+local ${NAME} = {}
+
+---@type UnityEngine.GameObject
+local gameObject = nil
+
+---@type UnityEngine.Transform
+local transform = nil
+
+---Called when the script instance is being loaded
+function ${NAME}.Awake()
+    gameObject = CS.UnityEngine.GameObject.Find("${NAME}")
+    if gameObject then
+        transform = gameObject.transform
+    end
+end
+
+---Called on the frame when a script is enabled
+function ${NAME}.Start()
+    print("${NAME} started")
+end
+
+---Update is called every frame
+---@param deltaTime number
+function ${NAME}.Update(deltaTime)
+    -- Update logic here
+end
+
+---Called every fixed frame-rate frame
+function ${NAME}.FixedUpdate()
+    -- Physics update logic here
+end
+
+---Called when the behaviour becomes disabled or inactive
+function ${NAME}.OnDestroy()
+    -- Cleanup logic here
+    gameObject = nil
+    transform = nil
+end
+
+---Called when the object becomes enabled and active
+function ${NAME}.OnEnable()
+    -- Enable logic here
+end
+
+---Called when the behaviour becomes disabled
+function ${NAME}.OnDisable()
+    -- Disable logic here
+end
+
+---Called when a collision is detected
+---@param collision CS.UnityEngine.Collision
+function ${NAME}.OnCollisionEnter(collision)
+    -- Collision logic here
+end
+
+---Called when a trigger is entered
+---@param other CS.UnityEngine.Collider
+function ${NAME}.OnTriggerEnter(other)
+    -- Trigger logic here
+end
+
+return ${NAME}
