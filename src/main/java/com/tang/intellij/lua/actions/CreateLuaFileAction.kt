@@ -15,7 +15,10 @@ import com.tang.intellij.lua.lang.LuaIcons
 class CreateLuaFileAction : CreateFileFromTemplateAction(CREATE_LUA_FILE, "", LuaIcons.FILE), DumbAware {
     override fun buildDialog(project: Project, directory: PsiDirectory, builder: CreateFileFromTemplateDialog.Builder) {
         builder.setTitle(CREATE_LUA_FILE)
-            .addKind("Source File", LuaIcons.FILE, "NewLua.lua")
+            .addKind("Empty File", LuaIcons.FILE, "NewLua.lua")
+            .addKind("Module", LuaIcons.FILE, "LuaModule.lua")
+            .addKind("Class", LuaIcons.FILE, "LuaClass.lua")
+            .addKind("Script", LuaIcons.FILE, "LuaScript.lua")
     }
 
     override fun getActionName(psiDirectory: PsiDirectory, s: String, s1: String): String {

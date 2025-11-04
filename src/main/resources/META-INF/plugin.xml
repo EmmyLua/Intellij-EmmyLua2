@@ -83,6 +83,11 @@
         <fileTemplateGroup implementation="com.tang.intellij.lua.actions.LuaFileTemplateProvider"/>
         <!--CreateFromTemplate-->
         <createFromTemplateHandler implementation="com.tang.intellij.lua.actions.LuaCreateFromTemplateHandler"/>
+        
+        <!-- Project Generation -->
+        <moduleType id="LUA_MODULE" implementationClass="com.tang.intellij.lua.project.LuaModuleType"/>
+        <directoryProjectGenerator implementation="com.tang.intellij.lua.project.LuaDirectoryProjectGenerator"/>
+        
         <!-- for displaying the statusbar icon -->
 
         <!-- for settings-->

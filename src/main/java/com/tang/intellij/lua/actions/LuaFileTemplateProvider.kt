@@ -14,6 +14,9 @@ class LuaFileTemplateProvider : FileTemplateGroupDescriptorFactory {
     override fun getFileTemplatesDescriptor(): FileTemplateGroupDescriptor {
         val group = FileTemplateGroupDescriptor("Lua", LuaIcons.FILE)
         group.addTemplate(FileTemplateDescriptor("NewLua.lua", LuaIcons.FILE))
+        group.addTemplate(FileTemplateDescriptor("LuaModule.lua", LuaIcons.FILE))
+        group.addTemplate(FileTemplateDescriptor("LuaClass.lua", LuaIcons.FILE))
+        group.addTemplate(FileTemplateDescriptor("LuaScript.lua", LuaIcons.FILE))
         return group
     }
 }

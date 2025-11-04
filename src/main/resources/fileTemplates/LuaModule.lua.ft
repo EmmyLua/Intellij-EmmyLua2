@@ -1,0 +1,25 @@
+---
+--- ${NAME} module
+--- Created by ${USER}
+--- DateTime: ${DATE} ${TIME}
+---
+
+---@class ${NAME}
+local M = {}
+
+---@private
+local function init()
+    -- Module initialization
+end
+
+---@return ${NAME}
+function M.new()
+    local instance = {}
+    setmetatable(instance, { __index = M })
+    return instance
+end
+
+-- Initialize module
+init()
+
+return M

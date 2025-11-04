@@ -1,0 +1,39 @@
+---
+--- ${NAME} class
+--- Created by ${USER}
+--- DateTime: ${DATE} ${TIME}
+---
+
+---@class ${NAME}
+---@field public name string
+local ${NAME} = {}
+${NAME}.__index = ${NAME}
+
+---Constructor
+---@param name string
+---@return ${NAME}
+function ${NAME}.new(name)
+    local self = setmetatable({}, ${NAME})
+    self.name = name or "${NAME}"
+    return self
+end
+
+---Example method
+---@return string
+function ${NAME}:getName()
+    return self.name
+end
+
+---Example method
+---@param name string
+function ${NAME}:setName(name)
+    self.name = name
+end
+
+---String representation
+---@return string
+function ${NAME}:__tostring()
+    return string.format("${NAME}(%s)", self.name)
+end
+
+return ${NAME}
