@@ -155,21 +155,6 @@ object LuaHighlightingData {
     )
 
     /**
-     * 根据 AnnotatorType 获取对应的高亮键
-     */
-    fun getLspHighlightKey(type: com.cppcxy.ide.lsp.AnnotatorType): TextAttributesKey {
-        return when (type) {
-            com.cppcxy.ide.lsp.AnnotatorType.ReadOnlyParam -> LSP_READ_ONLY_PARAM
-            com.cppcxy.ide.lsp.AnnotatorType.Global -> LSP_GLOBAL_VAR
-            com.cppcxy.ide.lsp.AnnotatorType.ReadOnlyLocal -> LSP_READ_ONLY_LOCAL
-            com.cppcxy.ide.lsp.AnnotatorType.MutLocal -> LSP_MUT_LOCAL
-            com.cppcxy.ide.lsp.AnnotatorType.MutParam -> LSP_MUT_PARAM
-            com.cppcxy.ide.lsp.AnnotatorType.DocEm -> LSP_DOC_EM
-            com.cppcxy.ide.lsp.AnnotatorType.DocStrong -> LSP_DOC_STRONG
-        }
-    }
-
-    /**
      * 创建自定义高亮样式的工具方法
      */
     fun createCustomHighlight(

@@ -124,6 +124,13 @@
         <enterHandlerDelegate implementation="com.tang.intellij.lua.editor.LuaEnterHandlerDelegate"/>
         <typedHandler implementation="com.tang.intellij.lua.editor.LuaTypedHandler"/>
         <lineIndentProvider implementation="com.tang.intellij.lua.editor.LuaLineIndentProvider"/>
+        
+        <!-- Gutter icons (Line Markers) -->
+        <codeInsight.lineMarkerProvider language="Lua" 
+                                       implementationClass="com.tang.intellij.lua.editor.LuaLineMarkerProvider"/>
+        
+        <!-- Startup activity for gutter cache management -->
+        <postStartupActivity implementation="com.tang.intellij.lua.editor.LuaGutterCacheStartupActivity"/>
 
     </extensions>
 
