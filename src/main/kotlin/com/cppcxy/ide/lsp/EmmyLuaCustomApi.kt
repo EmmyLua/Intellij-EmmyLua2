@@ -7,4 +7,7 @@ import java.util.concurrent.CompletableFuture
 interface EmmyLuaCustomApi : LanguageServer {
     @JsonRequest("emmy/gutter")
     fun getGutter(params: GutterParams): CompletableFuture<List<GutterInfo>>
+    
+    @JsonRequest("emmy/gutter/detail")
+    fun getGutterDetail(params: GutterDetailParams): CompletableFuture<GutterDetailResponse>
 }

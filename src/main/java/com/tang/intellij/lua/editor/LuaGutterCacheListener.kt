@@ -20,13 +20,16 @@ import java.util.concurrent.ConcurrentHashMap
  */
 object LuaGutterCacheManager {
     private val gutterCache = ConcurrentHashMap<String, List<com.cppcxy.ide.lsp.GutterInfo>>()
+    private val cacheTimestamps = ConcurrentHashMap<String, Long>()
     
     fun clearCache(uri: String) {
         gutterCache.remove(uri)
+        cacheTimestamps.remove(uri)
     }
     
     fun clearAllCache() {
         gutterCache.clear()
+        cacheTimestamps.clear()
     }
     
     fun getCache(uri: String): List<com.cppcxy.ide.lsp.GutterInfo>? {
@@ -35,6 +38,16 @@ object LuaGutterCacheManager {
     
     fun setCache(uri: String, infos: List<com.cppcxy.ide.lsp.GutterInfo>) {
         gutterCache[uri] = infos
+        cacheTimestamps[uri] = System.currentTimeMillis()
+    }
+    
+    fun getCacheAge(uri: String): Long {
+        val timestamp = cacheTimestamps[uri] ?: return Long.MAX_VALUE
+        return System.currentTimeMillis() - timestamp
+    }
+    
+    fun isCacheStale(uri: String, maxAgeMs: Long = 1000): Boolean {
+        return getCacheAge(uri) > maxAgeMs
     }
 }
 
@@ -43,6 +56,7 @@ object LuaGutterCacheManager {
  */
 class LuaDocumentListener(private val project: Project) : DocumentListener {
     private val updateScheduler = mutableMapOf<Document, Long>()
+    private val pendingUpdates = mutableMapOf<Document, Runnable>()
     
     override fun documentChanged(event: DocumentEvent) {
         val document = event.document
@@ -50,21 +64,46 @@ class LuaDocumentListener(private val project: Project) : DocumentListener {
         
         if (file.extension != "lua") return
         
-        // Clear cache immediately
+        // Clear cache immediately for instant refresh
         LuaGutterCacheManager.clearCache(file.url)
         
-        // Schedule restart of code analysis (debounced to avoid too frequent updates)
+        // Cancel any pending update
+        pendingUpdates[document]?.let { 
+            // The runnable will be replaced
+        }
+        
+        // Schedule restart of code analysis with shorter debounce (200ms)
         val now = System.currentTimeMillis()
         val lastUpdate = updateScheduler[document] ?: 0
         
-        // Only update if 500ms has passed since last update
-        if (now - lastUpdate > 500) {
-            updateScheduler[document] = now
-            
+        // Reduced debounce time to 200ms for better responsiveness
+        val debounceTime = 200L
+        
+        val updateRunnable = Runnable {
             ApplicationManager.getApplication().invokeLater {
                 val psiFile = PsiManager.getInstance(project).findFile(file)
-                if (psiFile is LuaPsiFile) {
+                if (psiFile is LuaPsiFile && psiFile.isValid) {
                     DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
+                }
+            }
+        }
+        
+        pendingUpdates[document] = updateRunnable
+        
+        if (now - lastUpdate > debounceTime) {
+            updateScheduler[document] = now
+            // Execute immediately if enough time has passed
+            updateRunnable.run()
+            pendingUpdates.remove(document)
+        } else {
+            // Schedule for later
+            ApplicationManager.getApplication().executeOnPooledThread {
+                Thread.sleep(debounceTime)
+                val currentRunnable = pendingUpdates[document]
+                if (currentRunnable == updateRunnable) {
+                    updateScheduler[document] = System.currentTimeMillis()
+                    currentRunnable.run()
+                    pendingUpdates.remove(document)
                 }
             }
         }
@@ -118,5 +157,29 @@ class LuaGutterCacheStartupActivity : ProjectActivity {
                 FileEditorManagerListener.FILE_EDITOR_MANAGER,
                 LuaFileEditorListener(project)
             )
+        
+        // Register bulk file listener to detect external changes
+        connection.subscribe(
+            com.intellij.openapi.vfs.VirtualFileManager.VFS_CHANGES,
+            object : com.intellij.openapi.vfs.newvfs.BulkFileListener {
+                override fun after(events: List<com.intellij.openapi.vfs.newvfs.events.VFileEvent>) {
+                    for (event in events) {
+                        val file = event.file
+                        if (file != null && file.extension == "lua") {
+                            // Clear cache when file changes externally
+                            LuaGutterCacheManager.clearCache(file.url)
+                            
+                            // Trigger update
+                            ApplicationManager.getApplication().invokeLater {
+                                val psiFile = PsiManager.getInstance(project).findFile(file)
+                                if (psiFile is LuaPsiFile && psiFile.isValid) {
+                                    DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        )
     }
 }
