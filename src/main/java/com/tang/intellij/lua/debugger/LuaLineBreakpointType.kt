@@ -21,6 +21,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.tree.TokenSet
+import com.intellij.util.text.CharArrayUtil.isEmptyOrSpaces
 import com.intellij.xdebugger.breakpoints.XLineBreakpointTypeBase
 import com.tang.intellij.lua.lang.LuaFileType
 import com.tang.intellij.lua.lang.LuaParserDefinition
@@ -40,9 +41,7 @@ class LuaLineBreakpointType : XLineBreakpointTypeBase(ID, NAME, LuaDebuggerEdito
 
         val lineStartOffset = doc.getLineStartOffset(line)
         val lineEndOffset = doc.getLineEndOffset(line)
-        val lineText = doc.text.substring(lineStartOffset, lineEndOffset).trim()
-
-        if (lineText.isEmpty()) return false
+        if (isEmptyOrSpaces(doc.charsSequence, lineStartOffset, lineEndOffset)) return false
 
         return generateSequence(psiFile.findElementAt(lineStartOffset)) { it.nextSibling }
             .takeWhile { it.textOffset < lineEndOffset }
