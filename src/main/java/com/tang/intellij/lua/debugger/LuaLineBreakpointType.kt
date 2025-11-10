@@ -16,10 +16,16 @@
 
 package com.tang.intellij.lua.debugger
 
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiManager
+import com.intellij.psi.tree.TokenSet
+import com.intellij.util.text.CharArrayUtil.isEmptyOrSpaces
 import com.intellij.xdebugger.breakpoints.XLineBreakpointTypeBase
 import com.tang.intellij.lua.lang.LuaFileType
+import com.tang.intellij.lua.lang.LuaParserDefinition
+import com.tang.intellij.lua.psi.LuaTypes
 
 /**
  *
@@ -28,12 +34,34 @@ import com.tang.intellij.lua.lang.LuaFileType
 class LuaLineBreakpointType : XLineBreakpointTypeBase(ID, NAME, LuaDebuggerEditorsProvider()) {
 
     override fun canPutAt(file: VirtualFile, line: Int, project: Project): Boolean {
-        return file.fileType === LuaFileType.INSTANCE
+        if (file.fileType !== LuaFileType.INSTANCE) return false
+
+        val psiFile = PsiManager.getInstance(project).findFile(file) ?: return false
+        val doc = FileDocumentManager.getInstance().getDocument(file) ?: return false
+
+        val lineStartOffset = doc.getLineStartOffset(line)
+        val lineEndOffset = doc.getLineEndOffset(line)
+        if (isEmptyOrSpaces(doc.charsSequence, lineStartOffset, lineEndOffset)) return false
+
+        return generateSequence(psiFile.findElementAt(lineStartOffset)) { it.nextSibling }
+            .takeWhile { it.textOffset < lineEndOffset }
+            .map { it.node.elementType }
+            .none {
+                LuaParserDefinition.COMMENTS.contains(it) || INVALID_BREAKPOINT_ELEMENTS.contains(it)
+            }
     }
 
     companion object {
-
         private const val ID = "lua-line"
         private const val NAME = "lua-line-breakpoint"
     }
 }
+
+private val INVALID_BREAKPOINT_ELEMENTS = TokenSet.create(
+    LuaTypes.LCURLY,
+    LuaTypes.RCURLY,
+    LuaTypes.LPAREN,
+    LuaTypes.RPAREN,
+    LuaTypes.LBRACK,
+    LuaTypes.RBRACK
+)
