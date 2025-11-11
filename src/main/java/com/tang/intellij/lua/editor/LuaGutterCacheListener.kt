@@ -1,5 +1,6 @@
 package com.tang.intellij.lua.editor
 
+import com.cppcxy.ide.lsp.GutterInfo
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
@@ -20,6 +21,7 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.newvfs.BulkFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.psi.PsiManager
+import com.tang.intellij.lua.lang.LuaFileType
 import com.tang.intellij.lua.psi.LuaPsiFile
 import java.util.concurrent.ConcurrentHashMap
 
@@ -27,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Manager to handle gutter cache and trigger updates
  */
 object LuaGutterCacheManager {
-    private val gutterCache = ConcurrentHashMap<String, List<com.cppcxy.ide.lsp.GutterInfo>>()
+    private val gutterCache = ConcurrentHashMap<String, List<GutterInfo>>()
     private val cacheTimestamps = ConcurrentHashMap<String, Long>()
 
     fun clearCache(uri: String) {
@@ -40,11 +42,11 @@ object LuaGutterCacheManager {
         cacheTimestamps.clear()
     }
 
-    fun getCache(uri: String): List<com.cppcxy.ide.lsp.GutterInfo>? {
+    fun getCache(uri: String): List<GutterInfo>? {
         return gutterCache[uri]
     }
 
-    fun setCache(uri: String, infos: List<com.cppcxy.ide.lsp.GutterInfo>) {
+    fun setCache(uri: String, infos: List<GutterInfo>) {
         gutterCache[uri] = infos
         cacheTimestamps[uri] = System.currentTimeMillis()
     }
@@ -70,7 +72,7 @@ class LuaDocumentListener(private val project: Project) : DocumentListener {
         val document = event.document
         val file = FileDocumentManager.getInstance().getFile(document) ?: return
 
-        if (file.extension != "lua") return
+        if (file.fileType !== LuaFileType.INSTANCE) return
 
         // Clear cache immediately for instant refresh
         LuaGutterCacheManager.clearCache(file.url)
@@ -123,7 +125,7 @@ class LuaDocumentListener(private val project: Project) : DocumentListener {
  */
 class LuaFileEditorListener(private val project: Project) : FileEditorManagerListener {
     override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
-        if (file.extension == "lua") {
+        if (file.fileType === LuaFileType.INSTANCE) {
             // Clear cache for newly opened file to ensure fresh data
             LuaGutterCacheManager.clearCache(file.url)
 
@@ -167,7 +169,7 @@ class LuaGutterCacheStartupActivity : ProjectActivity {
                 override fun after(events: List<VFileEvent>) {
                     for (event in events) {
                         val file = event.file
-                        if (file != null && file.extension == "lua") {
+                        if (file != null && file.fileType === LuaFileType.INSTANCE) {
                             // Clear cache when file changes externally
                             LuaGutterCacheManager.clearCache(file.url)
 
