@@ -73,6 +73,9 @@
         <!-- LSP 颜色配置页面 -->
         <colorSettingsPage implementation="com.tang.intellij.lua.highlighting.LuaLspColorSettingsPage"/>
 
+        <spellchecker.support implementationClass="com.tang.intellij.lua.spellchecker.LuaSpellcheckingStrategy" language="Lua"/>
+        <spellchecker.bundledDictionaryProvider implementation="com.tang.intellij.lua.spellchecker.LuaSpellBundledDictionaryProvider"/>
+
         <!-- <readWriteAccessDetector implementation="com.tang.intellij.lua.codeInsight.LuaReadWriteAccessDetector"/> -->
 
         <!--        debugger-->
