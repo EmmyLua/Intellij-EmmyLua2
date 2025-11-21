@@ -19,6 +19,7 @@ import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.newvfs.BulkFileListener
+import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.psi.PsiManager
 import com.tang.intellij.lua.lang.LuaFileType
@@ -169,15 +170,23 @@ class LuaGutterCacheStartupActivity : ProjectActivity {
                 override fun after(events: List<VFileEvent>) {
                     for (event in events) {
                         val file = event.file
-                        if (file != null && file.fileType === LuaFileType.INSTANCE) {
+                        if (file != null && file.isValid && file.fileType === LuaFileType.INSTANCE) {
                             // Clear cache when file changes externally
                             LuaGutterCacheManager.clearCache(file.url)
 
+                            // Skip delete events - no need to restart analysis on deleted files
+                            if (event is VFileDeleteEvent) {
+                                continue
+                            }
+
                             // Trigger update
                             ApplicationManager.getApplication().invokeLater {
-                                val psiFile = PsiManager.getInstance(project).findFile(file)
-                                if (psiFile is LuaPsiFile && psiFile.isValid) {
-                                    DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
+                                // Double-check file is still valid when callback executes
+                                if (file.isValid) {
+                                    val psiFile = PsiManager.getInstance(project).findFile(file)
+                                    if (psiFile is LuaPsiFile && psiFile.isValid) {
+                                        DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
+                                    }
                                 }
                             }
                         }
