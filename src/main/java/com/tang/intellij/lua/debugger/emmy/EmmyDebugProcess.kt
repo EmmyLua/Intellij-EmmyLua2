@@ -61,6 +61,13 @@ class EmmyDebugProcess(session: XDebugSession) : LuaDebugProcess(session) {
 
     // State
     private var isConnected = false
+    private val isServerMode: Boolean
+        get() = configuration.type == EmmyDebugTransportType.TCP_SERVER
+
+    /**
+     * Get source roots from configuration for path resolution
+     */
+    fun getSourceRoots(): List<String> = configuration.sourceRoots
 
     /**
      * Evaluation handler interface
@@ -145,8 +152,18 @@ class EmmyDebugProcess(session: XDebugSession) : LuaDebugProcess(session) {
             if (isConnected) {
                 isConnected = false
                 println("Disconnected from debugger", LogConsoleType.NORMAL, ConsoleViewContentType.SYSTEM_OUTPUT)
-                stop()
-                session.stop()
+                
+                // In server mode, keep listening for new connections instead of stopping
+                if (isServerMode) {
+                    println("Server mode: waiting for new connection...", LogConsoleType.NORMAL, ConsoleViewContentType.SYSTEM_OUTPUT)
+                    // Clear evaluation handlers for clean state
+                    evalHandlers.clear()
+                    // ServerTransport will automatically wait for new connection
+                } else {
+                    // Client mode: stop the session
+                    stop()
+                    session.stop()
+                }
             }
         }
 

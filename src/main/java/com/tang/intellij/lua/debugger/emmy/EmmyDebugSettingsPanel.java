@@ -20,9 +20,15 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.ex.EditorEx;
+import com.intellij.openapi.fileChooser.FileChooser;
+import com.intellij.openapi.fileChooser.FileChooserDescriptor;
+import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.SystemInfoRt;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.ui.ToolbarDecorator;
+import com.intellij.ui.components.JBList;
 import com.tang.intellij.lua.lang.LuaFileType;
 import com.tang.intellij.lua.psi.LuaFileUtil;
 import org.jetbrains.annotations.NotNull;
@@ -34,6 +40,8 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.PlainDocument;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class EmmyDebugSettingsPanel extends SettingsEditor<EmmyDebugConfiguration> implements DocumentListener {
@@ -54,10 +62,21 @@ public class EmmyDebugSettingsPanel extends SettingsEditor<EmmyDebugConfiguratio
     private JRadioButton x86RadioButton;
     private JPanel winArchPanel;
     private final ButtonGroup winArchGroup;
+    
+    // Source roots configuration - bound from .form file
+    private JLabel sourceRootsLabel;
+    private JPanel sourceRootsPanel;
+    
+    // Source roots list model and component
+    private final DefaultListModel<String> sourceRootsModel = new DefaultListModel<>();
+    private JBList<String> sourceRootsList;
 
     private final EditorEx editorEx;
+    private final Project project;
 
     public EmmyDebugSettingsPanel(Project project) {
+        this.project = project;
+        
         // type
         DefaultComboBoxModel<EmmyDebugTransportType> model = new DefaultComboBoxModel<>();
         model.addElement(EmmyDebugTransportType.TCP_CLIENT);
@@ -90,12 +109,51 @@ public class EmmyDebugSettingsPanel extends SettingsEditor<EmmyDebugConfiguratio
         winArchGroup.add(x86RadioButton);
         x64RadioButton.addChangeListener(e -> onChanged());
         x86RadioButton.addChangeListener(e -> onChanged());
+        
+        // source roots configuration
+        setupSourceRootsUI();
 
         // editor
         editorEx = createEditorEx(project);
         codePanel.add(editorEx.getComponent(), BorderLayout.CENTER);
 
         updateCode();
+    }
+    
+    private void setupSourceRootsUI() {
+        // Create list component for source roots
+        sourceRootsList = new JBList<>(sourceRootsModel);
+        sourceRootsList.setEmptyText("No source roots configured");
+        
+        // Create toolbar with add/remove buttons
+        ToolbarDecorator decorator = ToolbarDecorator.createDecorator(sourceRootsList)
+                .setAddAction(button -> {
+                    FileChooserDescriptor descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor();
+                    descriptor.setTitle("Select Source Root Directory");
+                    descriptor.setDescription("Select a directory containing your Lua source files");
+                    VirtualFile[] files = FileChooser.chooseFiles(descriptor, project, null);
+                    for (VirtualFile file : files) {
+                        String path = file.getPath();
+                        if (!sourceRootsModel.contains(path)) {
+                            sourceRootsModel.addElement(path);
+                            onChanged();
+                        }
+                    }
+                })
+                .setRemoveAction(button -> {
+                    int selectedIndex = sourceRootsList.getSelectedIndex();
+                    if (selectedIndex >= 0) {
+                        sourceRootsModel.remove(selectedIndex);
+                        onChanged();
+                    }
+                })
+                .disableUpDownActions();
+        
+        // Add the decorated panel to sourceRootsPanel (bound from .form file)
+        if (sourceRootsPanel != null) {
+            sourceRootsPanel.setLayout(new BorderLayout());
+            sourceRootsPanel.add(decorator.createPanel(), BorderLayout.CENTER);
+        }
     }
 
     private void onChanged() {
@@ -125,6 +183,12 @@ public class EmmyDebugSettingsPanel extends SettingsEditor<EmmyDebugConfiguratio
                 x86RadioButton.setSelected(true);
             }
         }
+        
+        // Source roots
+        sourceRootsModel.clear();
+        for (String path : configuration.getSourceRoots()) {
+            sourceRootsModel.addElement(path);
+        }
     }
 
     @Override
@@ -140,6 +204,14 @@ public class EmmyDebugSettingsPanel extends SettingsEditor<EmmyDebugConfiguratio
         if (SystemInfoRt.isWindows) {
             configuration.setWinArch(x64RadioButton.isSelected() ? EmmyWinArch.X64 : EmmyWinArch.X86);
         }
+        
+        // Source roots
+        List<String> sourceRoots = new ArrayList<>();
+        for (int i = 0; i < sourceRootsModel.size(); i++) {
+            sourceRoots.add(sourceRootsModel.get(i));
+        }
+        configuration.getSourceRoots().clear();
+        configuration.getSourceRoots().addAll(sourceRoots);
     }
 
     protected void setType(EmmyDebugTransportType type) {

@@ -146,9 +146,16 @@ class LuaFileEditorListener(private val project: Project) : FileEditorManagerLis
  */
 class LuaGutterCacheStartupActivity : ProjectActivity {
     override suspend fun execute(project: Project) {
+        val parentDisposable = project.service<LuaGutterCacheListenerDisposable>()
+        
+        // Prevent duplicate registration
+        if (parentDisposable.isInitialized) {
+            return
+        }
+        parentDisposable.isInitialized = true
+        
         // Register document listener
         val documentListener = LuaDocumentListener(project)
-        val parentDisposable = project.service<LuaGutterCacheListenerDisposable>()
         val appConnection = ApplicationManager.getApplication().messageBus.connect(parentDisposable)
         val projectConnection = project.messageBus.connect(parentDisposable)
 
@@ -199,7 +206,10 @@ class LuaGutterCacheStartupActivity : ProjectActivity {
 
 @Service(PROJECT)
 class LuaGutterCacheListenerDisposable : Disposable {
+    @Volatile
+    var isInitialized: Boolean = false
+    
     override fun dispose() {
-        // IntelliJ will automatically dispose of it when the project is disposed
+        isInitialized = false
     }
 }

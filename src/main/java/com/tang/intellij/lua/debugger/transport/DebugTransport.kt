@@ -228,11 +228,13 @@ abstract class SocketChannelTransport(
             socket?.socket()?.getInputStream()
         } catch (e: Exception) {
             error("Failed to get input stream", e)
+            isRunning.set(false)
             return
         }
 
         if (inputStream == null) {
             error("Input stream is null")
+            isRunning.set(false)
             return
         }
 
@@ -262,9 +264,11 @@ abstract class SocketChannelTransport(
         } catch (e: Exception) {
             error("Error in receive loop", e)
         } finally {
-            if (isRunning.get()) {
-                notifyDisconnected()
-            }
+            // Set isRunning to false BEFORE notifying disconnect
+            // This allows ServerTransport's accept loop to detect disconnection
+            // and wait for new connections
+            isRunning.set(false)
+            notifyDisconnected()
             // Signal send thread to stop
             messageQueue.put(StopSignal)
         }
@@ -339,6 +343,7 @@ class ClientTransport(
 /**
  * Server transport - IDE waits for debugger to connect
  * Use this when you want the debugger to initiate the connection
+ * Supports reconnection - after client disconnects, will wait for new connection
  */
 class ServerTransport(
     host: String,
@@ -346,7 +351,8 @@ class ServerTransport(
 ) : SocketChannelTransport(host, port) {
 
     private var serverSocket: ServerSocketChannel? = null
-
+    private val connectionLock = Object()
+    
     override fun start() {
         ApplicationManager.getApplication().executeOnPooledThread {
             try {
@@ -358,23 +364,59 @@ class ServerTransport(
 
                 while (!isStopped.get()) {
                     try {
+                        // Wait for connection
                         val channel = server.accept()
 
-                        // Only accept one connection at a time
-                        if (socket != null) {
-                            log("Rejecting connection, already connected")
-                            channel.close()
-                            continue
+                        // Close any existing connection
+                        synchronized(connectionLock) {
+                            if (socket != null) {
+                                try {
+                                    socket?.close()
+                                } catch (e: Exception) {
+                                    // Ignore
+                                }
+                                socket = null
+                            }
                         }
-
-                        socket = channel
+                        
+                        // Setup new connection
+                        synchronized(connectionLock) {
+                            socket = channel
+                            // Reset running state for new connection
+                            isRunning.set(false)
+                            messageQueue.clear()
+                        }
+                        
                         startIO()
                         notifyConnected(true)
+                        
+                        // Wait for this connection to close before accepting new one
+                        // This is done by waiting for isRunning to become false
+                        while (isRunning.get() && !isStopped.get()) {
+                            Thread.sleep(100)
+                        }
+                        
+                        // Connection ended, clean up socket
+                        synchronized(connectionLock) {
+                            try {
+                                socket?.close()
+                            } catch (e: Exception) {
+                                // Ignore
+                            }
+                            socket = null
+                        }
+                        
+                        if (!isStopped.get()) {
+                            log("Client disconnected, waiting for new connection...")
+                        }
 
                     } catch (e: IOException) {
                         if (!isStopped.get()) {
                             error("Error accepting connection", e)
                         }
+                        break
+                    } catch (e: InterruptedException) {
+                        // Thread interrupted, exit
                         break
                     }
                 }

@@ -17,6 +17,7 @@
 package com.tang.intellij.lua.debugger.emmy.value
 
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.xdebugger.frame.*
 import com.tang.intellij.lua.debugger.LuaDebugVariableContext
 import com.tang.intellij.lua.debugger.LuaXBoolPresentation
@@ -82,20 +83,20 @@ sealed class LuaXValue(val variable: DebugVariable) : XValue() {
      * Compute source position for inline values
      */
     override fun computeSourcePosition(callback: XNavigatable) {
-        println("LuaXValue.computeSourcePosition: Computing for variable '${name}'")
-
         val ctx = variableContext
         if (ctx == null) {
             println("LuaXValue.computeSourcePosition: variableContext is null for '${name}'")
             return
         }
 
-        val position = ctx.getSourcePosition(name)
-        if (position != null) {
-            println("LuaXValue.computeSourcePosition: Found position for '${name}': line ${position.line}")
-            callback.setSourcePosition(position)
-        } else {
-            println("LuaXValue.computeSourcePosition: No position found for '${name}'")
+        // Need to run in read action because getSourcePosition accesses document
+        ApplicationManager.getApplication().runReadAction {
+            val position = ctx.getSourcePosition(name)
+            if (position != null) {
+                callback.setSourcePosition(position)
+            } else {
+                println("LuaXValue.computeSourcePosition: No position found for '${name}'")
+            }
         }
     }
 

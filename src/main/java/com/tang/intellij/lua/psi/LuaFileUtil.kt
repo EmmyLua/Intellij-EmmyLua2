@@ -42,7 +42,15 @@ object LuaFileUtil {
             return null
         }
 
-    fun findFile(project: Project, shortUrl: String?): VirtualFile? {
+    /**
+     * Find a file by short URL with additional source roots for searching.
+     * 
+     * @param project The project context
+     * @param shortUrl The file path to find (can be relative or absolute)
+     * @param additionalSourceRoots Additional directories to search in (for debugger path resolution)
+     * @return The found VirtualFile or null
+     */
+    fun findFile(project: Project, shortUrl: String?, additionalSourceRoots: List<String> = emptyList()): VirtualFile? {
         var fixedShortUrl = shortUrl ?: return null
 
         // Check if the path is absolute
@@ -58,6 +66,15 @@ object LuaFileUtil {
         if (fixedShortUrl.startsWith("./") || fixedShortUrl.startsWith(".\\")) {
             fixedShortUrl = fixedShortUrl.substring(2)
         }
+        
+        // First, try to find in additional source roots
+        if (additionalSourceRoots.isNotEmpty()) {
+            val foundInSourceRoots = findInSourceRoots(fixedShortUrl, additionalSourceRoots)
+            if (foundInSourceRoots != null) {
+                return foundInSourceRoots
+            }
+        }
+        
         // Check if the fixedShortUrl already has an extension
         val hasExtension = fixedShortUrl.contains(".")
         if (hasExtension) {
@@ -73,6 +90,43 @@ object LuaFileUtil {
                 val virtualFile = findVirtualFile(project, fileName)
                 if (virtualFile != null && virtualFile.exists()) {
                     return virtualFile
+                }
+            }
+        }
+        return null
+    }
+    
+    /**
+     * Find a file in the specified source roots.
+     */
+    private fun findInSourceRoots(relativePath: String, sourceRoots: List<String>): VirtualFile? {
+        for (sourceRoot in sourceRoots) {
+            if (sourceRoot.isBlank()) continue
+            
+            val rootFile = File(sourceRoot)
+            if (!rootFile.exists() || !rootFile.isDirectory) continue
+            
+            // Try direct path
+            val targetFile = File(rootFile, relativePath)
+            if (targetFile.exists() && targetFile.isFile) {
+                val virtualFile = VfsUtil.findFileByIoFile(targetFile, true)
+                if (virtualFile != null && virtualFile.exists()) {
+                    return virtualFile
+                }
+            }
+            
+            // If no extension, try with Lua extensions
+            if (!relativePath.contains(".")) {
+                val extensions = LuaFileManager.extensions
+                for (extension in extensions) {
+                    val fileName = if (extension.isEmpty()) relativePath else "$relativePath$extension"
+                    val fileWithExt = File(rootFile, fileName)
+                    if (fileWithExt.exists() && fileWithExt.isFile) {
+                        val virtualFile = VfsUtil.findFileByIoFile(fileWithExt, true)
+                        if (virtualFile != null && virtualFile.exists()) {
+                            return virtualFile
+                        }
+                    }
                 }
             }
         }

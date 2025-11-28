@@ -16,21 +16,23 @@
 
 package com.tang.intellij.lua.debugger.emmy
 
-import com.intellij.xdebugger.evaluation.XDebuggerEvaluator
+import com.intellij.xdebugger.XSourcePosition
+import com.tang.intellij.lua.debugger.LuaDebuggerEvaluator
 import com.tang.intellij.lua.debugger.emmy.value.LuaXValueFactory
 
 /**
  * Evaluator for Emmy debugger - evaluates expressions in the debug context
+ * Extends LuaDebuggerEvaluator to get proper expression range detection for hover
  */
 class EmmyEvaluator(
     private val frame: EmmyDebugStackFrame,
     private val process: EmmyDebugProcess
-) : XDebuggerEvaluator() {
+) : LuaDebuggerEvaluator() {
 
-    override fun evaluate(
+    override fun eval(
         expression: String,
         callback: XEvaluationCallback,
-        expressionPosition: com.intellij.xdebugger.XSourcePosition?
+        expressionPosition: XSourcePosition?
     ) {
         evaluate(expression, 0, callback)
     }

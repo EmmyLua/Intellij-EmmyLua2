@@ -87,7 +87,8 @@ class EmmyDebugStackFrame(
         if (!sourcePositionInitialized) {
             sourcePosition = ReadAction.compute<XSourcePosition?, RuntimeException> {
                 try {
-                    val file = LuaFileUtil.findFile(process.session.project, stackData.file)
+                    val sourceRoots = process.getSourceRoots()
+                    val file = LuaFileUtil.findFile(process.session.project, stackData.file, sourceRoots)
                     if (file != null) {
                         XSourcePositionImpl.create(file, stackData.line - 1)
                     } else {

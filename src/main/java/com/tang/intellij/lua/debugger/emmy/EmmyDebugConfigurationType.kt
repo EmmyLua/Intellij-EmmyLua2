@@ -89,6 +89,11 @@ class EmmyDebugConfiguration(project: Project, factory: EmmyDebuggerConfiguratio
     var port = 9966
     var winArch = EmmyWinArch.X64
     var pipeName = "emmy"
+    
+    /**
+     * Source roots for path resolution during debugging.
+     */
+    var sourceRoots: MutableList<String> = mutableListOf()
 
     override fun getConfigurationEditor(): SettingsEditor<out RunConfiguration> {
         val group = SettingsEditorGroup<EmmyDebugConfiguration>()
@@ -111,6 +116,7 @@ class EmmyDebugConfiguration(project: Project, factory: EmmyDebuggerConfiguratio
         JDOMExternalizerUtil.writeField(element, "PORT", port.toString())
         JDOMExternalizerUtil.writeField(element, "PIPE", pipeName)
         JDOMExternalizerUtil.writeField(element, "WIN_ARCH", winArch.ordinal.toString())
+        JDOMExternalizerUtil.writeField(element, "SOURCE_ROOTS", sourceRoots.joinToString(";"))
     }
 
     override fun readExternal(element: Element) {
@@ -131,6 +137,9 @@ class EmmyDebugConfiguration(project: Project, factory: EmmyDebuggerConfiguratio
         JDOMExternalizerUtil.readField(element, "WIN_ARCH")?.let { value ->
             val i = value.toInt()
             winArch = EmmyWinArch.values().find { it.ordinal == i } ?: EmmyWinArch.X64
+        }
+        JDOMExternalizerUtil.readField(element, "SOURCE_ROOTS")?.let {
+            sourceRoots = it.split(";").filter { path -> path.isNotBlank() }.toMutableList()
         }
     }
 }
