@@ -64,7 +64,7 @@ class LuaDocumentListener(private val project: Project) : DocumentListener {
     override fun documentChanged(event: DocumentEvent) {
         val document = event.document
         val psiDocumentManager = PsiDocumentManager.getInstance(project)
-        val psiFile = psiDocumentManager.getPsiFile(document) as? LuaPsiFile ?: return
+        val psiFile = psiDocumentManager.getCachedPsiFile(document) as? LuaPsiFile ?: return
         val virtualFile = psiFile.virtualFile ?: return
 
         if (!virtualFile.isValid || virtualFile.fileType !== LuaFileType.INSTANCE) return
