@@ -11,9 +11,9 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
-import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
+import com.intellij.openapi.fileEditor.FileEditorManagerListener.FILE_EDITOR_MANAGER
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.vfs.VirtualFile
@@ -21,6 +21,7 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.newvfs.BulkFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiManager
 import com.tang.intellij.lua.lang.LuaFileType
 import com.tang.intellij.lua.psi.LuaPsiFile
@@ -38,14 +39,7 @@ object LuaGutterCacheManager {
         cacheTimestamps.remove(uri)
     }
 
-    fun clearAllCache() {
-        gutterCache.clear()
-        cacheTimestamps.clear()
-    }
-
-    fun getCache(uri: String): List<GutterInfo>? {
-        return gutterCache[uri]
-    }
+    fun getCache(uri: String): List<GutterInfo>? = gutterCache[uri]
 
     fun setCache(uri: String, infos: List<GutterInfo>) {
         gutterCache[uri] = infos
@@ -57,9 +51,7 @@ object LuaGutterCacheManager {
         return System.currentTimeMillis() - timestamp
     }
 
-    fun isCacheStale(uri: String, maxAgeMs: Long = 1000): Boolean {
-        return getCacheAge(uri) > maxAgeMs
-    }
+    fun isCacheStale(uri: String, maxAgeMs: Long = 1000): Boolean = getCacheAge(uri) > maxAgeMs
 }
 
 /**
@@ -71,19 +63,21 @@ class LuaDocumentListener(private val project: Project) : DocumentListener {
 
     override fun documentChanged(event: DocumentEvent) {
         val document = event.document
-        val file = FileDocumentManager.getInstance().getFile(document) ?: return
+        val psiDocumentManager = PsiDocumentManager.getInstance(project)
+        val psiFile = psiDocumentManager.getPsiFile(document) as? LuaPsiFile ?: return
+        val virtualFile = psiFile.virtualFile ?: return
 
-        if (file.fileType !== LuaFileType.INSTANCE) return
+        if (!virtualFile.isValid || virtualFile.fileType !== LuaFileType.INSTANCE) return
 
-        // Clear cache immediately for instant refresh
-        LuaGutterCacheManager.clearCache(file.url)
+        // Clear the cache immediately for instant refresh
+        LuaGutterCacheManager.clearCache(virtualFile.url)
 
         // Cancel any pending update
         pendingUpdates[document]?.let {
             // The runnable will be replaced
         }
 
-        // Schedule restart of code analysis with shorter debounce (200ms)
+        // Schedule restart of code analysis with shorter debouncing (200ms)
         val now = System.currentTimeMillis()
         val lastUpdate = updateScheduler[document] ?: 0
 
@@ -92,9 +86,10 @@ class LuaDocumentListener(private val project: Project) : DocumentListener {
 
         val updateRunnable = Runnable {
             ApplicationManager.getApplication().invokeLater {
-                val psiFile = PsiManager.getInstance(project).findFile(file)
-                if (psiFile is LuaPsiFile && psiFile.isValid) {
-                    DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
+                if (project.isDisposed) return@invokeLater
+                val latestPsi = psiDocumentManager.getPsiFile(document)
+                if (latestPsi is LuaPsiFile && latestPsi.isValid) {
+                    DaemonCodeAnalyzer.getInstance(project).restart(latestPsi)
                 }
             }
         }
@@ -127,7 +122,7 @@ class LuaDocumentListener(private val project: Project) : DocumentListener {
 class LuaFileEditorListener(private val project: Project) : FileEditorManagerListener {
     override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
         if (file.fileType === LuaFileType.INSTANCE) {
-            // Clear cache for newly opened file to ensure fresh data
+            // Clear cache for the newly opened file to ensure fresh data
             LuaGutterCacheManager.clearCache(file.url)
 
             // Trigger code analysis
@@ -147,28 +142,25 @@ class LuaFileEditorListener(private val project: Project) : FileEditorManagerLis
 class LuaGutterCacheStartupActivity : ProjectActivity {
     override suspend fun execute(project: Project) {
         val parentDisposable = project.service<LuaGutterCacheListenerDisposable>()
-        
+
         // Prevent duplicate registration
         if (parentDisposable.isInitialized) {
             return
         }
         parentDisposable.isInitialized = true
-        
+
         // Register document listener
         val documentListener = LuaDocumentListener(project)
         val appConnection = ApplicationManager.getApplication().messageBus.connect(parentDisposable)
         val projectConnection = project.messageBus.connect(parentDisposable)
 
-        // Listen to editor creation events to attach document listener
+        // Listen to editor creation events to attach the document listener
         EditorFactory.getInstance()
             .eventMulticaster
             .addDocumentListener(documentListener, parentDisposable)
 
         // Register file editor listener
-        projectConnection.subscribe(
-            FileEditorManagerListener.FILE_EDITOR_MANAGER,
-            LuaFileEditorListener(project)
-        )
+        projectConnection.subscribe(FILE_EDITOR_MANAGER, LuaFileEditorListener(project))
 
         // Register bulk file listener to detect external changes
         appConnection.subscribe(
@@ -178,7 +170,7 @@ class LuaGutterCacheStartupActivity : ProjectActivity {
                     for (event in events) {
                         val file = event.file
                         if (file != null && file.isValid && file.fileType === LuaFileType.INSTANCE) {
-                            // Clear cache when file changes externally
+                            // Clear cache when the file changes externally
                             LuaGutterCacheManager.clearCache(file.url)
 
                             // Skip delete events - no need to restart analysis on deleted files
@@ -188,7 +180,7 @@ class LuaGutterCacheStartupActivity : ProjectActivity {
 
                             // Trigger update
                             ApplicationManager.getApplication().invokeLater {
-                                // Double-check file is still valid when callback executes
+                                // Double-check file is still valid when the callback executes
                                 if (file.isValid) {
                                     val psiFile = PsiManager.getInstance(project).findFile(file)
                                     if (psiFile is LuaPsiFile && psiFile.isValid) {
@@ -208,7 +200,7 @@ class LuaGutterCacheStartupActivity : ProjectActivity {
 class LuaGutterCacheListenerDisposable : Disposable {
     @Volatile
     var isInitialized: Boolean = false
-    
+
     override fun dispose() {
         isInitialized = false
     }
