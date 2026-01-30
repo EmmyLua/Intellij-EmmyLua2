@@ -8,17 +8,17 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.tang.intellij.lua.psi.LuaTypes.*;
+import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.tang.intellij.lua.psi.*;
 
-public class LuaForBStatImpl extends LuaStatementImpl implements LuaForBStat {
+public class LuaGlobalFuncDefImpl extends ASTWrapperPsiElement implements LuaGlobalFuncDef {
 
-  public LuaForBStatImpl(@NotNull ASTNode node) {
+  public LuaGlobalFuncDefImpl(@NotNull ASTNode node) {
     super(node);
   }
 
-  @Override
   public void accept(@NotNull LuaVisitor visitor) {
-    visitor.visitForBStat(this);
+    visitor.visitGlobalFuncDef(this);
   }
 
   @Override
@@ -29,14 +29,8 @@ public class LuaForBStatImpl extends LuaStatementImpl implements LuaForBStat {
 
   @Override
   @Nullable
-  public LuaExprList getExprList() {
-    return findChildByClass(LuaExprList.class);
-  }
-
-  @Override
-  @NotNull
-  public List<LuaParamNameDef> getParamNameDefList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, LuaParamNameDef.class);
+  public LuaFuncBody getFuncBody() {
+    return findChildByClass(LuaFuncBody.class);
   }
 
   @Override

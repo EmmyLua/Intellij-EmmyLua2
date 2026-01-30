@@ -10,4 +10,7 @@ public interface LuaFuncBody extends LuaPsiElement {
   @NotNull
   List<LuaParamNameDef> getParamNameDefList();
 
+  @Nullable
+  PsiElement getId();
+
 }

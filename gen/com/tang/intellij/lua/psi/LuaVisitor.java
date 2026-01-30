@@ -109,6 +109,14 @@ public class LuaVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
+  public void visitGlobalDef(@NotNull LuaGlobalDef o) {
+    visitPsiElement(o);
+  }
+
+  public void visitGlobalFuncDef(@NotNull LuaGlobalFuncDef o) {
+    visitPsiElement(o);
+  }
+
   public void visitGotoStat(@NotNull LuaGotoStat o) {
     visitStatement(o);
   }

@@ -12,7 +12,7 @@ import static com.tang.intellij.lua.psi.LuaTypes.*;
 %%
 
 %{
-    private LuaLanguageLevel level = LuaLanguageLevel.LUA54;
+    private LuaLanguageLevel level = LuaLanguageLevel.LUA55;
     public _LuaLexer(LuaLanguageLevel level) {
         this((Reader) null);
         this.level = level;

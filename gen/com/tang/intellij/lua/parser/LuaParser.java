@@ -450,16 +450,17 @@ public class LuaParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // classMethodDef | funcDef | localFuncDef | localDef
+  // classMethodDef | funcDef | localFuncDef | globalFuncDef | localDef | globalDef
   static boolean defStat(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "defStat")) return false;
-    if (!nextTokenIs(b, "", FUNCTION, LOCAL)) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = classMethodDef(b, l + 1);
     if (!r) r = funcDef(b, l + 1);
     if (!r) r = localFuncDef(b, l + 1);
+    if (!r) r = globalFuncDef(b, l + 1);
     if (!r) r = localDef(b, l + 1);
+    if (!r) r = globalDef(b, l + 1);
     register_hook_(b, LEFT_BINDER, MY_LEFT_COMMENT_BINDER);
     exit_section_(b, m, null, r);
     return r;
@@ -793,6 +794,56 @@ public class LuaParser implements PsiParser, LightPsiParser {
     r = r && consumeToken(b, ID);
     exit_section_(b, l, m, r, false, null);
     return r;
+  }
+
+  /* ********************************************************** */
+  // 'global' nameList ('=' exprList)?
+  public static boolean globalDef(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "globalDef")) return false;
+    if (!nextTokenIs(b, GLOBAL)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, GLOBAL_DEF, null);
+    r = consumeToken(b, GLOBAL);
+    p = r; // pin = 1
+    r = r && report_error_(b, nameList(b, l + 1));
+    r = p && globalDef_2(b, l + 1) && r;
+    register_hook_(b, LEFT_BINDER, MY_LEFT_COMMENT_BINDER);
+    register_hook_(b, RIGHT_BINDER, MY_RIGHT_COMMENT_BINDER);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  // ('=' exprList)?
+  private static boolean globalDef_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "globalDef_2")) return false;
+    globalDef_2_0(b, l + 1);
+    return true;
+  }
+
+  // '=' exprList
+  private static boolean globalDef_2_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "globalDef_2_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ASSIGN);
+    r = r && exprList(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // 'global' 'function' ID funcBody
+  public static boolean globalFuncDef(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "globalFuncDef")) return false;
+    if (!nextTokenIs(b, GLOBAL)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, GLOBAL_FUNC_DEF, null);
+    r = consumeTokens(b, 2, GLOBAL, FUNCTION, ID);
+    p = r; // pin = 2
+    r = r && funcBody(b, l + 1);
+    register_hook_(b, LEFT_BINDER, MY_LEFT_COMMENT_BINDER);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
   }
 
   /* ********************************************************** */
@@ -1148,18 +1199,18 @@ public class LuaParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // paramNameDef (',' paramNameDef)* (',' '...')? | '...'
+  // paramNameDef (',' paramNameDef)* (',' varargParam)? | varargParam
   static boolean parList(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "parList")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_);
     r = parList_0(b, l + 1);
-    if (!r) r = consumeToken(b, ELLIPSIS);
+    if (!r) r = varargParam(b, l + 1);
     exit_section_(b, l, m, r, false, LuaParser::parList_recover);
     return r;
   }
 
-  // paramNameDef (',' paramNameDef)* (',' '...')?
+  // paramNameDef (',' paramNameDef)* (',' varargParam)?
   private static boolean parList_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "parList_0")) return false;
     boolean r;
@@ -1193,19 +1244,20 @@ public class LuaParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // (',' '...')?
+  // (',' varargParam)?
   private static boolean parList_0_2(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "parList_0_2")) return false;
     parList_0_2_0(b, l + 1);
     return true;
   }
 
-  // ',' '...'
+  // ',' varargParam
   private static boolean parList_0_2_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "parList_0_2_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = consumeTokens(b, 0, COMMA, ELLIPSIS);
+    r = consumeToken(b, COMMA);
+    r = r && varargParam(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }
@@ -1403,7 +1455,7 @@ public class LuaParser implements PsiParser, LightPsiParser {
   /* ********************************************************** */
   // !(ID
   //     | ',' | ';'
-  //     | 'local' | 'do' | 'while' | 'repeat' | 'function' | 'if' | 'for' | 'return' | break
+  //     | 'local' | 'global' | 'do' | 'while' | 'repeat' | 'function' | 'if' | 'for' | 'return' | break
   //     | nil | true | false | STRING | NUMBER | '::' | 'goto'
   //     | unaryOp)
   static boolean stat_recover(PsiBuilder b, int l) {
@@ -1417,7 +1469,7 @@ public class LuaParser implements PsiParser, LightPsiParser {
 
   // ID
   //     | ',' | ';'
-  //     | 'local' | 'do' | 'while' | 'repeat' | 'function' | 'if' | 'for' | 'return' | break
+  //     | 'local' | 'global' | 'do' | 'while' | 'repeat' | 'function' | 'if' | 'for' | 'return' | break
   //     | nil | true | false | STRING | NUMBER | '::' | 'goto'
   //     | unaryOp
   private static boolean stat_recover_0(PsiBuilder b, int l) {
@@ -1427,6 +1479,7 @@ public class LuaParser implements PsiParser, LightPsiParser {
     if (!r) r = consumeToken(b, COMMA);
     if (!r) r = consumeToken(b, SEMI);
     if (!r) r = consumeToken(b, LOCAL);
+    if (!r) r = consumeToken(b, GLOBAL);
     if (!r) r = consumeToken(b, DO);
     if (!r) r = consumeToken(b, WHILE);
     if (!r) r = consumeToken(b, REPEAT);
@@ -1647,6 +1700,26 @@ public class LuaParser implements PsiParser, LightPsiParser {
     r = r && varExpr(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
+  }
+
+  /* ********************************************************** */
+  // '...' ID?
+  static boolean varargParam(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "varargParam")) return false;
+    if (!nextTokenIs(b, ELLIPSIS)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ELLIPSIS);
+    r = r && varargParam_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // ID?
+  private static boolean varargParam_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "varargParam_1")) return false;
+    consumeToken(b, ID);
+    return true;
   }
 
   /* ********************************************************** */

@@ -35,6 +35,8 @@ public interface LuaTypes {
   IElementType FOR_B_STAT = LuaParserDefinitionKt.createType("FOR_B_STAT");
   IElementType FUNC_BODY = LuaParserDefinitionKt.createType("FUNC_BODY");
   IElementType FUNC_DEF = LuaParserDefinitionKt.createType("FUNC_DEF");
+  IElementType GLOBAL_DEF = LuaParserDefinitionKt.createType("GLOBAL_DEF");
+  IElementType GLOBAL_FUNC_DEF = LuaParserDefinitionKt.createType("GLOBAL_FUNC_DEF");
   IElementType GOTO_STAT = LuaParserDefinitionKt.createType("GOTO_STAT");
   IElementType IF_STAT = LuaParserDefinitionKt.createType("IF_STAT");
   IElementType INDEX_EXPR = LuaParserDefinitionKt.createType("INDEX_EXPR");
@@ -100,6 +102,7 @@ public interface LuaTypes {
   IElementType FUNCTION = LuaParserDefinitionKt.createToken("function");
   IElementType GE = LuaParserDefinitionKt.createToken(">=");
   IElementType GETN = LuaParserDefinitionKt.createToken("#");
+  IElementType GLOBAL = LuaParserDefinitionKt.createToken("global");
   IElementType GOTO = LuaParserDefinitionKt.createToken("goto");
   IElementType GT = LuaParserDefinitionKt.createToken(">");
   IElementType ID = LuaParserDefinitionKt.createToken("ID");
@@ -221,6 +224,12 @@ public interface LuaTypes {
       }
       else if (type == FUNC_DEF) {
         return new LuaFuncDefImpl(node);
+      }
+      else if (type == GLOBAL_DEF) {
+        return new LuaGlobalDefImpl(node);
+      }
+      else if (type == GLOBAL_FUNC_DEF) {
+        return new LuaGlobalFuncDefImpl(node);
       }
       else if (type == GOTO_STAT) {
         return new LuaGotoStatImpl(node);

@@ -5,13 +5,10 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface LuaForBStat extends LuaStatement {
+public interface LuaGlobalFuncDef extends LuaPsiElement {
 
   @Nullable
-  LuaExprList getExprList();
-
-  @NotNull
-  List<LuaParamNameDef> getParamNameDefList();
+  LuaFuncBody getFuncBody();
 
   @Nullable
   PsiElement getId();

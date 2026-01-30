@@ -48,6 +48,7 @@
         IF = "if"
         IN = "in"
         LOCAL = "local"
+        GLOBAL = "global"
         NIL = "nil"
         NOT = "not"
         OR = "or"
@@ -129,8 +130,8 @@
 
   ]
 
-  hooks("localDef|assignStat|tableField") = [leftBinder="MY_LEFT_COMMENT_BINDER" rightBinder="MY_RIGHT_COMMENT_BINDER"]
-  hooks("funcDef|localFuncDef|classMethodDef") = [leftBinder="MY_LEFT_COMMENT_BINDER"]
+  hooks("localDef|globalDef|assignStat|tableField") = [leftBinder="MY_LEFT_COMMENT_BINDER" rightBinder="MY_RIGHT_COMMENT_BINDER"]
+  hooks("funcDef|localFuncDef|globalFuncDef|classMethodDef") = [leftBinder="MY_LEFT_COMMENT_BINDER"]
   hooks("fieldList") = [leftBinder="GREEDY_LEFT_BINDER" rightBinder="GREEDY_RIGHT_BINDER"]
   extends(".*Expr") = expr
   extends(".*Stat") = statement
@@ -169,7 +170,7 @@ private stat_impl ::=
     }
 private stat_recover ::= !(ID
     | ',' | ';'
-    | 'local' | 'do' | 'while' | 'repeat' | 'function' | 'if' | 'for' | 'return' | break
+    | 'local' | 'global' | 'do' | 'while' | 'repeat' | 'function' | 'if' | 'for' | 'return' | break
     | nil | true | false | STRING | NUMBER | '::' | 'goto'
     | unaryOp)
 
@@ -230,7 +231,7 @@ gotoStat ::= 'goto' ID {
         getReferences
     ]
 }
-private defStat ::= classMethodDef | funcDef | localFuncDef | localDef
+private defStat ::= classMethodDef | funcDef | localFuncDef | globalFuncDef | localDef | globalDef
 exprStat ::= expr {
 }
 
@@ -255,12 +256,18 @@ classMethodDef ::= 'function' classMethodName funcBody {
 localFuncDef ::= 'local' 'function' ID funcBody {
     pin = 2
 }
+globalFuncDef ::= 'global' 'function' ID funcBody {
+    pin = 2
+}
 attribute ::= '<' ID '>' {
     pin = 1
 }
 nameList ::= nameDef attribute? (',' nameDef attribute?)* {
 }
 localDef ::= 'local' nameList ('=' exprList)? {
+    pin = 1
+}
+globalDef ::= 'global' nameList ('=' exprList)? {
     pin = 1
 }
 
@@ -323,7 +330,8 @@ funcBody ::= '(' (parList)? ')' <<lazyBlock>>? 'end' {
     pin = 1
 }
 
-private parList ::= paramNameDef (',' paramNameDef)* (',' '...')? | '...' { recoverWhile = parList_recover }
+private parList ::= paramNameDef (',' paramNameDef)* (',' varargParam)? | varargParam { recoverWhile = parList_recover }
+private varargParam ::= '...' ID?
 private parList_recover ::= !(')'|'in')
 
 tableExpr ::= '{' fieldList '}' {
