@@ -32,7 +32,7 @@ private val buildDataList = listOf(
         ideaSDKShortVersion = "252",
         ideaSDKVersion = "2025.2",
         sinceBuild = "252",
-        untilBuild = "253.*"
+        untilBuild = "261.*"
     )
 )
 
