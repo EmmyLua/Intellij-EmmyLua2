@@ -259,15 +259,15 @@ class TableXValue(
 
     override fun computeChildren(node: XCompositeNode) {
         // If children are already loaded, display them
-        if (variable.hasChildren && children.isNotEmpty()) {
-            val list = XValueChildrenList()
-            children.forEach { child ->
-                child.parent = this
-                list.add(child.name, child)
-            }
-            node.addChildren(list, true)
-            return
-        }
+//        if (variable.hasChildren && children.isNotEmpty()) {
+//            val list = XValueChildrenList()
+//            children.forEach { child ->
+//                child.parent = this
+//                list.add(child.name, child)
+//            }
+//            node.addChildren(list, true)
+//            return
+//        }
 
         // Otherwise, need to evaluate to get children
         val expression = buildExpressionPath()
