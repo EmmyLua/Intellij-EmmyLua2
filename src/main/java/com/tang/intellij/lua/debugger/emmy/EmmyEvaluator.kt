@@ -26,7 +26,7 @@ import com.tang.intellij.lua.debugger.emmy.value.LuaXValueFactory
  */
 class EmmyEvaluator(
     private val frame: EmmyDebugStackFrame,
-    private val process: EmmyDebugProcess
+    private val process: EmmyDebugProcessBase
 ) : LuaDebuggerEvaluator() {
 
     override fun eval(
@@ -50,7 +50,7 @@ class EmmyEvaluator(
             frame.stackData.level,
             cacheId,
             1, // depth
-            object : EmmyDebugProcess.EvalHandler {
+            object : EmmyDebugProcessBase.EvalHandler {
                 override fun onSuccess(variable: com.tang.intellij.lua.debugger.model.DebugVariable) {
                     val value = LuaXValueFactory.create(variable, frame)
                     callback.evaluated(value)

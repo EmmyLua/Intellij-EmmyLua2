@@ -152,11 +152,18 @@ val installDependencies by tasks.registering(Copy::class) {
 
     // 复制调试器核心文件
     listOf(
-        Triple("temp/extracted/debugger/windows/x64", "emmy_core.dll", "debugger/emmy/windows/x64"),
-        Triple("temp/extracted/debugger/windows/x86", "emmy_core.dll", "debugger/emmy/windows/x86"),
-        Triple("temp/extracted/debugger/linux", "emmy_core.so", "debugger/emmy/linux"),
-        Triple("temp/extracted/debugger/mac/x64", "emmy_core.dylib", "debugger/emmy/mac/x64"),
-        Triple("temp/extracted/debugger/mac/arm64", "emmy_core.dylib", "debugger/emmy/mac/arm64")
+        Triple("temp/extracted/debugger/windows/x64", "emmy_core.dll",  "debugger/emmy/windows/x64"),
+        Triple("temp/extracted/debugger/windows/x86", "emmy_core.dll",  "debugger/emmy/windows/x86"),
+        Triple("temp/extracted/debugger/linux",        "emmy_core.so",   "debugger/emmy/linux"),
+        Triple("temp/extracted/debugger/mac/x64",      "emmy_core.dylib","debugger/emmy/mac/x64"),
+        Triple("temp/extracted/debugger/mac/arm64",    "emmy_core.dylib","debugger/emmy/mac/arm64"),
+        // Attach / Launch debugger tools (Windows only)
+        Triple("temp/extracted/debugger/windows/x64", "emmy_tool.exe",  "debugger/emmy/windows/x64"),
+        Triple("temp/extracted/debugger/windows/x64", "emmy_hook.dll",  "debugger/emmy/windows/x64"),
+        Triple("temp/extracted/debugger/windows/x64", "EasyHook.dll",   "debugger/emmy/windows/x64"),
+        Triple("temp/extracted/debugger/windows/x86", "emmy_tool.exe",  "debugger/emmy/windows/x86"),
+        Triple("temp/extracted/debugger/windows/x86", "emmy_hook.dll",  "debugger/emmy/windows/x86"),
+        Triple("temp/extracted/debugger/windows/x86", "EasyHook.dll",   "debugger/emmy/windows/x86")
     ).forEach { (sourcePath, fileName, targetPath) ->
         from(sourcePath) {
             include(fileName)
@@ -264,30 +271,23 @@ tasks {
         untilBuild.set(buildVersionData.untilBuild)
     }
 
-    // 构建插件
     buildPlugin {
         dependsOn(installDependencies)
-
-        // 确保二进制文件被包含在插件分发包中
-        from("src/main/resources/server") {
-            into("server")
-        }
-
-        from("src/main/resources/debugger") {
-            into("debugger")
-        }
     }
 
     // 准备沙盒环境
     prepareSandbox {
         dependsOn(installDependencies)
 
+        // into() 相对于 plugins/ 目录，需要加插件目录名前缀
+        val pluginDir = intellijPlatform.projectName.get()
+
         from("src/main/resources/server") {
-            into("server")
+            into("$pluginDir/server")
         }
 
         from("src/main/resources/debugger") {
-            into("debugger")
+            into("$pluginDir/debugger")
         }
 
     }

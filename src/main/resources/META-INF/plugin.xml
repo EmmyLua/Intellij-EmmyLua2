@@ -78,10 +78,20 @@
 
         <!-- <readWriteAccessDetector implementation="com.tang.intellij.lua.codeInsight.LuaReadWriteAccessDetector"/> -->
 
-        <!--        debugger-->
+        <!--        debugger - Emmy (TCP connect/listen) -->
         <programRunner implementation="com.tang.intellij.lua.debugger.emmy.EmmyDebuggerRunner"/>
         <configurationType implementation="com.tang.intellij.lua.debugger.emmy.EmmyDebugConfigurationType"/>
         <xdebugger.breakpointType implementation="com.tang.intellij.lua.debugger.LuaLineBreakpointType"/>
+
+        <!--        debugger - Attach (inject into running process, Windows only) -->
+        <xdebugger.attachDebuggerProvider
+                implementation="com.tang.intellij.lua.debugger.attach.EmmyAttachDebuggerProvider"/>
+        <programRunner implementation="com.tang.intellij.lua.debugger.attach.EmmyAttachRunner"/>
+        <configurationType implementation="com.tang.intellij.lua.debugger.attach.EmmyAttachConfigurationType"/>
+
+        <!--        debugger - Launch (start process with hook injected, Windows only) -->
+        <programRunner implementation="com.tang.intellij.lua.debugger.launch.EmmyLaunchRunner"/>
+        <configurationType implementation="com.tang.intellij.lua.debugger.launch.EmmyLaunchConfigurationType"/>
         <!-- file template provider -->
         <!-- Commented out to prevent templates from appearing directly in New menu -->
         <!-- <fileTemplateGroup implementation="com.tang.intellij.lua.actions.LuaFileTemplateProvider"/> -->
