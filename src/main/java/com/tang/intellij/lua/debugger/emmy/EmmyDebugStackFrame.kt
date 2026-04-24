@@ -34,7 +34,7 @@ import com.tang.intellij.lua.psi.LuaFileUtil
  */
 class EmmyDebugStackFrame(
     val stackData: DebugStackFrame,
-    val process: EmmyDebugProcess
+    val process: EmmyDebugProcessBase
 ) : XStackFrame() {
 
     private val evaluator = EmmyEvaluator(this, process)

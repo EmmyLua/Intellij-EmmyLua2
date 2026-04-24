@@ -23,7 +23,7 @@ import com.tang.intellij.lua.debugger.LuaDebugVariableContext
 import com.tang.intellij.lua.debugger.LuaXBoolPresentation
 import com.tang.intellij.lua.debugger.LuaXNumberPresentation
 import com.tang.intellij.lua.debugger.LuaXStringPresentation
-import com.tang.intellij.lua.debugger.emmy.EmmyDebugProcess
+import com.tang.intellij.lua.debugger.emmy.EmmyDebugProcessBase
 import com.tang.intellij.lua.debugger.emmy.EmmyDebugStackFrame
 import com.tang.intellij.lua.debugger.model.DebugVariable
 import com.tang.intellij.lua.debugger.model.LuaValueType
@@ -277,7 +277,7 @@ class TableXValue(
             frame.stackData.level,
             variable.cacheId,
             2, // depth
-            object : EmmyDebugProcess.EvalHandler {
+            object : EmmyDebugProcessBase.EvalHandler {
                 override fun onSuccess(variable: DebugVariable) {
                     val list = XValueChildrenList()
                     variable.children?.sortedWith(
