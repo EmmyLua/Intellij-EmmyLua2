@@ -26,8 +26,8 @@
 
 ### 🔧 Advanced Features
 - **EmmyLua Annotations Support** - Complete type annotation system
-- **Debugger Integration** - Built-in EmmyLua debugger
-- **Multi-platform Support** - Full support for Windows, macOS, Linux
+- **Debugger Integration** - Built-in EmmyLua debugger (TCP connect/listen); [Emmy Attach Debugger](docs/attach-debugger.md) for attaching to running processes (Windows only)
+- **Multi-platform Support** - Full support for Windows, macOS, Linux (Emmy Attach Debugger is Windows only)
 - **Performance Optimization** - High-performance language server based on Rust
 
 ## 🛠️ Installation
