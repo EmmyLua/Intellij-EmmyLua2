@@ -39,10 +39,4 @@ public class LuaForBStatImpl extends LuaStatementImpl implements LuaForBStat {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, LuaParamNameDef.class);
   }
 
-  @Override
-  @Nullable
-  public PsiElement getId() {
-    return findChildByType(ID);
-  }
-
 }

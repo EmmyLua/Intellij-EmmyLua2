@@ -8,7 +8,7 @@ import com.intellij.psi.PsiElement;
 public interface LuaGotoStat extends LuaStatement {
 
   @Nullable
-  PsiElement getId();
+  LuaNameExpr getNameExpr();
 
   //WARNING: getReferences(...) is skipped
   //matching getReferences(LuaGotoStat, ...)

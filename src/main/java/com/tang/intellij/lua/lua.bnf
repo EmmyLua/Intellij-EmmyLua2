@@ -222,10 +222,19 @@ forAStat ::= 'for' paramNameDef '=' expr ',' expr (',' expr)? 'do' <<lazyBlock>>
 forBStat ::= 'for' parList 'in' exprList 'do' <<lazyBlock>> 'end' {
     pin = 1
 }
-labelStat ::= '::' ID '::' {
+// Lua labels/goto also need to tolerate plugin-specific `continue` token as a name.
+labelNameDef ::= ID | continue {
+    extends = nameDef
+    elementType = nameDef
+}
+gotoNameExpr ::= ID | continue {
+    extends = nameExpr
+    elementType = nameExpr
+}
+labelStat ::= '::' labelNameDef '::' {
     pin = 1
 }
-gotoStat ::= 'goto' ID {
+gotoStat ::= 'goto' gotoNameExpr {
     pin = 1
     methods = [
         getReferences
@@ -262,12 +271,16 @@ globalFuncDef ::= 'global' 'function' ID funcBody {
 attribute ::= '<' ID '>' {
     pin = 1
 }
-nameList ::= nameDef attribute? (',' nameDef attribute?)* {
+// Lua 5.5-like attributed name list
+// supports: local/global <const> name1, name2
+// and also tolerates per-name attributes after commas.
+nameList ::= attribute? nameDef attribute? (',' attribute? nameDef attribute?)* {
 }
 localDef ::= 'local' nameList ('=' exprList)? {
     pin = 1
 }
-globalDef ::= 'global' nameList ('=' exprList)? {
+// Lua 5.5: stat ::= 'global' [attrib] '*'
+globalDef ::= 'global' (nameList ('=' exprList)? | attribute? '*') {
     pin = 1
 }
 
@@ -331,7 +344,7 @@ funcBody ::= '(' (parList)? ')' <<lazyBlock>>? 'end' {
 }
 
 private parList ::= paramNameDef (',' paramNameDef)* (',' varargParam)? | varargParam { recoverWhile = parList_recover }
-private varargParam ::= '...' ID?
+private varargParam ::= '...' paramNameDef?
 private parList_recover ::= !(')'|'in')
 
 tableExpr ::= '{' fieldList '}' {

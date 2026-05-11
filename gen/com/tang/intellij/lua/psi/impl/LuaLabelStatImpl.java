@@ -29,8 +29,8 @@ public class LuaLabelStatImpl extends LuaStatementImpl implements LuaLabelStat {
 
   @Override
   @Nullable
-  public PsiElement getId() {
-    return findChildByType(ID);
+  public LuaNameDef getNameDef() {
+    return findChildByClass(LuaNameDef.class);
   }
 
 }

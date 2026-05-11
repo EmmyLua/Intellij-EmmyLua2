@@ -8,6 +8,6 @@ import com.intellij.psi.PsiElement;
 public interface LuaLabelStat extends LuaStatement {
 
   @Nullable
-  PsiElement getId();
+  LuaNameDef getNameDef();
 
 }

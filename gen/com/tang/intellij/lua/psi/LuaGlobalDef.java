@@ -8,6 +8,9 @@ import com.intellij.psi.PsiElement;
 public interface LuaGlobalDef extends LuaPsiElement {
 
   @Nullable
+  LuaAttribute getAttribute();
+
+  @Nullable
   LuaExprList getExprList();
 
   @Nullable

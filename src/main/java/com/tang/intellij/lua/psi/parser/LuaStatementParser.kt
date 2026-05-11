@@ -35,6 +35,7 @@ object LuaStatementParser : GeneratedParserUtilBase() {
             CONTINUE -> parseContinueStatement(b)
             RETURN -> parseReturnStatement(b, l)
             LOCAL -> parseLocalDef(b, l)
+            GLOBAL -> parseGlobalDef(b, l)
             FOR -> parseForStatement(b, l)
             FUNCTION -> parseFunctionStatement(b, l)
             SEMI -> parseEmptyStatement(b)
@@ -122,12 +123,12 @@ object LuaStatementParser : GeneratedParserUtilBase() {
         return m
     }
 
-    // '::' ID '::'
+    // '::' nameDef '::'
     private fun parseLabelStatement(b: PsiBuilder): PsiBuilder.Marker {
         val m = b.mark()
         b.advanceLexer() // ::
 
-        expectError(b, ID) { "ID" }
+        parseLabelNameDef(b)
 
         expectError(b, DOUBLE_COLON) { "'::'" } // ::
 
@@ -194,6 +195,46 @@ object LuaStatementParser : GeneratedParserUtilBase() {
         return nameCount
     }
 
+    private fun parseNameDef(b: PsiBuilder, error: Boolean = true): PsiBuilder.Marker? {
+        if (b.tokenType == ID) {
+            val m = b.mark()
+            b.advanceLexer()
+            m.done(NAME_DEF)
+            return m
+        } else if (error) b.error("ID expected")
+        return null
+    }
+
+    private fun parseLabelNameDef(b: PsiBuilder, error: Boolean = true): PsiBuilder.Marker? {
+        if (b.tokenType == ID || b.tokenType == CONTINUE) {
+            val m = b.mark()
+            b.advanceLexer()
+            m.done(NAME_DEF)
+            return m
+        } else if (error) b.error("ID expected")
+        return null
+    }
+
+    private fun parseNameExpr(b: PsiBuilder, error: Boolean = true): PsiBuilder.Marker? {
+        if (b.tokenType == ID) {
+            val m = b.mark()
+            b.advanceLexer()
+            m.done(NAME_EXPR)
+            return m
+        } else if (error) b.error("ID expected")
+        return null
+    }
+
+    private fun parseGotoNameExpr(b: PsiBuilder, error: Boolean = true): PsiBuilder.Marker? {
+        if (b.tokenType == ID || b.tokenType == CONTINUE) {
+            val m = b.mark()
+            b.advanceLexer()
+            m.done(NAME_EXPR)
+            return m
+        } else if (error) b.error("ID expected")
+        return null
+    }
+
     private fun parseBreakStatement(b: PsiBuilder): PsiBuilder.Marker {
         val m = b.mark()
         b.advanceLexer()
@@ -240,6 +281,26 @@ object LuaStatementParser : GeneratedParserUtilBase() {
         return m
     }
 
+    private fun parseGlobalDef(b: PsiBuilder, l: Int): PsiBuilder.Marker {
+        return if (b.lookAhead(1) == FUNCTION)
+            parseGlobalFunction(b, l)
+        else
+            parseGlobal(b, l)
+    }
+
+    private fun parseGlobalFunction(b: PsiBuilder, l: Int): PsiBuilder.Marker {
+        val m = b.mark()
+        b.advanceLexer() // global
+        b.advanceLexer() // function
+
+        expectError(b, ID) { "ID" }
+
+        parseFuncBody(b, l)
+
+        doneStat(b, m, GLOBAL_FUNC_DEF)
+        return m
+    }
+
     // Lua 5.4
     private fun parseAttribute(b: PsiBuilder): PsiBuilder.Marker? {
         if (b.tokenType == LT) {
@@ -254,19 +315,17 @@ object LuaStatementParser : GeneratedParserUtilBase() {
     }
 
     private fun parseNameList(b: PsiBuilder): PsiBuilder.Marker {
-        var m = b.mark()
-        if (expectError(b, ID) { "ID" }) {
-            m.done(NAME_DEF)
+        val m = b.mark()
+        parseAttribute(b)
+        if (parseNameDef(b) != null) {
             parseAttribute(b)
             while (b.tokenType == COMMA) {
                 b.advanceLexer()
-                val nameDef = b.mark()
-                if (expectError(b, ID) { "ID" }) {
-                    nameDef.done(NAME_DEF)
+                parseAttribute(b)
+                if (parseNameDef(b) != null) {
                     parseAttribute(b)
-                } else nameDef.drop()
+                }
             }
-            m = m.precede()
         }
 
         m.done(NAME_LIST)
@@ -292,6 +351,49 @@ object LuaStatementParser : GeneratedParserUtilBase() {
         return m
     }
 
+    private fun parseGlobal(b: PsiBuilder, l: Int): PsiBuilder.Marker {
+        val m = b.mark()
+        b.advanceLexer() // global
+
+        if (b.tokenType == MULT) {
+            b.advanceLexer()
+        } else if (b.tokenType == LT) {
+            parseAttribute(b)
+            if (b.tokenType == MULT) {
+                b.advanceLexer()
+            } else {
+                parseNameList(b)
+                if (b.tokenType == ASSIGN) {
+                    b.advanceLexer()
+
+                    val exprList = b.mark()
+                    if (LuaExpressionParser.parseExprList(b, l + 1) == null)
+                        b.error("Expression expected")
+                    exprList.done(EXPR_LIST)
+                }
+            }
+        } else {
+            parseNameList(b)
+
+            if (b.tokenType == ASSIGN) {
+                b.advanceLexer()
+
+                val exprList = b.mark()
+                if (LuaExpressionParser.parseExprList(b, l + 1) == null)
+                    b.error("Expression expected")
+                exprList.done(EXPR_LIST)
+            }
+        }
+
+        doneStat(b, m, GLOBAL_DEF)
+        return m
+    }
+
+    private fun parseVarargParam(b: PsiBuilder) {
+        expect(b, ELLIPSIS)
+        expectParamName(b, false)
+    }
+
     fun parseFuncBody(b: PsiBuilder, l: Int): PsiBuilder.Marker {
         val m = b.mark()
         if (b.tokenType !== LPAREN) {
@@ -300,18 +402,26 @@ object LuaStatementParser : GeneratedParserUtilBase() {
         }
         b.advanceLexer()
 
-        // param list
-        val def = expectParamName(b, false)
-        while (def != null) {
-            if (expect(b, COMMA)) {
-                if (expectParamName(b, false) == null && !expect(b, ELLIPSIS)) {
+        if (b.tokenType != RPAREN) {
+            if (b.tokenType == ELLIPSIS) {
+                parseVarargParam(b)
+            } else {
+                if (expectParamName(b, false) == null) {
                     b.error("ID or '...' expected")
                 }
-            } else break
-        }
-        // (...)
-        if (def == null) {
-            expect(b, ELLIPSIS)
+
+                while (b.tokenType == COMMA) {
+                    b.advanceLexer()
+                    if (b.tokenType == ELLIPSIS) {
+                        parseVarargParam(b)
+                        break
+                    }
+
+                    if (expectParamName(b, false) == null) {
+                        b.error("ID or '...' expected")
+                    }
+                }
+            }
         }
 
         expectError(b, RPAREN) { "')'" }
@@ -328,7 +438,7 @@ object LuaStatementParser : GeneratedParserUtilBase() {
     private fun parseGotoStatement(b: PsiBuilder): PsiBuilder.Marker {
         val m = b.mark()
         b.advanceLexer()
-        expectError(b, ID) { "ID" }
+        parseGotoNameExpr(b)
         doneStat(b, m, GOTO_STAT)
         return m
     }

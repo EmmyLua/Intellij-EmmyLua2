@@ -3,7 +3,6 @@ package com.tang.intellij.lua.lexer;
 import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
-import com.tang.intellij.lua.lang.LuaLanguageLevel;
 
 import java.io.Reader;
 
@@ -12,12 +11,6 @@ import static com.tang.intellij.lua.psi.LuaTypes.*;
 %%
 
 %{
-    private LuaLanguageLevel level = LuaLanguageLevel.LUA55;
-    public _LuaLexer(LuaLanguageLevel level) {
-        this((Reader) null);
-        this.level = level;
-    }
-
     private int nBrackets = 0;
     private boolean checkAhead(char c, int offset) {
         return this.zzMarkedPos + offset < this.zzBuffer.length() && this.zzBuffer.charAt(this.zzMarkedPos + offset) == c;
@@ -135,6 +128,7 @@ LONG_STRING=\[=*\[[\s\S]*\]=*\]
   "if"                        { return IF; }
   "in"                        { return IN; }
   "local"                     { return LOCAL; }
+  "global"                    { return GLOBAL; }
   "nil"                       { return NIL; }
   "not"                       { return NOT; }
   "or"                        { return OR; }
@@ -144,7 +138,7 @@ LONG_STRING=\[=*\[[\s\S]*\]=*\]
   "true"                      { return TRUE; }
   "until"                     { return UNTIL; }
   "while"                     { return WHILE; }
-  "goto"                      { if (level.getVersion() < LuaLanguageLevel.LUA52.getVersion()) return ID; else return GOTO; } //lua5.3
+  "goto"                      { return GOTO; }
   "#!"                        { yybegin(xSHEBANG); return SHEBANG; }
   "..."                       { return ELLIPSIS; }
   ".."                        { return CONCAT; }
@@ -197,7 +191,7 @@ LONG_STRING=\[=*\[[\s\S]*\]=*\]
   "#"                         { return GETN; }
   ","                         { return COMMA; }
   ";"                         { return SEMI; }
-  "::"                        { return DOUBLE_COLON; } //lua5.2
+  "::"                        { return DOUBLE_COLON; }
   ":"                         { return COLON; }
   "."                         { return DOT; }
   "^="                        { return EXP_ASSIGN; } // 非标准符号

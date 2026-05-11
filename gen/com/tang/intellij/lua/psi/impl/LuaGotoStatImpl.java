@@ -29,8 +29,8 @@ public class LuaGotoStatImpl extends LuaStatementImpl implements LuaGotoStat {
 
   @Override
   @Nullable
-  public PsiElement getId() {
-    return findChildByType(ID);
+  public LuaNameExpr getNameExpr() {
+    return findChildByClass(LuaNameExpr.class);
   }
 
 }

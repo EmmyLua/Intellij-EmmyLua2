@@ -13,7 +13,4 @@ public interface LuaForBStat extends LuaStatement {
   @NotNull
   List<LuaParamNameDef> getParamNameDefList();
 
-  @Nullable
-  PsiElement getId();
-
 }

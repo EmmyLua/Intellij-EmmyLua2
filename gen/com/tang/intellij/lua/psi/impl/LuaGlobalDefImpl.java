@@ -29,6 +29,12 @@ public class LuaGlobalDefImpl extends ASTWrapperPsiElement implements LuaGlobalD
 
   @Override
   @Nullable
+  public LuaAttribute getAttribute() {
+    return findChildByClass(LuaAttribute.class);
+  }
+
+  @Override
+  @Nullable
   public LuaExprList getExprList() {
     return findChildByClass(LuaExprList.class);
   }
