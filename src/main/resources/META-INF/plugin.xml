@@ -157,10 +157,10 @@
                          languageId="lua"/>
     </extensions>
 
-    <projectListeners>
-        <listener class="com.tang.intellij.lua.editor.LuaMultiCaretCompletionListener"
-                  topic="com.intellij.codeInsight.lookup.LookupManagerListener"/>
-    </projectListeners>
+<!--    <projectListeners>-->
+<!--        <listener class="com.tang.intellij.lua.editor.LuaMultiCaretCompletionListener"-->
+<!--                  topic="com.intellij.codeInsight.lookup.LookupManagerListener"/>-->
+<!--    </projectListeners>-->
 
     <actions>
         <action class="com.tang.intellij.lua.actions.CreateLuaFileAction"
