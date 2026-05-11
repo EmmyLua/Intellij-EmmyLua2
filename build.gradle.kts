@@ -213,7 +213,7 @@ dependencies {
     intellijPlatform {
         intellijIdeaCommunity(Versions.ideaSDK)
         bundledPlugins("com.intellij.java", "org.jetbrains.kotlin")
-        plugins("com.redhat.devtools.lsp4ij:0.18.0")
+        plugins("com.redhat.devtools.lsp4ij:0.19.0")
     }
 }
 

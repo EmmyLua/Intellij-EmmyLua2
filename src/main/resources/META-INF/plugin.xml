@@ -18,10 +18,10 @@
     <h2>Features</h2>
 
     <ul>
-    <li> All Lua versions support (<code>Lua 5.1</code>, <code>Lua 5.2</code>, <code>Lua 5.3</code>, <code>Lua 5.4</code>, <code>Luajit</code>)</li>
+    <li> All Lua versions support (<code>Lua 5.1</code>, <code>Lua 5.2</code>, <code>Lua 5.3</code>, <code>Lua 5.4</code>, <code>Lua 5.5</code>, <code>Luajit</code>)</li>
     <li> Support Enhance EmmyLua Doc</li>
-    <li> Support Almost language IDE features Provider by <a href="https://github.com/CppCXY/EmmyLuaAnalyzer">EmmyLuaAnalyzer</a></li>
-    <li> More better formatter base on <a href="https://github.com/CppCXY/EmmyLuaCodeStyle">EmmyLuaCodeStyle</a></li>
+    <li> Support Almost language IDE features Provider by <a href="https://github.com/EmmyLuaLs/emmylua-analyzer-rust">emmylua_ls</a></li>
+    <li> More better formatter base on <a href="https://github.com/EmmyLuaLs/emmylua-analyzer-rust/tree/main/crates/emmylua_formatter">luafmt</a></li>
     <li> Powerful and more performant <a href="https://github.com/EmmyLua/EmmyLuaDebugger">EmmyLuaLua Debugger</li></li>
 
     </ul>
@@ -153,7 +153,8 @@
             </description>
         </server>
         <languageMapping language="Lua"
-                         serverId="EmmyLua"/>
+                         serverId="EmmyLua"
+                         languageId="lua"/>
     </extensions>
 
     <projectListeners>

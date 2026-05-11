@@ -15,7 +15,7 @@
 
 ## ✨ Features
 
-> Powered by the robust [emmylua-analyzer-rust](https://github.com/CppCXY/emmylua-analyzer-rust) engine
+> Powered by the robust [emmylua-analyzer-rust](https://github.com/EmmyLuaLs/emmylua-analyzer-rust) engine
 
 ### 🎯 Core Features
 - **Smart Code Completion** - Context-aware precise code suggestions
