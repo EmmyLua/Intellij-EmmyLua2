@@ -12,8 +12,8 @@ group = "com.cppcxy"
 
 // 版本配置
 object Versions {
-    const val emmyluaAnalyzer = "0.23.0"
-    const val emmyDebugger = "1.9.1"
+    const val emmyluaAnalyzer = "0.23.2"
+    const val emmyDebugger = "1.9.2"
     const val jvm = "17"
     const val ideaSDK = "2025.2"
 }
@@ -32,7 +32,7 @@ private val buildDataList = listOf(
         ideaSDKShortVersion = "252",
         ideaSDKVersion = "2025.2",
         sinceBuild = "252",
-        untilBuild = "261.*"
+        untilBuild = "262.*"
     )
 )
 
