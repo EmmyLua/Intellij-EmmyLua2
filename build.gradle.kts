@@ -15,7 +15,7 @@ object Versions {
     const val emmyluaAnalyzer = "0.23.2"
     const val emmyDebugger = "1.9.2"
     const val jvm = "17"
-    const val ideaSDK = "2025.2"
+    const val ideaSDK = "2026.1"
 }
 
 // 构建数据配置
@@ -29,9 +29,9 @@ data class BuildData(
 
 private val buildDataList = listOf(
     BuildData(
-        ideaSDKShortVersion = "252",
-        ideaSDKVersion = "2025.2",
-        sinceBuild = "252",
+        ideaSDKShortVersion = "261",
+        ideaSDKVersion = "2026.1",
+        sinceBuild = "261",
         untilBuild = "262.*"
     )
 )
