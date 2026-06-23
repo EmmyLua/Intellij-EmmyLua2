@@ -184,20 +184,6 @@ val cleanDependencies by tasks.registering(Delete::class) {
 
 // ============= 仓库配置 =============
 repositories {
-    // 添加阿里云镜像仓库优先使用
-    maven {
-        url = uri("https://maven.aliyun.com/repository/central")
-        name = "AliyunMavenCentral"
-    }
-    maven {
-        url = uri("https://maven.aliyun.com/repository/gradle-plugin")
-        name = "AliyunGradlePlugin"
-    }
-    maven {
-        url = uri("https://maven.aliyun.com/repository/google")
-        name = "AliyunGoogle"
-    }
-
     // 保留原有仓库作为备用
     mavenCentral()
     google()
