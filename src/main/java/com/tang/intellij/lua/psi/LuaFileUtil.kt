@@ -30,11 +30,13 @@ import java.io.File
  *
  * Created by tangzx on 2017/1/4.
  */
+@Suppress("UnstableApiUsage")
 object LuaFileUtil {
 
     private val pluginVirtualDirectory: VirtualFile?
         get() {
-            val descriptor = PluginManagerCore.getPlugin(PluginId.getId("com.cppcxy.Intellij-EmmyLua"))
+            val plugin = PluginId.getId("com.cppcxy.Intellij-EmmyLua")
+            val descriptor = PluginManagerCore.getPlugin(plugin)
             if (descriptor != null) {
                 return VirtualFileManager.getInstance().findFileByNioPath(descriptor.pluginPath)
             }

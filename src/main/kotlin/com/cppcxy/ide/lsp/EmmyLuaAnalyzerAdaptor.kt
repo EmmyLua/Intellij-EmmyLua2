@@ -1,18 +1,11 @@
 package com.cppcxy.ide.lsp
 
 import com.cppcxy.ide.setting.EmmyLuaSettings
-import com.intellij.ide.plugins.PluginManagerCore
-import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.util.SystemInfoRt
+import com.tang.intellij.lua.psi.LuaFileUtil
 import java.io.File
 
 object EmmyLuaAnalyzerAdaptor {
-    private val pluginSource: String?
-        get() {
-            val plugin = PluginManagerCore.getPlugin(PluginId.getId("com.cppcxy.Intellij-EmmyLua"))
-            return plugin?.pluginPath?.toFile()?.path
-        }
-
     private val exe: String
         get() {
             return if (SystemInfoRt.isWindows) {
@@ -33,7 +26,7 @@ object EmmyLuaAnalyzerAdaptor {
             if (EmmyLuaSettings.getInstance().location.isNotEmpty()) {
                 return EmmyLuaSettings.getInstance().location
             }
-            return "$pluginSource/server/$exe"
+            return LuaFileUtil.getPluginVirtualFile("/server/$exe").toString()
         }
 
     val canExecute: Boolean

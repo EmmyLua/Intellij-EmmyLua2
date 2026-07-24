@@ -17,27 +17,6 @@ fun resolveToolPath(): String? =
     LuaFileUtil.getPluginVirtualFile("debugger/emmy/windows/x86/emmy_tool.exe")
         ?: LuaFileUtil.getPluginVirtualFile("debugger/emmy/windows/x64/emmy_tool.exe")
 
-/**
- * Returns a diagnostic string listing every path that was searched for emmy_tool.exe,
- * along with whether each file actually exists on disk. Useful for debugging "not found" errors.
- */
-fun resolveToolPathDiagnostic(): String {
-    val pluginDir = PluginManagerCore.getPlugin(PluginId.getId("com.cppcxy.Intellij-EmmyLua"))
-        ?.pluginPath?.toString()
-        ?: return "  <plugin directory not found — is the plugin ID correct?>"
-
-    val relPaths = listOf(
-        "debugger/emmy/windows/x86/emmy_tool.exe",
-        "debugger/emmy/windows/x64/emmy_tool.exe"
-    )
-    return relPaths.flatMap { rel ->
-        listOf("$pluginDir/classes/$rel", "$pluginDir/$rel")
-    }.joinToString("\n") { fullPath ->
-        val status = if (File(fullPath).exists()) "EXISTS" else "missing"
-        "  [$status] $fullPath"
-    }
-}
-
 /** @deprecated Use [resolveToolPath] directly. Kept for call-site compatibility. */
 val archToolPath: String?
     get() = resolveToolPath()

@@ -66,7 +66,7 @@ class EmmyConfigAttachDebugProcess(
         if (pool.isEmpty()) {
             val toolPath = resolveToolPath()
             if (toolPath == null) {
-                error("emmy_tool.exe not found. Searched paths:\n${resolveToolPathDiagnostic()}")
+                error("emmy_tool.exe not found. ")
             } else {
                 error("emmy_tool.exe found at $toolPath but returned no processes. " +
                       "Check that it can run on this machine (try running it manually).")
