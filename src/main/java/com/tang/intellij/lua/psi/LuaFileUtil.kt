@@ -17,6 +17,7 @@
 package com.tang.intellij.lua.psi
 
 import com.intellij.ide.plugins.PluginManagerCore
+import com.intellij.ide.plugins.cl.PluginAwareClassLoader
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
@@ -25,22 +26,22 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.ProjectAndLibrariesScope
 import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.exists
+import kotlin.io.path.pathString
 
 /**
  *
  * Created by tangzx on 2017/1/4.
  */
-@Suppress("UnstableApiUsage")
 object LuaFileUtil {
 
-    private val pluginVirtualDirectory: VirtualFile?
+    private val pluginPath: Path?
         get() {
-            val plugin = PluginId.getId("com.cppcxy.Intellij-EmmyLua")
-            val descriptor = PluginManagerCore.getPlugin(plugin)
-            if (descriptor != null) {
-                return VirtualFileManager.getInstance().findFileByNioPath(descriptor.pluginPath)
+            val classLoader = LuaFileUtil::class.java.classLoader
+            if (classLoader is PluginAwareClassLoader) {
+                return classLoader.pluginDescriptor.pluginPath
             }
-
             return null
         }
 
@@ -155,15 +156,18 @@ object LuaFileUtil {
     }
 
     fun getPluginVirtualFile(path: String): String? {
-        val directory = pluginVirtualDirectory
-        if (directory != null) {
-            var fullPath = directory.path + "/classes/" + path
-            if (File(fullPath).exists())
-                return fullPath
-            fullPath = directory.path + "/" + path
-            if (File(fullPath).exists())
-                return fullPath
+        val directory: Path = pluginPath ?: return null
+
+        val classesPath = directory.resolve("classes").resolve(path)
+        if (classesPath.exists()) {
+            return classesPath.pathString
         }
+
+        val directPath = directory.resolve(path)
+        if (directPath.exists()) {
+            return directPath.pathString
+        }
+
         return null
     }
 }
