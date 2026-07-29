@@ -16,9 +16,11 @@
 
 package com.tang.intellij.lua.psi
 
+import com.intellij.ide.plugins.PluginDetailsService
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.ide.plugins.cl.PluginAwareClassLoader
+import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
@@ -43,36 +45,9 @@ object LuaFileUtil {
 
     private val pluginPath: Path?
         get() {
-            return getPathFromClassLocation()
+            val pluginDir = PathManager.getPluginsDir()
+            return pluginDir.resolve("Intellij-EmmyLua2")
         }
-
-    private fun getPathFromClassLocation(): Path? {
-        return try {
-            // 获取 LuaFileUtil 这个 class 所在的 jar 包路径，或者 classes 目录路径
-            val rawPath = PathUtil.getJarPathForClass(LuaFileUtil::class.java)
-            val path = Paths.get(rawPath)
-
-            if (rawPath.endsWith(".jar")) {
-                // 生产打包后结构：.../your-plugin/lib/plugin.jar
-                // path.parent 是 lib/，path.parent.parent 就是 your-plugin/ 根目录
-                path.parent?.parent
-            } else {
-                // Gradle runIde 调试模式结构：.../build/idea-sandbox/plugins/your-plugin/classes
-                // 沿着目录树向上找，找到包含 classes 或 lib 的上一级文件夹（即插件根目录）
-                var current: Path? = path
-                while (current != null) {
-                    val name = current.fileName?.toString()
-                    if (name == "classes" || name == "lib") {
-                        return current.parent
-                    }
-                    current = current.parent
-                }
-                path
-            }
-        } catch (e: Exception) {
-            null
-        }
-    }
 
     /**
      * Find a file by short URL with additional source roots for searching.
