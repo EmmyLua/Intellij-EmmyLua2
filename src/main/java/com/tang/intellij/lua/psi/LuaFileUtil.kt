@@ -16,16 +16,9 @@
 
 package com.tang.intellij.lua.psi
 
-import com.intellij.ide.plugins.PluginDetailsService
-import com.intellij.ide.plugins.PluginManager
-import com.intellij.ide.plugins.PluginManagerCore
-import com.intellij.ide.plugins.cl.PluginAwareClassLoader
-import com.intellij.openapi.application.PathManager
-import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.ProjectAndLibrariesScope
 import com.intellij.util.PathUtil
@@ -41,13 +34,14 @@ import kotlin.io.path.pathString
  */
 object LuaFileUtil {
 
-    private val pluginId = PluginId.getId("com.cppcxy.Intellij-EmmyLua")
-
-    private val pluginPath: Path?
-        get() {
-            val pluginDir = PathManager.getPluginsDir()
-            return pluginDir.resolve("Intellij-EmmyLua2")
-        }
+    /**
+     * Root of this plugin's installation. The directory name is set by the build, so it must not
+     * be hard-coded; derive it from the jar this class ships in instead.
+     */
+    private val pluginPath: Path? by lazy {
+        val parent = Paths.get(PathUtil.getJarPathForClass(LuaFileUtil::class.java)).parent
+        if (parent?.fileName?.toString() == "lib") parent.parent else parent
+    }
 
     /**
      * Find a file by short URL with additional source roots for searching.
@@ -159,19 +153,13 @@ object LuaFileUtil {
         return VfsUtil.findRelativeFile(filename, project.baseDir)
     }
 
+    /**
+     * Absolute path of a bundled file, or `null` if absent. [path] is always relative to the
+     * plugin root: a leading separator would make [Path.resolve] escape the directory.
+     */
     fun getPluginVirtualFile(path: String): String? {
         val directory: Path = pluginPath ?: return null
-
-        val classesPath = directory.resolve("classes").resolve(path)
-        if (classesPath.exists()) {
-            return classesPath.pathString
-        }
-
-        val directPath = directory.resolve(path)
-        if (directPath.exists()) {
-            return directPath.pathString
-        }
-
-        return null
+        val target = directory.resolve(path.trimStart('/', '\\'))
+        return if (target.exists()) target.pathString else null
     }
 }

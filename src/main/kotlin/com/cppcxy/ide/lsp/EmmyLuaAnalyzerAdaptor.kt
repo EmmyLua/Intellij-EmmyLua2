@@ -26,7 +26,7 @@ object EmmyLuaAnalyzerAdaptor {
             if (EmmyLuaSettings.getInstance().location.isNotEmpty()) {
                 return EmmyLuaSettings.getInstance().location
             }
-            return LuaFileUtil.getPluginVirtualFile("/server/$exe").toString()
+            return LuaFileUtil.getPluginVirtualFile("server/$exe").orEmpty()
         }
 
     val canExecute: Boolean
