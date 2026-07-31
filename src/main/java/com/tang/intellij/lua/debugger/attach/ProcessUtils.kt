@@ -2,10 +2,7 @@ package com.tang.intellij.lua.debugger.attach
 
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
-import com.intellij.ide.plugins.PluginManagerCore
-import com.intellij.openapi.extensions.PluginId
 import com.tang.intellij.lua.psi.LuaFileUtil
-import java.io.File
 import java.nio.charset.Charset
 
 /**
@@ -16,10 +13,6 @@ import java.nio.charset.Charset
 fun resolveToolPath(): String? =
     LuaFileUtil.getPluginVirtualFile("debugger/emmy/windows/x86/emmy_tool.exe")
         ?: LuaFileUtil.getPluginVirtualFile("debugger/emmy/windows/x64/emmy_tool.exe")
-
-/** @deprecated Use [resolveToolPath] directly. Kept for call-site compatibility. */
-val archToolPath: String?
-    get() = resolveToolPath()
 
 fun listProcesses(): Map<Int, ProcessDetailInfo> {
     val toolPath = resolveToolPath() ?: return emptyMap()

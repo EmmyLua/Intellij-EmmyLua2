@@ -35,7 +35,7 @@ class EmmyAttachDebuggerProvider : XAttachDebuggerProvider {
 
         // Build the process map once per "Attach to Process" dialog open.
         if (userDataHolder.getUserData(DETAIL_KEY) == null) {
-            if (archToolPath == null) {
+            if (resolveToolPath() == null) {
                 ApplicationManager.getApplication().invokeLater {
                     Notifications.Bus.notify(
                         Notification(
