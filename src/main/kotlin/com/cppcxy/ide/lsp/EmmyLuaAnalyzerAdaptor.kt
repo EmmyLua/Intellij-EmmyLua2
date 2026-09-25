@@ -11,7 +11,7 @@ object EmmyLuaAnalyzerAdaptor {
             return if (SystemInfoRt.isWindows) {
                 "win32-x64/emmylua_ls.exe"
             } else if (SystemInfoRt.isMac) {
-                if (System.getProperty("os.arch") == "arm64") {
+                if (System.getProperty("os.arch") in setOf("aarch64", "arm64")) {
                     "darwin-arm64/emmylua_ls"
                 } else {
                     "darwin-x64/emmylua_ls"
