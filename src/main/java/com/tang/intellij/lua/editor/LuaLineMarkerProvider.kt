@@ -62,18 +62,20 @@ class LuaLineMarkerProvider : LineMarkerProvider {
         val project = file.project
         val virtualFile = file.virtualFile ?: return
         val uri = virtualFile.url
+        val serverId = EmmyLuaServerRouting.getServerId(project, virtualFile)
+        val cacheKey = LuaGutterCacheManager.Key(project, serverId, uri)
 
         ProgressManager.checkCanceled()
         val document = FileDocumentManager.getInstance().getDocument(virtualFile) ?: return
         val stamp = document.modificationStamp
-        val key = LuaGutterCacheManager.Key(project, "EmmyLua", uri)
-        val gutterInfos = LuaGutterCacheManager.getOrRequest(key, stamp, {
-            requestGutters(project, key.serverId, uri)
+        val gutterInfos = LuaGutterCacheManager.getOrRequest(cacheKey, stamp, {
+            requestGutters(project, serverId, uri)
         }) {
             ApplicationManager.getApplication().invokeLater {
                 if (project.isDisposed || !virtualFile.isValid) return@invokeLater
                 ReadAction.run<RuntimeException> {
-                    if (document.modificationStamp == stamp && file.isValid) {
+                    if (document.modificationStamp == stamp && file.isValid &&
+                        EmmyLuaServerRouting.getServerId(project, virtualFile) == serverId) {
                         DaemonCodeAnalyzer.getInstance(project).restart(file)
                     }
                 }
@@ -115,7 +117,7 @@ class LuaLineMarkerProvider : LineMarkerProvider {
 
                 // Create navigation handler - all kinds are clickable if they have data
                 val navHandler = if (gutterInfo.data != null) {
-                    createNavigationHandler(project, element, gutterInfo)
+                    createNavigationHandler(project, element, gutterInfo, serverId)
                 } else {
                     null
                 }
@@ -154,9 +156,12 @@ class LuaLineMarkerProvider : LineMarkerProvider {
     private fun createNavigationHandler(
         project: Project,
         element: PsiElement,
-        gutterInfo: GutterInfo
+        gutterInfo: GutterInfo,
+        serverId: String
     ): (MouseEvent, PsiElement) -> Unit {
-        return { mouseEvent, _ ->
+        return handler@{ mouseEvent, _ ->
+            val file = element.containingFile?.virtualFile ?: return@handler
+            if (project.isDisposed || EmmyLuaServerRouting.getServerId(project, file) != serverId) return@handler
             // Special handling for Method kind - parse data directly
             if (gutterInfo.kind == GutterKind.Override && gutterInfo.data is String) {
                 val dataStr = gutterInfo.data
@@ -181,7 +186,7 @@ class LuaLineMarkerProvider : LineMarkerProvider {
                 ApplicationManager.getApplication().executeOnPooledThread {
                     try {
                         val languageServerFuture = LanguageServerManager.getInstance(project)
-                            .getLanguageServer("EmmyLua")
+                            .getLanguageServer(serverId)
 
                         val languageServerItem = try {
                             languageServerFuture.get(1, TimeUnit.SECONDS)
