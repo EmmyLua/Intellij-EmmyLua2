@@ -1,3 +1,4 @@
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import de.undercouch.gradle.tasks.download.Download
 
 plugins {
@@ -193,7 +194,9 @@ repositories {
 
 // ============= 依赖配置 =============
 dependencies {
+    testImplementation("junit:junit:4.13.2")
     intellijPlatform {
+        testFramework(TestFrameworkType.Platform)
         intellijIdeaUltimate(Versions.ideaSDK)
         bundledPlugins("com.intellij.java", "org.jetbrains.kotlin")
         plugins("com.redhat.devtools.lsp4ij:0.19.0")
