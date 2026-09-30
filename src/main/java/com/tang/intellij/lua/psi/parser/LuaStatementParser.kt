@@ -464,6 +464,7 @@ object LuaStatementParser : GeneratedParserUtilBase() {
                 // .ID
                 while (b.tokenType == DOT || b.tokenType == COLON) {
                     b.advanceLexer()
+                    remapGlobalMember(b)
                     expectError(b, ID) { "ID" }
                     val next = b.tokenType
                     if (next == DOT || next == COLON) {

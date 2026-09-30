@@ -1,4 +1,5 @@
 import de.undercouch.gradle.tasks.download.Download
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
     id("java")
@@ -193,7 +194,9 @@ repositories {
 
 // ============= 依赖配置 =============
 dependencies {
+    testImplementation("junit:junit:4.13.2")
     intellijPlatform {
+        testFramework(TestFrameworkType.Platform)
         intellijIdeaUltimate(Versions.ideaSDK)
         bundledPlugins("com.intellij.java", "org.jetbrains.kotlin")
         plugins("com.redhat.devtools.lsp4ij:0.19.0")
@@ -233,6 +236,10 @@ intellijPlatform {
 
 // ============= 任务配置 =============
 tasks {
+    withType<Test> {
+        systemProperty("idea.load.plugins.id", "com.cppcxy.Intellij-EmmyLua,com.redhat.devtools.lsp4ij")
+    }
+
     // Java 编译配置
     withType<JavaCompile> {
         sourceCompatibility = Versions.jvm

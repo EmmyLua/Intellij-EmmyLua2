@@ -17,6 +17,8 @@
 package com.tang.intellij.lua.psi.parser
 
 import com.intellij.lang.PsiBuilder
+import com.tang.intellij.lua.lang.LuaLanguageLevel
+import com.tang.intellij.lua.lang.LuaLanguageLevelProvider
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.tree.TokenSet
 import com.tang.intellij.lua.psi.LuaParserUtil.MY_LEFT_COMMENT_BINDER
@@ -37,6 +39,14 @@ internal fun expect(builder: PsiBuilder, expectedType: IElementType): Boolean {
         return true
     }
     return false
+}
+
+// Keep the reserved token for Lua 5.5 and unknown runtimes.
+internal fun remapGlobalMember(builder: PsiBuilder) {
+    if (builder.tokenType === GLOBAL &&
+        LuaLanguageLevelProvider.resolve(builder).version < LuaLanguageLevel.LUA55.version) {
+        builder.remapCurrentToken(ID)
+    }
 }
 
 internal fun expectExpr(b: PsiBuilder, l: Int): PsiBuilder.Marker? {
