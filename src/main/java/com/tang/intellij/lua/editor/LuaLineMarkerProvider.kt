@@ -56,21 +56,23 @@ class LuaLineMarkerProvider : LineMarkerProvider {
         val project = file.project
         val virtualFile = file.virtualFile ?: return
         val uri = virtualFile.url
+        val serverId = EmmyLuaServerRouting.getServerId(project, virtualFile)
+        val cacheKey = LuaGutterCacheManager.Key(project, serverId, uri)
 
         // Check if we need to refresh the cache
         // - Cache is missing
         // - Cache is older than 2 seconds (to account for document changes)
-        val needsRefresh = LuaGutterCacheManager.getCache(uri) == null ||
-                LuaGutterCacheManager.isCacheStale(uri, 2000)
+        val needsRefresh = LuaGutterCacheManager.getCache(cacheKey) == null ||
+                LuaGutterCacheManager.isCacheStale(cacheKey, 2000)
 
         // Try to get cached gutter info
-        var gutterInfos = if (needsRefresh) null else LuaGutterCacheManager.getCache(uri)
+        var gutterInfos = if (needsRefresh) null else LuaGutterCacheManager.getCache(cacheKey)
 
         if (gutterInfos == null) {
             // Request gutter information from LSP synchronously
             try {
                 val languageServerFuture = LanguageServerManager.getInstance(project)
-                    .getLanguageServer("EmmyLua")
+                    .getLanguageServer(serverId)
 
                 // Get the language server with timeout
                 val languageServerItem = try {
@@ -97,7 +99,7 @@ class LuaLineMarkerProvider : LineMarkerProvider {
 
                             // Cache the result
                             if (gutterInfos != null && gutterInfos.isNotEmpty()) {
-                                LuaGutterCacheManager.setCache(uri, gutterInfos)
+                                LuaGutterCacheManager.setCache(cacheKey, gutterInfos)
                             }
                         }
                     } catch (e: Exception) {
@@ -146,7 +148,7 @@ class LuaLineMarkerProvider : LineMarkerProvider {
 
                 // Create navigation handler - all kinds are clickable if they have data
                 val navHandler = if (gutterInfo.data != null) {
-                    createNavigationHandler(project, element, gutterInfo)
+                    createNavigationHandler(project, element, gutterInfo, serverId)
                 } else {
                     null
                 }
@@ -174,9 +176,12 @@ class LuaLineMarkerProvider : LineMarkerProvider {
     private fun createNavigationHandler(
         project: Project,
         element: PsiElement,
-        gutterInfo: GutterInfo
+        gutterInfo: GutterInfo,
+        serverId: String
     ): (MouseEvent, PsiElement) -> Unit {
-        return { mouseEvent, _ ->
+        return handler@{ mouseEvent, _ ->
+            val file = element.containingFile?.virtualFile ?: return@handler
+            if (project.isDisposed || EmmyLuaServerRouting.getServerId(project, file) != serverId) return@handler
             // Special handling for Method kind - parse data directly
             if (gutterInfo.kind == GutterKind.Override && gutterInfo.data is String) {
                 val dataStr = gutterInfo.data
@@ -199,7 +204,7 @@ class LuaLineMarkerProvider : LineMarkerProvider {
                 ApplicationManager.getApplication().executeOnPooledThread {
                     try {
                         val languageServerFuture = LanguageServerManager.getInstance(project)
-                            .getLanguageServer("EmmyLua")
+                            .getLanguageServer(serverId)
 
                         val languageServerItem = try {
                             languageServerFuture.get(1, TimeUnit.SECONDS)

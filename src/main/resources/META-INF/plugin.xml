@@ -35,6 +35,9 @@
     <idea-version since-build="251"/>
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <extensionPoints>
+        <extensionPoint name="serverProvider" interface="com.cppcxy.ide.lsp.EmmyLuaServerProvider" dynamic="true"/>
+    </extensionPoints>
     <extensions defaultExtensionNs="com.intellij">
         <fileType name="lua"
                   implementationClass="com.tang.intellij.lua.lang.LuaFileType"
@@ -154,6 +157,7 @@
         </server>
         <languageMapping language="Lua"
                          serverId="EmmyLua"
+                         documentMatcher="com.cppcxy.ide.lsp.EmmyLuaDocumentMatcher"
                          languageId="lua"/>
     </extensions>
 
