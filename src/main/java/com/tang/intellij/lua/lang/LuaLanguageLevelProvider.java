@@ -1,6 +1,7 @@
 package com.tang.intellij.lua.lang;
 
 import com.intellij.lang.PsiBuilder;
+import com.cppcxy.ide.setting.LuaRuntimeConfiguration;
 import com.intellij.openapi.extensions.ExtensionPointName;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
@@ -24,7 +25,7 @@ public interface LuaLanguageLevelProvider {
         if (cached != null) return cached;
         PsiFile psiFile = builder.getUserDataUnprotected(FileContextUtil.CONTAINING_FILE_KEY);
         VirtualFile file = psiFile == null ? null : psiFile.getOriginalFile().getVirtualFile();
-        LuaLanguageLevel level = LuaLanguageLevel.LUA55;
+        LuaLanguageLevel level = null;
         if (file != null) {
             for (LuaLanguageLevelProvider provider : EP_NAME.getExtensionList()) {
                 LuaLanguageLevel candidate = provider.getLanguageLevel(builder.getProject(), file);
@@ -34,7 +35,11 @@ public interface LuaLanguageLevelProvider {
                 }
             }
         }
-        // Unknown runtimes stay strict. Cache only for this parse, not for the file.
+        if (level == null) {
+            level = file == null ? LuaLanguageLevel.LUA55 :
+                    LuaRuntimeConfiguration.get(builder.getProject()).languageLevel(file);
+        }
+        // Cache only for this parse, not for the file.
         builder.putUserData(PARSE_LEVEL, level);
         return level;
     }
