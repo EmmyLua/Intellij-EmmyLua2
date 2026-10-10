@@ -178,6 +178,7 @@ object LuaExpressionParser {
         when (b.tokenType) {
             DOT, COLON -> { // left indexExpr ::= '[' expr ']' | '.' ID | ':' ID
                 b.advanceLexer() // . or :
+                remapGlobalMember(b)
                 expectError(b, ID) { "ID" }
                 val m = prefix.precede()
                 m.done(INDEX_EXPR)
@@ -318,6 +319,7 @@ object LuaExpressionParser {
     }
 
     private fun parseTableField(b: PsiBuilder, l: Int): PsiBuilder.Marker? {
+        if (b.lookAhead(1) == ASSIGN) remapGlobalMember(b)
         when (b.tokenType) {
             LBRACK -> { // '[' expr ']' '=' expr
                 val m = b.mark()

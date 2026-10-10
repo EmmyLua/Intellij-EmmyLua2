@@ -35,6 +35,9 @@
     <idea-version since-build="251"/>
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <extensionPoints>
+        <extensionPoint name="languageLevelProvider" interface="com.tang.intellij.lua.lang.LuaLanguageLevelProvider" dynamic="true"/>
+    </extensionPoints>
     <extensions defaultExtensionNs="com.intellij">
         <fileType name="lua"
                   implementationClass="com.tang.intellij.lua.lang.LuaFileType"

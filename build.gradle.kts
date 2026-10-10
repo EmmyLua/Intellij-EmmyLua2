@@ -1,5 +1,6 @@
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import de.undercouch.gradle.tasks.download.Download
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
     id("java")
@@ -236,6 +237,10 @@ intellijPlatform {
 
 // ============= 任务配置 =============
 tasks {
+    withType<Test> {
+        systemProperty("idea.load.plugins.id", "com.cppcxy.Intellij-EmmyLua,com.redhat.devtools.lsp4ij")
+    }
+
     // Java 编译配置
     withType<JavaCompile> {
         sourceCompatibility = Versions.jvm
