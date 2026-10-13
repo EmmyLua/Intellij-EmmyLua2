@@ -31,27 +31,33 @@ import java.util.concurrent.ConcurrentHashMap
  * Manager to handle gutter cache and trigger updates
  */
 object LuaGutterCacheManager {
-    private val gutterCache = ConcurrentHashMap<String, List<GutterInfo>>()
-    private val cacheTimestamps = ConcurrentHashMap<String, Long>()
+    data class Key(val project: Project, val serverId: String, val uri: String)
+
+    private val gutterCache = ConcurrentHashMap<Key, List<GutterInfo>>()
+    private val cacheTimestamps = ConcurrentHashMap<Key, Long>()
 
     fun clearCache(uri: String) {
-        gutterCache.remove(uri)
-        cacheTimestamps.remove(uri)
+        gutterCache.keys.removeIf { it.uri == uri }
+        cacheTimestamps.keys.removeIf { it.uri == uri }
     }
 
-    fun getCache(uri: String): List<GutterInfo>? = gutterCache[uri]
-
-    fun setCache(uri: String, infos: List<GutterInfo>) {
-        gutterCache[uri] = infos
-        cacheTimestamps[uri] = System.currentTimeMillis()
+    fun clearProject(project: Project) {
+        gutterCache.keys.removeIf { it.project === project }
+        cacheTimestamps.keys.removeIf { it.project === project }
     }
 
-    fun getCacheAge(uri: String): Long {
-        val timestamp = cacheTimestamps[uri] ?: return Long.MAX_VALUE
-        return System.currentTimeMillis() - timestamp
+    fun getCache(key: Key): List<GutterInfo>? = gutterCache[key]
+
+    fun setCache(key: Key, infos: List<GutterInfo>) {
+        gutterCache[key] = infos
+        cacheTimestamps[key] = System.currentTimeMillis()
     }
 
-    fun isCacheStale(uri: String, maxAgeMs: Long = 1000): Boolean = getCacheAge(uri) > maxAgeMs
+    fun isCacheStale(key: Key, maxAgeMs: Long = 1000): Boolean {
+        val timestamp = cacheTimestamps[key] ?: return true
+        return System.currentTimeMillis() - timestamp > maxAgeMs
+    }
+
 }
 
 /**
@@ -197,11 +203,12 @@ class LuaGutterCacheStartupActivity : ProjectActivity {
 }
 
 @Service(PROJECT)
-class LuaGutterCacheListenerDisposable : Disposable {
+class LuaGutterCacheListenerDisposable(private val project: Project) : Disposable {
     @Volatile
     var isInitialized: Boolean = false
 
     override fun dispose() {
         isInitialized = false
+        LuaGutterCacheManager.clearProject(project)
     }
 }

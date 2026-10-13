@@ -1,6 +1,5 @@
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import de.undercouch.gradle.tasks.download.Download
-import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
     id("java")
