@@ -1,10 +1,15 @@
 package com.tang.intellij.lua.editor
 
 import com.cppcxy.ide.lsp.*
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.codeInsight.daemon.LineMarkerInfo
 import com.intellij.codeInsight.daemon.LineMarkerProvider
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.progress.ProcessCanceledException
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.markup.GutterIconRenderer
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
@@ -21,6 +26,7 @@ import com.tang.intellij.lua.psi.LuaPsiFile
 import org.eclipse.lsp4j.Position
 import java.awt.event.MouseEvent
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.CompletableFuture
 import javax.swing.Icon
 
 /**
@@ -57,66 +63,29 @@ class LuaLineMarkerProvider : LineMarkerProvider {
         val virtualFile = file.virtualFile ?: return
         val uri = virtualFile.url
 
-        // Check if we need to refresh the cache
-        // - Cache is missing
-        // - Cache is older than 2 seconds (to account for document changes)
-        val needsRefresh = LuaGutterCacheManager.getCache(uri) == null ||
-                LuaGutterCacheManager.isCacheStale(uri, 2000)
-
-        // Try to get cached gutter info
-        var gutterInfos = if (needsRefresh) null else LuaGutterCacheManager.getCache(uri)
-
-        if (gutterInfos == null) {
-            // Request gutter information from LSP synchronously
-            try {
-                val languageServerFuture = LanguageServerManager.getInstance(project)
-                    .getLanguageServer("EmmyLua")
-
-                // Get the language server with timeout
-                val languageServerItem = try {
-                    languageServerFuture.get(1, TimeUnit.SECONDS)
-                } catch (e: Exception) {
-                    LOG.debug("Timeout or error getting language server", e)
-                    null
-                }
-
-                if (languageServerItem != null) {
-                    try {
-                        val server = languageServerItem.server as? EmmyLuaCustomApi
-                        if (server != null) {
-                            val params = GutterParams(uri)
-                            val gutterFuture = server.getGutter(params)
-
-                            // Wait for gutter info with timeout
-                            gutterInfos = try {
-                                gutterFuture.get(2, TimeUnit.SECONDS)
-                            } catch (e: Exception) {
-                                LOG.debug("Timeout or error getting gutter info", e)
-                                emptyList()
-                            }
-
-                            // Cache the result
-                            if (gutterInfos != null && gutterInfos.isNotEmpty()) {
-                                LuaGutterCacheManager.setCache(uri, gutterInfos)
-                            }
-                        }
-                    } catch (e: Exception) {
-                        LOG.warn("Error casting to EmmyLuaCustomApi", e)
+        ProgressManager.checkCanceled()
+        val document = FileDocumentManager.getInstance().getDocument(virtualFile) ?: return
+        val stamp = document.modificationStamp
+        val key = LuaGutterCacheManager.Key(project, "EmmyLua", uri)
+        val gutterInfos = LuaGutterCacheManager.getOrRequest(key, stamp, {
+            requestGutters(project, key.serverId, uri)
+        }) {
+            ApplicationManager.getApplication().invokeLater {
+                if (project.isDisposed || !virtualFile.isValid) return@invokeLater
+                ReadAction.run<RuntimeException> {
+                    if (document.modificationStamp == stamp && file.isValid) {
+                        DaemonCodeAnalyzer.getInstance(project).restart(file)
                     }
                 }
-            } catch (e: Exception) {
-                LOG.warn("Error collecting gutter info", e)
-                return
             }
-        }
-
-        if (gutterInfos == null || gutterInfos.isEmpty()) return
+        } ?: return
 
         // Track processed positions to avoid duplicates
         val processedKeys = mutableSetOf<String>()
 
         // Convert LSP positions to PSI elements and create line markers
         for (gutterInfo in gutterInfos) {
+            ProgressManager.checkCanceled()
             try {
                 val range = gutterInfo.range
                 val startOffset = positionToOffset(file, range.start)
@@ -162,9 +131,20 @@ class LuaLineMarkerProvider : LineMarkerProvider {
                 )
 
                 result.add(markerInfo)
+            } catch (e: ProcessCanceledException) {
+                throw e
             } catch (e: Exception) {
                 LOG.warn("Error creating line marker", e)
             }
+        }
+    }
+
+    /** Requests gutter data without blocking the highlighting read action. */
+    private fun requestGutters(project: Project, serverId: String, uri: String): CompletableFuture<List<GutterInfo>> {
+        return requestGutterData({ LanguageServerManager.getInstance(project).getLanguageServer(serverId) }) { item ->
+            val server = item.server as? EmmyLuaCustomApi
+                ?: throw IllegalStateException("Language server does not support gutter requests")
+            server.getGutter(GutterParams(uri))
         }
     }
 
@@ -190,6 +170,8 @@ class LuaLineMarkerProvider : LineMarkerProvider {
                         ApplicationManager.getApplication().invokeLater {
                             navigateToLocation(project, filepath, line, col)
                         }
+                    } catch (e: ProcessCanceledException) {
+                        throw e
                     } catch (e: Exception) {
                         LOG.warn("Failed to parse Method data: $dataStr", e)
                     }
@@ -203,6 +185,8 @@ class LuaLineMarkerProvider : LineMarkerProvider {
 
                         val languageServerItem = try {
                             languageServerFuture.get(1, TimeUnit.SECONDS)
+                        } catch (e: ProcessCanceledException) {
+                            throw e
                         } catch (e: Exception) {
                             LOG.warn("Timeout getting language server for gutter detail", e)
                             null
@@ -216,6 +200,8 @@ class LuaLineMarkerProvider : LineMarkerProvider {
 
                                 val response = try {
                                     detailFuture.get(2, TimeUnit.SECONDS)
+                                } catch (e: ProcessCanceledException) {
+                                    throw e
                                 } catch (e: Exception) {
                                     LOG.warn("Timeout getting gutter detail", e)
                                     null
@@ -265,6 +251,8 @@ class LuaLineMarkerProvider : LineMarkerProvider {
                                 }
                             }
                         }
+                    } catch (e: ProcessCanceledException) {
+                        throw e
                     } catch (e: Exception) {
                         LOG.warn("Error handling gutter navigation", e)
                     }
@@ -358,6 +346,8 @@ class LuaLineMarkerProvider : LineMarkerProvider {
                 } else {
                     LOG.warn("Cannot find file: $uri")
                 }
+            } catch (e: ProcessCanceledException) {
+                throw e
             } catch (e: Exception) {
                 LOG.warn("Error navigating to location: $filepath:$line:$col", e)
             }

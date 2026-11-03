@@ -25,33 +25,27 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiManager
 import com.tang.intellij.lua.lang.LuaFileType
 import com.tang.intellij.lua.psi.LuaPsiFile
-import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CompletableFuture
 
 /**
  * Manager to handle gutter cache and trigger updates
  */
 object LuaGutterCacheManager {
-    private val gutterCache = ConcurrentHashMap<String, List<GutterInfo>>()
-    private val cacheTimestamps = ConcurrentHashMap<String, Long>()
+    data class Key(val project: Project, val serverId: String, val uri: String)
+    private val requests = GutterRequestCache<Key>()
 
-    fun clearCache(uri: String) {
-        gutterCache.remove(uri)
-        cacheTimestamps.remove(uri)
-    }
+    fun clearCache(project: Project, uri: String) = requests.invalidate { it.project === project && it.uri == uri }
 
-    fun getCache(uri: String): List<GutterInfo>? = gutterCache[uri]
+    fun clearProject(project: Project) = requests.invalidate { it.project === project }
 
-    fun setCache(uri: String, infos: List<GutterInfo>) {
-        gutterCache[uri] = infos
-        cacheTimestamps[uri] = System.currentTimeMillis()
-    }
+    internal fun getOrRequest(
+        key: Key,
+        stamp: Long,
+        load: () -> CompletableFuture<List<GutterInfo>>,
+        updated: () -> Unit
+    ): List<GutterInfo>? = if (key.project.isDisposed) null
+        else requests.getOrRequest(key, stamp, load, updated)
 
-    fun getCacheAge(uri: String): Long {
-        val timestamp = cacheTimestamps[uri] ?: return Long.MAX_VALUE
-        return System.currentTimeMillis() - timestamp
-    }
-
-    fun isCacheStale(uri: String, maxAgeMs: Long = 1000): Boolean = getCacheAge(uri) > maxAgeMs
 }
 
 /**
@@ -70,7 +64,7 @@ class LuaDocumentListener(private val project: Project) : DocumentListener {
         if (!virtualFile.isValid || virtualFile.fileType !== LuaFileType.INSTANCE) return
 
         // Clear the cache immediately for instant refresh
-        LuaGutterCacheManager.clearCache(virtualFile.url)
+        LuaGutterCacheManager.clearCache(project, virtualFile.url)
 
         // Cancel any pending update
         pendingUpdates[document]?.let {
@@ -120,10 +114,14 @@ class LuaDocumentListener(private val project: Project) : DocumentListener {
  * File editor listener to trigger gutter update when files are opened
  */
 class LuaFileEditorListener(private val project: Project) : FileEditorManagerListener {
+    override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
+        LuaGutterCacheManager.clearCache(project, file.url)
+    }
+
     override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
         if (file.fileType === LuaFileType.INSTANCE) {
             // Clear cache for the newly opened file to ensure fresh data
-            LuaGutterCacheManager.clearCache(file.url)
+            LuaGutterCacheManager.clearCache(project, file.url)
 
             // Trigger code analysis
             ApplicationManager.getApplication().invokeLater {
@@ -171,7 +169,7 @@ class LuaGutterCacheStartupActivity : ProjectActivity {
                         val file = event.file
                         if (file != null && file.isValid && file.fileType === LuaFileType.INSTANCE) {
                             // Clear cache when the file changes externally
-                            LuaGutterCacheManager.clearCache(file.url)
+                            LuaGutterCacheManager.clearCache(project, file.url)
 
                             // Skip delete events - no need to restart analysis on deleted files
                             if (event is VFileDeleteEvent) {
@@ -197,11 +195,12 @@ class LuaGutterCacheStartupActivity : ProjectActivity {
 }
 
 @Service(PROJECT)
-class LuaGutterCacheListenerDisposable : Disposable {
+class LuaGutterCacheListenerDisposable(private val project: Project) : Disposable {
     @Volatile
     var isInitialized: Boolean = false
 
     override fun dispose() {
         isInitialized = false
+        LuaGutterCacheManager.clearProject(project)
     }
 }
