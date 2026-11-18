@@ -1,5 +1,6 @@
 package com.cppcxy.ide.lsp;
 
+import com.google.gson.JsonParser;
 import org.eclipse.lsp4j.*;
 import org.junit.Assume;
 import org.junit.Before;
@@ -85,6 +86,16 @@ public class EmmyLuaWorkspaceOwnershipTest {
         assertNull(params.getRootUri());
     }
 
+    @Test public void sendsBothSpellingsOfSymlinkedOwnedRootToAnalyzer() throws IOException {
+        var real = temporary.newFolder("real").toPath().toRealPath();
+        var alias = linkTo(real);
+        var result = EmmyLuaLanguageClient.withOwnedRoots(null, List.of(alias));
+        var ignored = result.getAsJsonObject("workspace").getAsJsonArray("ignoreDir");
+        assertEquals(2, ignored.size());
+        assertEquals(alias.toString(), ignored.get(0).getAsString());
+        assertEquals(real.toString(), ignored.get(1).getAsString());
+    }
+
     private Path linkTo(Path target) throws IOException {
         Path alias = target.resolveSibling("alias");
         try {
@@ -106,5 +117,77 @@ public class EmmyLuaWorkspaceOwnershipTest {
         assertEquals(mod.toUri().toString(), params.getRootUri());
         assertEquals(1, params.getWorkspaceFolders().size());
         assertNull(params.getCapabilities().getWorkspace().getConfiguration());
+    }
+
+    @Test public void enablesConfigurationWhenCapabilitiesAreMissing() {
+        var params = new InitializeParams();
+        assertNull(params.getCapabilities());
+        EmmyLuaClientFeatures.excludeOwnedRoots(params, List.of(mod));
+        assertEquals(Boolean.TRUE, params.getCapabilities().getWorkspace().getConfiguration());
+    }
+
+    @Test public void enablesConfigurationWithoutExistingWorkspaceCapabilities() {
+        var params = params(mod);
+        var capabilities = new ClientCapabilities();
+        var textDocument = new TextDocumentClientCapabilities();
+        capabilities.setTextDocument(textDocument);
+        params.setCapabilities(capabilities);
+        EmmyLuaClientFeatures.excludeOwnedRoots(params, List.of(mod));
+        assertSame(capabilities, params.getCapabilities());
+        assertSame(textDocument, capabilities.getTextDocument());
+        assertEquals(Boolean.TRUE, capabilities.getWorkspace().getConfiguration());
+    }
+
+    @Test public void dottedExclusionsReplaceNestedExclusionsInTheSameLayer() {
+        var settings = JsonParser.parseString("""
+                {"workspace.ignoreDir":["dotted"], "workspace":{"ignoreDir":["nested"], "library":["lib"]}}
+                """).getAsJsonObject();
+        var original = settings.deepCopy();
+        var result = EmmyLuaLanguageClient.withOwnedRoots(settings, List.of(mod));
+        var workspace = result.getAsJsonObject("workspace");
+        var ignored = workspace.getAsJsonArray("ignoreDir");
+        assertEquals(2, ignored.size());
+        assertEquals("dotted", ignored.get(0).getAsString());
+        assertEquals(mod.toString(), ignored.get(1).getAsString());
+        assertEquals("lib", workspace.getAsJsonArray("library").get(0).getAsString());
+        assertFalse(result.has("workspace.ignoreDir"));
+        assertEquals(original, settings);
+    }
+
+    @Test public void sendsOwnedRootsWhenExistingIgnoreDirHasAnInvalidShape() {
+        var settings = JsonParser.parseString("""
+                {"workspace":{"ignoreDir":"not-an-array"}}
+                """).getAsJsonObject();
+        var result = EmmyLuaLanguageClient.withOwnedRoots(settings, List.of(mod));
+        var ignored = result.getAsJsonObject("workspace").getAsJsonArray("ignoreDir");
+        assertEquals(1, ignored.size());
+        assertEquals(mod.toString(), ignored.get(0).getAsString());
+        assertEquals("not-an-array", settings.getAsJsonObject("workspace").get("ignoreDir").getAsString());
+    }
+
+    @Test public void preservesDottedClientExclusions() {
+        var settings = JsonParser.parseString("{\"workspace.ignoreDir\":[\"vendor\"]}").getAsJsonObject();
+        var result = EmmyLuaLanguageClient.withOwnedRoots(settings, List.of(mod));
+        assertFalse(result.has("workspace.ignoreDir"));
+        assertEquals(2, result.getAsJsonObject("workspace").getAsJsonArray("ignoreDir").size());
+        assertTrue(settings.has("workspace.ignoreDir"));
+    }
+
+    @Test public void addsExclusionsWithoutMutatingSettingsOrLibraries() {
+        var settings = JsonParser.parseString("""
+                {"diagnostics":{"disable":["unused"]},
+                 "workspace":{"ignoreDir":["vendor"], "library":["shared"], "packages":["dep"]}}
+                """).getAsJsonObject();
+        var before = settings.deepCopy();
+        var result = EmmyLuaLanguageClient.withOwnedRoots(settings, List.of(mod));
+        assertEquals(before, settings);
+        assertEquals(before.get("diagnostics"), result.get("diagnostics"));
+        var ws = result.getAsJsonObject("workspace");
+        assertEquals(before.getAsJsonObject("workspace").get("library"), ws.get("library"));
+        assertEquals(before.getAsJsonObject("workspace").get("packages"), ws.get("packages"));
+        assertEquals(2, ws.getAsJsonArray("ignoreDir").size());
+        assertEquals(mod.toString(), ws.getAsJsonArray("ignoreDir").get(1).getAsString());
+        assertEquals(1, EmmyLuaLanguageClient.withOwnedRoots(null, List.of(mod))
+                .getAsJsonObject("workspace").getAsJsonArray("ignoreDir").size());
     }
 }

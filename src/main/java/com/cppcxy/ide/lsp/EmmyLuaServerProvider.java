@@ -17,8 +17,8 @@ import java.util.List;
 public interface EmmyLuaServerProvider {
     /**
      * Directories whose Lua files are handled by this provider. The default server
-     * omits workspace folders at or beneath these directories during initialization.
-     * A retained parent workspace can still index its descendants.
+     * omits these workspace roots and excludes them from scans of parent folders.
+     * Explicit analyzer library/package entries remain available as dependencies.
      *
      * Return an immutable snapshot of absolute paths, without I/O or starting servers.
      * Report roots as soon as their files are reserved, even before the owned server
