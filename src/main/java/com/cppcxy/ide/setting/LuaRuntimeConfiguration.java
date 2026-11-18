@@ -1,5 +1,6 @@
 package com.cppcxy.ide.setting;
 
+import com.cppcxy.ide.lsp.EmmyLuaServerRouting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.intellij.openapi.Disposable;
@@ -18,7 +19,8 @@ import com.intellij.util.Alarm;
 import com.intellij.util.EnvironmentUtil;
 import com.intellij.util.FileContentUtil;
 import com.redhat.devtools.lsp4ij.LSPIJUtils;
-import com.redhat.devtools.lsp4ij.LanguageServiceAccessor;
+import com.redhat.devtools.lsp4ij.LanguageServerManager;
+import com.redhat.devtools.lsp4ij.ServerStatus;
 import com.tang.intellij.lua.lang.LuaLanguageLevel;
 import org.jetbrains.annotations.NotNull;
 
@@ -153,8 +155,11 @@ public final class LuaRuntimeConfiguration implements Disposable {
                 files.removeIf(file -> !file.isValid());
                 parsedFiles.retainAll(files);
                 WriteAction.run(() -> FileContentUtil.reparseFiles(project, files, true));
-                for (var server : LanguageServiceAccessor.getInstance(project).getStartedServers()) {
-                    if ("EmmyLua".equals(server.getServerDefinition().getId())) server.restart();
+                var manager = LanguageServerManager.getInstance(project);
+                var status = manager.getServerStatus(EmmyLuaServerRouting.DEFAULT_SERVER_ID);
+                if (status == ServerStatus.starting || status == ServerStatus.started) {
+                    manager.start(EmmyLuaServerRouting.DEFAULT_SERVER_ID,
+                            new LanguageServerManager.StartOptions().setForceRestart(true));
                 }
             }, 100);
         }, project.getDisposed());
