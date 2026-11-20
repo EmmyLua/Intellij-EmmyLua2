@@ -46,6 +46,19 @@ class EmmyLuaServerRoutingTest : BasePlatformTestCase() {
         assertTrue(EmmyLuaDocumentMatcher().match(file, project))
     }
 
+    fun testOwnedRootsAreOptionalAndReflectUpdatedProviders() {
+        val root = java.nio.file.Path.of("/owned").toAbsolutePath()
+        var roots = listOf(root, root.resolve("child/.."))
+        providers(object : EmmyLuaServerProvider {
+            override fun getServerId(project: com.intellij.openapi.project.Project,
+                                     file: com.intellij.openapi.vfs.VirtualFile): String? = null
+            override fun getOwnedRoots(project: com.intellij.openapi.project.Project) = roots
+        }, EmmyLuaServerProvider { _, _ -> null })
+        assertEquals(listOf(root), EmmyLuaServerRouting.getOwnedRoots(project))
+        roots = emptyList()
+        assertEmpty(EmmyLuaServerRouting.getOwnedRoots(project))
+    }
+
     fun testGutterCacheDoesNotCrossServerRoutes() {
         val a = LuaGutterCacheManager.Key(project, "mod-a", "file:///control.lua")
         val b = LuaGutterCacheManager.Key(project, "mod-b", a.uri)
