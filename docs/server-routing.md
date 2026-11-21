@@ -34,12 +34,19 @@ hook does not itself start multiple servers or impose a module isolation model.
 
 ## Workspace ownership
 
-Integrations can implement `EmmyLuaServerProvider.getOwnedRoots(Project)` to
-keep a whole workspace folder on their own server. Return immutable absolute
-paths from the file-routing snapshot, including roots reserved while a server
-starts. The default server omits workspace folders at or beneath those paths
-when it starts. A retained parent workspace can still index a nested owned
-directory during its scan.
+File routing keeps editor requests on the right server. To also keep the default
+analyzer from indexing integration-owned source directories, implement
+`EmmyLuaServerProvider.getOwnedRoots(Project)`. Return immutable absolute paths
+from the same snapshot used for file routing, including roots reserved while a
+server starts. Do not discover roots or start processes inside this callback.
+
+The default server removes owned workspace folders and appends `workspace.ignoreDir`
+through `workspace/configuration`. The exclusions also cover an owned module
+nested below a broader project root. Existing configuration files are not edited.
+Explicit library/package roots remain available as imports under EmmyLua's normal
+ignore-directory semantics; explicitly configured `workspaceRoots` also remain
+user-controlled. Ownership controls the automatically discovered workspace scan,
+not whether another environment may deliberately include a dependency.
 
 After updating the snapshot, call `EmmyLuaServerRouting.ownershipChanged(project)`
 on the EDT, then refresh affected editors. This stops the default server without

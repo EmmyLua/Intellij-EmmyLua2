@@ -12,6 +12,8 @@ class EmmyLuaAnalyzerFactory : LanguageServerFactory {
 
     override fun createClientFeatures() = EmmyLuaClientFeatures()
 
+    override fun createLanguageClient(project: Project) = EmmyLuaLanguageClient(project)
+
     override fun getServerInterface(): Class<out LanguageServer?> {
         return EmmyLuaCustomApi::class.java
     }

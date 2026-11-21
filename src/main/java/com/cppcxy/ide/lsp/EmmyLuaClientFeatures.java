@@ -1,7 +1,9 @@
 package com.cppcxy.ide.lsp;
 
 import com.redhat.devtools.lsp4ij.client.features.LSPClientFeatures;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.InitializeParams;
+import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.jetbrains.annotations.NotNull;
 
@@ -13,10 +15,18 @@ import java.util.List;
 
 /** Keeps the default analyzer out of source roots handled by integration-owned servers. */
 public final class EmmyLuaClientFeatures extends LSPClientFeatures {
+    // One immutable snapshot per initialization, also read by workspace/configuration.
+    private volatile List<Path> ownedRoots = List.of();
+
     @Override
     public void initializeParams(@NotNull InitializeParams params) {
         super.initializeParams(params);
-        excludeOwnedRoots(params, EmmyLuaServerRouting.getOwnedRoots(getProject()));
+        ownedRoots = EmmyLuaServerRouting.getOwnedRoots(getProject());
+        excludeOwnedRoots(params, ownedRoots);
+    }
+
+    List<Path> ownedRoots() {
+        return ownedRoots;
     }
 
     static void excludeOwnedRoots(InitializeParams params, List<Path> owned) {
@@ -32,6 +42,17 @@ public final class EmmyLuaClientFeatures extends LSPClientFeatures {
             String uri = folders == null || folders.isEmpty() ? null : folders.get(0).getUri();
             params.setRootUri(uri);
         }
+        var capabilities = params.getCapabilities();
+        if (capabilities == null) {
+            capabilities = new ClientCapabilities();
+            params.setCapabilities(capabilities);
+        }
+        var workspace = capabilities.getWorkspace();
+        if (workspace == null) {
+            workspace = new WorkspaceClientCapabilities();
+            capabilities.setWorkspace(workspace);
+        }
+        workspace.setConfiguration(true);
     }
 
     private static boolean isOwned(String uri, List<Path> canonicalRoots) {
@@ -51,7 +72,7 @@ public final class EmmyLuaClientFeatures extends LSPClientFeatures {
         }
     }
 
-    private static Path canonical(Path path) {
+    static Path canonical(Path path) {
         Path absolute = path.toAbsolutePath();
         // A workspace folder may not exist yet. Resolve symlinks in its existing
         // parent path before comparing it to an owned root.
